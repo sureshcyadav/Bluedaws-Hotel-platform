@@ -1,1 +1,1 @@
-console.log("Bluedaws Hotel Website Loaded");
+console.log("Bluedaws Private Hotel Website Loaded Successfully");
