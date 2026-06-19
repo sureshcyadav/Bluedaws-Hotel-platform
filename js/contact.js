@@ -1,4 +1,12 @@
-// ---------- Contact form validation ----------
+// ======================================================================
+// BLUEDAWS HOTEL — Contact Form + EmailJS
+// ======================================================================
+
+// Init EmailJS if configured
+if (typeof emailjs !== 'undefined' && typeof EMAILJS !== 'undefined' && EMAILJS.publicKey !== 'YOUR_PUBLIC_KEY') {
+  emailjs.init({ publicKey: EMAILJS.publicKey });
+}
+
 const form        = document.getElementById('contactForm');
 const formSuccess = document.getElementById('formSuccess');
 
@@ -11,6 +19,15 @@ if (form) {
     message:   { el: form.querySelector('#message'),   err: form.querySelector('#messageErr'),   msg: 'Please enter your message.' },
   };
 
+  const subjectLabels = {
+    booking:   'Booking Enquiry',
+    group:     'Group Booking (6+ guests)',
+    checkin:   'Check-in / Check-out',
+    breakfast: 'Breakfast Information',
+    luggage:   'Luggage Storage',
+    other:     'General Enquiry',
+  };
+
   function validateEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
 
   function validateField(key) {
@@ -18,7 +35,7 @@ if (form) {
     let valid = el.value.trim() !== '';
     if (key === 'email') valid = validateEmail(el.value.trim());
     el.classList.toggle('error', !valid);
-    err.textContent = valid ? '' : msg;
+    if (err) err.textContent = valid ? '' : msg;
     return valid;
   }
 
@@ -29,22 +46,50 @@ if (form) {
     });
   });
 
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const allValid = Object.keys(fields).map(validateField).every(Boolean);
     if (!allValid) return;
 
     const btn = form.querySelector('#submitBtn');
+    const originalText = btn.textContent;
     btn.textContent = 'Sending…';
     btn.disabled = true;
 
-    setTimeout(() => {
-      formSuccess.classList.add('visible');
+    const data = {
+      firstName:    fields.firstName.el.value.trim(),
+      lastName:     fields.lastName.el.value.trim(),
+      email:        fields.email.el.value.trim(),
+      phone:        (form.querySelector('#phone') || {}).value || '',
+      subjectLabel: subjectLabels[fields.subject.el.value] || fields.subject.el.value,
+      message:      fields.message.el.value.trim(),
+    };
+
+    try {
+      if (typeof emailjs !== 'undefined' && typeof EMAILJS !== 'undefined' && EMAILJS.publicKey !== 'YOUR_PUBLIC_KEY') {
+        await emailjs.send(EMAILJS.serviceId, EMAILJS.contactTemplate, {
+          to_email:      EMAILJS.hotelEmail,
+          from_name:     `${data.firstName} ${data.lastName}`,
+          from_email:    data.email,
+          phone:         data.phone || 'Not provided',
+          subject_label: data.subjectLabel,
+          message:       data.message,
+        });
+      }
+      // Show success regardless (even if EmailJS isn't configured yet)
+      if (formSuccess) formSuccess.classList.add('visible');
       form.reset();
-      btn.textContent = 'Send Message';
-      btn.disabled = false;
       Object.values(fields).forEach(({ el }) => el.classList.remove('error'));
-      setTimeout(() => formSuccess.classList.remove('visible'), 7000);
-    }, 1200);
+      setTimeout(() => { if (formSuccess) formSuccess.classList.remove('visible'); }, 8000);
+    } catch (err) {
+      // Email failed — show a fallback message with the hotel email
+      if (formSuccess) {
+        formSuccess.textContent = `We couldn't send your message automatically. Please email us directly at reservations@bluedawshotel.com`;
+        formSuccess.classList.add('visible');
+      }
+    } finally {
+      btn.textContent = originalText;
+      btn.disabled = false;
+    }
   });
 }

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -94,6 +94,9 @@
                     <option value="2" selected>2 Adults</option>
                     <option value="3">3 Adults</option>
                     <option value="4">4 Adults</option>
+                    <option value="5">5 Adults</option>
+                    <option value="6">6 Adults</option>
+                    <option value="7">7 Adults</option>
                   </select>
                 </div>
                 <div class="form-group">
@@ -106,307 +109,26 @@
                   </select>
                 </div>
               </div>
+              <div class="booking-guarantee">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="18" height="18"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <span>Best price guaranteed &nbsp;&middot;&nbsp; Free Wi-Fi &amp; Breakfast included &nbsp;&middot;&nbsp; No booking fees</span>
+              </div>
               <button class="btn btn-primary" id="toStep2">Continue to Room Selection &rarr;</button>
             </div>
           </div>
 
-          <!-- Step 2: Choose Room -->
+          <!-- Step 2: Choose Room (rendered dynamically by JS) -->
           <div class="booking-step hidden" id="step2">
             <div class="step-header">
               <p class="section-label">Step 2 of 4</p>
               <h2>Choose Your Room</h2>
             </div>
-            <p class="booking-rooms-intro">All rooms include: Free Wi-Fi · Breakfast · Heating & Fan · Hair Dryer · Iron · Towels & Toiletries · Luggage Storage</p>
+            <div class="step2-meta">
+              <p class="booking-rooms-intro">All rooms include: Free Wi-Fi &middot; Breakfast &middot; Heating &amp; Fan &middot; Hair Dryer &middot; Iron &middot; Towels &amp; Toiletries &middot; Luggage Storage</p>
+              <span class="guest-filter-badge" id="guestFilterBadge"></span>
+            </div>
             <div class="booking-rooms" id="bookingRooms">
-
-              <!-- Singles / Twins (1–2 guests) -->
-              <div class="brc-group-label">1–2 Guests</div>
-
-              <label class="booking-room-option">
-                <input type="radio" name="roomChoice" value="d6" data-price="85" data-name="Single Room (D6)">
-                <div class="booking-room-card">
-                  <div class="brc-img" style="background-image:url('assets/images/double-room.jpg')"></div>
-                  <div class="brc-info">
-                    <div class="brc-top">
-                      <div><h3>Single Room <span class="room-code-tag">D6</span></h3><p>Third Floor · 1 Single Bed · 1 Guest</p></div>
-                      <div class="brc-price">£85<span>/night</span></div>
-                    </div>
-                    <div class="brc-tags"><span>Wi-Fi</span><span>Breakfast</span><span>Heating</span><span>Fan</span></div>
-                  </div>
-                  <div class="brc-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg></div>
-                </div>
-              </label>
-
-              <label class="booking-room-option">
-                <input type="radio" name="roomChoice" value="c3" data-price="110" data-name="Twin Room (C3)">
-                <div class="booking-room-card">
-                  <div class="brc-img" style="background-image:url('assets/images/twin-room.jpg')"></div>
-                  <div class="brc-info">
-                    <div class="brc-top">
-                      <div><h3>Twin Room <span class="room-code-tag">C3</span></h3><p>Second Floor · 2 Single Beds · 2 Guests</p></div>
-                      <div class="brc-price">£110<span>/night</span></div>
-                    </div>
-                    <div class="brc-tags"><span>Wi-Fi</span><span>Breakfast</span><span>Heating</span><span>Fan</span></div>
-                  </div>
-                  <div class="brc-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg></div>
-                </div>
-              </label>
-
-              <label class="booking-room-option">
-                <input type="radio" name="roomChoice" value="d3" data-price="110" data-name="Twin Room (D3)">
-                <div class="booking-room-card">
-                  <div class="brc-img" style="background-image:url('assets/images/twin-room.jpg')"></div>
-                  <div class="brc-info">
-                    <div class="brc-top">
-                      <div><h3>Twin Room <span class="room-code-tag">D3</span></h3><p>Third Floor · 2 Single Beds · 2 Guests</p></div>
-                      <div class="brc-price">£110<span>/night</span></div>
-                    </div>
-                    <div class="brc-tags"><span>Wi-Fi</span><span>Breakfast</span><span>Heating</span><span>Fan</span></div>
-                  </div>
-                  <div class="brc-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg></div>
-                </div>
-              </label>
-
-              <!-- Triples (3 guests) -->
-              <div class="brc-group-label">3 Guests</div>
-
-              <label class="booking-room-option">
-                <input type="radio" name="roomChoice" value="b6" data-price="135" data-name="Triple Room (B6)">
-                <div class="booking-room-card">
-                  <div class="brc-img" style="background-image:url('assets/images/twin-room.jpg')"></div>
-                  <div class="brc-info">
-                    <div class="brc-top">
-                      <div><h3>Triple Room <span class="room-code-tag">B6</span></h3><p>First Floor · 1 Bunk + 1 Single · 3 Guests</p></div>
-                      <div class="brc-price">£135<span>/night</span></div>
-                    </div>
-                    <div class="brc-tags"><span>Wi-Fi</span><span>Breakfast</span><span>Bunk Beds</span></div>
-                  </div>
-                  <div class="brc-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg></div>
-                </div>
-              </label>
-
-              <label class="booking-room-option">
-                <input type="radio" name="roomChoice" value="c6" data-price="135" data-name="Triple Room (C6)">
-                <div class="booking-room-card">
-                  <div class="brc-img" style="background-image:url('assets/images/twin-room.jpg')"></div>
-                  <div class="brc-info">
-                    <div class="brc-top">
-                      <div><h3>Triple Room <span class="room-code-tag">C6</span></h3><p>Second Floor · 1 Bunk + 1 Single · 3 Guests</p></div>
-                      <div class="brc-price">£135<span>/night</span></div>
-                    </div>
-                    <div class="brc-tags"><span>Wi-Fi</span><span>Breakfast</span><span>Bunk Beds</span></div>
-                  </div>
-                  <div class="brc-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg></div>
-                </div>
-              </label>
-
-              <label class="booking-room-option">
-                <input type="radio" name="roomChoice" value="b8" data-price="145" data-name="Double + Single (B8)">
-                <div class="booking-room-card">
-                  <div class="brc-img" style="background-image:url('assets/images/double-room.jpg')"></div>
-                  <div class="brc-info">
-                    <div class="brc-top">
-                      <div><h3>Double + Single <span class="room-code-tag">B8</span></h3><p>First Floor · 1 Double + 1 Single · 3 Guests</p></div>
-                      <div class="brc-price">£145<span>/night</span></div>
-                    </div>
-                    <div class="brc-tags"><span>Wi-Fi</span><span>Breakfast</span><span>Double Bed</span></div>
-                  </div>
-                  <div class="brc-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg></div>
-                </div>
-              </label>
-
-              <!-- Family (4 guests) -->
-              <div class="brc-group-label">4 Guests</div>
-
-              <label class="booking-room-option">
-                <input type="radio" name="roomChoice" value="b7" data-price="160" data-name="Family Room (B7)">
-                <div class="booking-room-card">
-                  <div class="brc-img" style="background-image:url('assets/images/twin-room.jpg')"></div>
-                  <div class="brc-info">
-                    <div class="brc-top">
-                      <div><h3>Family Room <span class="room-code-tag">B7</span> <span class="popular-tag">Popular</span></h3><p>First Floor · 1 Double + 2 Single · 4 Guests</p></div>
-                      <div class="brc-price">£160<span>/night</span></div>
-                    </div>
-                    <div class="brc-tags"><span>Wi-Fi</span><span>Breakfast</span><span>Family</span></div>
-                  </div>
-                  <div class="brc-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg></div>
-                </div>
-              </label>
-
-              <label class="booking-room-option">
-                <input type="radio" name="roomChoice" value="e2" data-price="160" data-name="Family Room (E2)">
-                <div class="booking-room-card">
-                  <div class="brc-img" style="background-image:url('assets/images/twin-room.jpg')"></div>
-                  <div class="brc-info">
-                    <div class="brc-top">
-                      <div><h3>Family Room <span class="room-code-tag">E2</span></h3><p>Fourth Floor · 1 Double + 2 Single · 4 Guests</p></div>
-                      <div class="brc-price">£160<span>/night</span></div>
-                    </div>
-                    <div class="brc-tags"><span>Wi-Fi</span><span>Breakfast</span><span>Family</span></div>
-                  </div>
-                  <div class="brc-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg></div>
-                </div>
-              </label>
-
-              <label class="booking-room-option">
-                <input type="radio" name="roomChoice" value="e3" data-price="160" data-name="Family Room (E3)">
-                <div class="booking-room-card">
-                  <div class="brc-img" style="background-image:url('assets/images/twin-room.jpg')"></div>
-                  <div class="brc-info">
-                    <div class="brc-top">
-                      <div><h3>Family Room <span class="room-code-tag">E3</span></h3><p>Fourth Floor · 1 Double + 2 Single · 4 Guests</p></div>
-                      <div class="brc-price">£160<span>/night</span></div>
-                    </div>
-                    <div class="brc-tags"><span>Wi-Fi</span><span>Breakfast</span><span>Family</span></div>
-                  </div>
-                  <div class="brc-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg></div>
-                </div>
-              </label>
-
-              <!-- Large Family (5 guests) -->
-              <div class="brc-group-label">5 Guests</div>
-
-              <label class="booking-room-option">
-                <input type="radio" name="roomChoice" value="b2" data-price="195" data-name="Large Family Room (B2)">
-                <div class="booking-room-card">
-                  <div class="brc-img" style="background-image:url('assets/images/twin-room.jpg')"></div>
-                  <div class="brc-info">
-                    <div class="brc-top">
-                      <div><h3>Large Family Room <span class="room-code-tag">B2</span></h3><p>First Floor · 1 Double + 1 Single + 1 Bunk · 5 Guests</p></div>
-                      <div class="brc-price">£195<span>/night</span></div>
-                    </div>
-                    <div class="brc-tags"><span>Wi-Fi</span><span>Breakfast</span><span>Bunk + Double</span></div>
-                  </div>
-                  <div class="brc-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg></div>
-                </div>
-              </label>
-
-              <label class="booking-room-option">
-                <input type="radio" name="roomChoice" value="b4" data-price="195" data-name="Large Family Room (B4)">
-                <div class="booking-room-card">
-                  <div class="brc-img" style="background-image:url('assets/images/twin-room.jpg')"></div>
-                  <div class="brc-info">
-                    <div class="brc-top">
-                      <div><h3>Large Family Room <span class="room-code-tag">B4</span></h3><p>First Floor · 1 Double + 1 Single + 1 Bunk · 5 Guests</p></div>
-                      <div class="brc-price">£195<span>/night</span></div>
-                    </div>
-                    <div class="brc-tags"><span>Wi-Fi</span><span>Breakfast</span><span>Bunk + Double</span></div>
-                  </div>
-                  <div class="brc-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg></div>
-                </div>
-              </label>
-
-              <!-- Group (6 guests) -->
-              <div class="brc-group-label">6 Guests</div>
-
-              <label class="booking-room-option">
-                <input type="radio" name="roomChoice" value="b5" data-price="225" data-name="Group Room (B5)">
-                <div class="booking-room-card">
-                  <div class="brc-img" style="background-image:url('assets/images/twin-room.jpg')"></div>
-                  <div class="brc-info">
-                    <div class="brc-top">
-                      <div><h3>Group Room <span class="room-code-tag">B5</span></h3><p>First Floor · 3 Bunk Beds · 6 Guests</p></div>
-                      <div class="brc-price">£225<span>/night</span></div>
-                    </div>
-                    <div class="brc-tags"><span>Wi-Fi</span><span>Breakfast</span><span>Group Value</span></div>
-                  </div>
-                  <div class="brc-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg></div>
-                </div>
-              </label>
-
-              <label class="booking-room-option">
-                <input type="radio" name="roomChoice" value="c1" data-price="225" data-name="Group Room (C1)">
-                <div class="booking-room-card">
-                  <div class="brc-img" style="background-image:url('assets/images/twin-room.jpg')"></div>
-                  <div class="brc-info">
-                    <div class="brc-top">
-                      <div><h3>Group Room <span class="room-code-tag">C1</span></h3><p>Second Floor · 3 Bunk Beds · 6 Guests</p></div>
-                      <div class="brc-price">£225<span>/night</span></div>
-                    </div>
-                    <div class="brc-tags"><span>Wi-Fi</span><span>Breakfast</span><span>Group Value</span></div>
-                  </div>
-                  <div class="brc-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg></div>
-                </div>
-              </label>
-
-              <label class="booking-room-option">
-                <input type="radio" name="roomChoice" value="b3" data-price="235" data-name="Group Room (B3)">
-                <div class="booking-room-card">
-                  <div class="brc-img" style="background-image:url('assets/images/twin-room.jpg')"></div>
-                  <div class="brc-info">
-                    <div class="brc-top">
-                      <div><h3>Group Room <span class="room-code-tag">B3</span></h3><p>First Floor · 1 Double + 2 Single + 1 Bunk · 6 Guests</p></div>
-                      <div class="brc-price">£235<span>/night</span></div>
-                    </div>
-                    <div class="brc-tags"><span>Wi-Fi</span><span>Breakfast</span><span>Mixed Beds</span></div>
-                  </div>
-                  <div class="brc-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg></div>
-                </div>
-              </label>
-
-              <label class="booking-room-option">
-                <input type="radio" name="roomChoice" value="c5" data-price="235" data-name="Group Room (C5)">
-                <div class="booking-room-card">
-                  <div class="brc-img" style="background-image:url('assets/images/twin-room.jpg')"></div>
-                  <div class="brc-info">
-                    <div class="brc-top">
-                      <div><h3>Group Room <span class="room-code-tag">C5</span></h3><p>Second Floor · 2 Bunk + 2 Single · 6 Guests</p></div>
-                      <div class="brc-price">£235<span>/night</span></div>
-                    </div>
-                    <div class="brc-tags"><span>Wi-Fi</span><span>Breakfast</span><span>Mixed Beds</span></div>
-                  </div>
-                  <div class="brc-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg></div>
-                </div>
-              </label>
-
-              <label class="booking-room-option">
-                <input type="radio" name="roomChoice" value="d4" data-price="235" data-name="Group Room (D4)">
-                <div class="booking-room-card">
-                  <div class="brc-img" style="background-image:url('assets/images/twin-room.jpg')"></div>
-                  <div class="brc-info">
-                    <div class="brc-top">
-                      <div><h3>Group Room <span class="room-code-tag">D4</span></h3><p>Third Floor · 2 Bunk + 2 Single · 6 Guests</p></div>
-                      <div class="brc-price">£235<span>/night</span></div>
-                    </div>
-                    <div class="brc-tags"><span>Wi-Fi</span><span>Breakfast</span><span>Mixed Beds</span></div>
-                  </div>
-                  <div class="brc-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg></div>
-                </div>
-              </label>
-
-              <!-- Large Group (7 guests) -->
-              <div class="brc-group-label">7 Guests — Best Per-Person Value</div>
-
-              <label class="booking-room-option">
-                <input type="radio" name="roomChoice" value="z6" data-price="275" data-name="Large Group Room (Z6)">
-                <div class="booking-room-card">
-                  <div class="brc-img" style="background-image:url('assets/images/twin-room.jpg')"></div>
-                  <div class="brc-info">
-                    <div class="brc-top">
-                      <div><h3>Large Group Room <span class="room-code-tag">Z6</span> <span class="popular-tag popular-tag-gold">Best Value</span></h3><p>Basement · 3 Bunk + 1 Single · 7 Guests · £39/person</p></div>
-                      <div class="brc-price">£275<span>/night</span></div>
-                    </div>
-                    <div class="brc-tags"><span>Wi-Fi</span><span>Breakfast</span><span>Sleeps 7</span></div>
-                  </div>
-                  <div class="brc-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg></div>
-                </div>
-              </label>
-
-              <label class="booking-room-option">
-                <input type="radio" name="roomChoice" value="c2" data-price="275" data-name="Large Group Room (C2)">
-                <div class="booking-room-card">
-                  <div class="brc-img" style="background-image:url('assets/images/twin-room.jpg')"></div>
-                  <div class="brc-info">
-                    <div class="brc-top">
-                      <div><h3>Large Group Room <span class="room-code-tag">C2</span></h3><p>Second Floor · 3 Bunk + 1 Single · 7 Guests</p></div>
-                      <div class="brc-price">£275<span>/night</span></div>
-                    </div>
-                    <div class="brc-tags"><span>Wi-Fi</span><span>Breakfast</span><span>Sleeps 7</span></div>
-                  </div>
-                  <div class="brc-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg></div>
-                </div>
-              </label>
-
+              <!-- Rooms are injected by booking.js based on guest count -->
             </div>
             <span class="field-error" id="roomErr"></span>
             <div class="step-nav">
@@ -425,92 +147,103 @@
               <div class="form-row">
                 <div class="form-group">
                   <label for="gFirstName">First Name *</label>
-                  <input type="text" id="gFirstName" placeholder="John" required>
+                  <input type="text" id="gFirstName" placeholder="John" required autocomplete="given-name">
                   <span class="field-error" id="gFirstNameErr"></span>
                 </div>
                 <div class="form-group">
                   <label for="gLastName">Last Name *</label>
-                  <input type="text" id="gLastName" placeholder="Doe" required>
+                  <input type="text" id="gLastName" placeholder="Doe" required autocomplete="family-name">
                   <span class="field-error" id="gLastNameErr"></span>
                 </div>
               </div>
               <div class="form-row">
                 <div class="form-group">
                   <label for="gEmail">Email Address *</label>
-                  <input type="email" id="gEmail" placeholder="john@example.com" required>
+                  <input type="email" id="gEmail" placeholder="john@example.com" required autocomplete="email">
                   <span class="field-error" id="gEmailErr"></span>
                 </div>
                 <div class="form-group">
                   <label for="gPhone">Phone Number *</label>
-                  <input type="tel" id="gPhone" placeholder="+1 (555) 000-0000" required>
+                  <input type="tel" id="gPhone" placeholder="+44 7700 000000" required autocomplete="tel">
                   <span class="field-error" id="gPhoneErr"></span>
                 </div>
               </div>
               <div class="form-group">
                 <label for="gCountry">Country of Residence *</label>
-                <select id="gCountry" required>
+                <select id="gCountry" required autocomplete="country-name">
                   <option value="">Select country...</option>
                   <option>United Kingdom</option>
                   <option>United States</option>
                   <option>United Arab Emirates</option>
-                  <option>France</option>
-                  <option>Germany</option>
                   <option>Australia</option>
                   <option>Canada</option>
+                  <option>France</option>
+                  <option>Germany</option>
+                  <option>India</option>
+                  <option>Ireland</option>
+                  <option>Italy</option>
+                  <option>Japan</option>
+                  <option>Netherlands</option>
+                  <option>New Zealand</option>
+                  <option>Saudi Arabia</option>
+                  <option>Singapore</option>
+                  <option>South Africa</option>
+                  <option>Spain</option>
+                  <option>Sweden</option>
+                  <option>Switzerland</option>
                   <option>Other</option>
                 </select>
                 <span class="field-error" id="gCountryErr"></span>
               </div>
               <div class="form-group">
-                <label for="gRequests">Special Requests</label>
-                <textarea id="gRequests" rows="3" placeholder="Dietary requirements, accessibility needs, special occasions..."></textarea>
+                <label for="gRequests">Special Requests <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+                <textarea id="gRequests" rows="3" placeholder="Early check-in, dietary requirements, accessibility needs, celebrations..."></textarea>
               </div>
-              <div class="form-group">
-                <label class="payment-label">Payment Method</label>
-                <div class="payment-options">
-                  <label class="payment-opt">
-                    <input type="radio" name="payment" value="card" checked>
-                    <span>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                      Credit / Debit Card
-                    </span>
-                  </label>
-                  <label class="payment-opt">
-                    <input type="radio" name="payment" value="bank">
-                    <span>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><rect x="2" y="5" width="20" height="14" rx="2"/><polyline points="2 10 22 10"/></svg>
-                      Bank Transfer
-                    </span>
-                  </label>
-                  <label class="payment-opt">
-                    <input type="radio" name="payment" value="payathotel">
-                    <span>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-                      Pay at Hotel
-                    </span>
-                  </label>
-                </div>
+              <label class="payment-label" style="margin-top:8px">Payment Method</label>
+              <div class="payment-options">
+                <label class="payment-opt">
+                  <input type="radio" name="payment" value="card" checked>
+                  <span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="18" height="18"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                    Credit / Debit Card
+                  </span>
+                </label>
+                <label class="payment-opt">
+                  <input type="radio" name="payment" value="bank">
+                  <span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="18" height="18"><rect x="2" y="5" width="20" height="14" rx="2"/><polyline points="2 10 22 10"/></svg>
+                    Bank Transfer
+                  </span>
+                </label>
+                <label class="payment-opt">
+                  <input type="radio" name="payment" value="payathotel">
+                  <span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="18" height="18"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                    Pay at Hotel
+                  </span>
+                </label>
               </div>
-              <div class="step-nav">
+              <div class="step-nav" style="margin-top:24px">
                 <button class="btn btn-outline-dark btn-sm" id="backToStep2">&larr; Back</button>
                 <button class="btn btn-primary" id="toStep4">Review Booking &rarr;</button>
               </div>
             </div>
           </div>
 
-          <!-- Step 4: Confirmation -->
+          <!-- Step 4: Review & Confirm -->
           <div class="booking-step hidden" id="step4">
             <div class="step-header">
               <p class="section-label">Step 4 of 4</p>
-              <h2>Review & Confirm</h2>
+              <h2>Review &amp; Confirm</h2>
             </div>
+            <p style="font-size:0.85rem;color:var(--muted);margin-bottom:20px">Please review your booking details before confirming. A confirmation email will be sent to your address.</p>
             <div class="confirm-summary" id="confirmSummary">
-              <!-- Dynamically populated -->
+              <!-- Populated by JS -->
             </div>
             <div class="confirm-terms">
               <label class="terms-label">
                 <input type="checkbox" id="termsCheck">
-                <span>I agree to the <a href="#">Terms & Conditions</a> and <a href="#">Cancellation Policy</a>. A 50% deposit will be charged upon confirmation.</span>
+                <span>I agree to the <a href="#">Terms &amp; Conditions</a> and understand that a 50% deposit may be requested to secure the booking.</span>
               </label>
               <span class="field-error" id="termsErr"></span>
             </div>
@@ -526,10 +259,14 @@
               <div class="success-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"><polyline points="20 6 9 17 4 12"/></svg>
               </div>
-              <h2>Reservation Confirmed!</h2>
-              <p>Thank you for choosing Bluedaws Private Hotel. A confirmation has been sent to your email address. Our reservations team will be in touch within 2 hours.</p>
+              <h2>Booking Received!</h2>
+              <p>Thank you for choosing Bluedaws Private Hotel. Your booking request has been received and our team will confirm within <strong>2 hours</strong>.</p>
+              <p style="margin-top:-8px">A confirmation has been sent to <strong id="successEmail"></strong></p>
               <div class="success-ref" id="successRef"></div>
-              <div class="success-actions">
+              <div class="success-ref" style="margin-top:12px;font-size:0.8rem;background:rgba(201,169,110,0.08);color:var(--body)">
+                Check-in from 1:00 PM &nbsp;&middot;&nbsp; Check-out by 12:00 PM &nbsp;&middot;&nbsp; Address: Bluedaws Private Hotel, Paddington, London
+              </div>
+              <div class="success-actions" style="margin-top:32px">
                 <a href="index.html" class="btn btn-primary">Return to Home</a>
                 <a href="contact.html" class="btn btn-outline-dark">Contact Us</a>
               </div>
@@ -543,7 +280,7 @@
           <div class="summary-card">
             <h3>Booking Summary</h3>
             <div class="summary-section" id="summaryDates">
-              <p class="summary-empty">Select your dates to see pricing.</p>
+              <p class="summary-empty">Select your dates above.</p>
             </div>
             <div class="summary-divider"></div>
             <div class="summary-section" id="summaryRoom">
@@ -554,13 +291,14 @@
               <span>Estimated Total</span>
               <strong id="totalAmount">—</strong>
             </div>
-            <p class="summary-note">Prices in GBP, VAT included. Breakfast included. Check-in from 1:00 PM · Check-out by 12:00 PM.</p>
+            <p class="summary-note">Prices in GBP &middot; VAT included &middot; Breakfast included &middot; Check-in 1 PM &middot; Check-out 12 PM</p>
           </div>
           <div class="summary-help">
             <p>Need help booking?</p>
             <a href="mailto:reservations@bluedawshotel.com">reservations@bluedawshotel.com</a>
           </div>
         </aside>
+
       </div>
     </div>
   </div>
@@ -587,10 +325,10 @@
         <div class="footer-col">
           <h4>What's Included</h4>
           <ul>
-            <li><a href="#">Free Wi-Fi</a></li>
-            <li><a href="#">Breakfast</a></li>
-            <li><a href="#">Luggage Storage</a></li>
-            <li><a href="#">In-Room Essentials</a></li>
+            <li>Free Wi-Fi</li>
+            <li>Breakfast</li>
+            <li>Luggage Storage</li>
+            <li>In-Room Essentials</li>
           </ul>
         </div>
         <div class="footer-col">
@@ -613,7 +351,10 @@
     </div>
   </footer>
 
+  <!-- EmailJS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script src="js/main.js?v=3"></script>
+  <script src="js/emailjs-config.js?v=3"></script>
   <script src="js/booking.js?v=3"></script>
 </body>
 </html>

@@ -1,27 +1,31 @@
-// ---------- Real room data ----------
+// ======================================================================
+// BLUEDAWS HOTEL — Booking Engine
+// ======================================================================
+
+// ---------- Room data ----------
 const ROOMS = {
-  d6:  { name: 'Single Room (D6)',             bed: 'Third Floor · 1 Single Bed',             max: 1, price: 85  },
-  c3:  { name: 'Twin Room (C3)',               bed: 'Second Floor · 2 Single Beds',            max: 2, price: 110 },
-  d3:  { name: 'Twin Room (D3)',               bed: 'Third Floor · 2 Single Beds',             max: 2, price: 110 },
-  b6:  { name: 'Triple Room (B6)',             bed: 'First Floor · 1 Bunk + 1 Single',         max: 3, price: 135 },
-  c6:  { name: 'Triple Room (C6)',             bed: 'Second Floor · 1 Bunk + 1 Single',        max: 3, price: 135 },
-  b8:  { name: 'Double + Single (B8)',         bed: 'First Floor · 1 Double + 1 Single',       max: 3, price: 145 },
-  b7:  { name: 'Family Room (B7)',             bed: 'First Floor · 1 Double + 2 Single',       max: 4, price: 160 },
-  e2:  { name: 'Family Room (E2)',             bed: 'Fourth Floor · 1 Double + 2 Single',      max: 4, price: 160 },
-  e3:  { name: 'Family Room (E3)',             bed: 'Fourth Floor · 1 Double + 2 Single',      max: 4, price: 160 },
-  b2:  { name: 'Large Family Room (B2)',       bed: 'First Floor · 1 Double + 1 Single + 1 Bunk', max: 5, price: 195 },
-  b4:  { name: 'Large Family Room (B4)',       bed: 'First Floor · 1 Double + 1 Single + 1 Bunk', max: 5, price: 195 },
-  b5:  { name: 'Group Room (B5)',              bed: 'First Floor · 3 Bunk Beds',               max: 6, price: 225 },
-  c1:  { name: 'Group Room (C1)',              bed: 'Second Floor · 3 Bunk Beds',              max: 6, price: 225 },
-  c4:  { name: 'Group Room (C4)',              bed: 'Second Floor · 3 Bunk Beds',              max: 6, price: 225 },
-  d1:  { name: 'Group Room (D1)',              bed: 'Third Floor · 3 Bunk Beds',               max: 6, price: 225 },
-  d2:  { name: 'Group Room (D2)',              bed: 'Third Floor · 3 Bunk Beds',               max: 6, price: 225 },
-  d5:  { name: 'Group Room (D5)',              bed: 'Third Floor · 3 Bunk Beds',               max: 6, price: 225 },
-  b3:  { name: 'Group Room (B3)',              bed: 'First Floor · 1 Double + 2 Single + 1 Bunk', max: 6, price: 235 },
-  c5:  { name: 'Group Room (C5)',              bed: 'Second Floor · 2 Bunk + 2 Single',        max: 6, price: 235 },
-  d4:  { name: 'Group Room (D4)',              bed: 'Third Floor · 2 Bunk + 2 Single',         max: 6, price: 235 },
-  z6:  { name: 'Large Group Room (Z6)',        bed: 'Basement · 3 Bunk + 1 Single',            max: 7, price: 275 },
-  c2:  { name: 'Large Group Room (C2)',        bed: 'Second Floor · 3 Bunk + 1 Single',        max: 7, price: 275 },
+  d6:  { name: 'Single Room',       code: 'D6', floor: 'Third Floor',   bed: '1 Single Bed',                    max: 1, price: 85,  img: 'double-room', tags: ['1 Guest',   'Single Bed'] },
+  c3:  { name: 'Twin Room',         code: 'C3', floor: 'Second Floor',  bed: '2 Single Beds',                   max: 2, price: 110, img: 'twin-room',   tags: ['2 Guests',  'Twin Beds'] },
+  d3:  { name: 'Twin Room',         code: 'D3', floor: 'Third Floor',   bed: '2 Single Beds',                   max: 2, price: 110, img: 'twin-room',   tags: ['2 Guests',  'Twin Beds'] },
+  b6:  { name: 'Triple Room',       code: 'B6', floor: 'First Floor',   bed: '1 Bunk + 1 Single',              max: 3, price: 135, img: 'twin-room',   tags: ['3 Guests',  'Bunk Beds'] },
+  c6:  { name: 'Triple Room',       code: 'C6', floor: 'Second Floor',  bed: '1 Bunk + 1 Single',              max: 3, price: 135, img: 'twin-room',   tags: ['3 Guests',  'Bunk Beds'] },
+  b8:  { name: 'Double + Single',   code: 'B8', floor: 'First Floor',   bed: '1 Double + 1 Single',            max: 3, price: 145, img: 'double-room', tags: ['3 Guests',  'Double Bed'] },
+  b7:  { name: 'Family Room',       code: 'B7', floor: 'First Floor',   bed: '1 Double + 2 Single',            max: 4, price: 160, img: 'double-room', tags: ['4 Guests',  'Family', 'Popular'], popular: true },
+  e2:  { name: 'Family Room',       code: 'E2', floor: 'Fourth Floor',  bed: '1 Double + 2 Single',            max: 4, price: 160, img: 'double-room', tags: ['4 Guests',  'Family'] },
+  e3:  { name: 'Family Room',       code: 'E3', floor: 'Fourth Floor',  bed: '1 Double + 2 Single',            max: 4, price: 160, img: 'double-room', tags: ['4 Guests',  'Family'] },
+  b2:  { name: 'Large Family Room', code: 'B2', floor: 'First Floor',   bed: '1 Double + 1 Single + 1 Bunk',  max: 5, price: 195, img: 'double-room', tags: ['5 Guests',  'Bunk + Double'] },
+  b4:  { name: 'Large Family Room', code: 'B4', floor: 'First Floor',   bed: '1 Double + 1 Single + 1 Bunk',  max: 5, price: 195, img: 'double-room', tags: ['5 Guests',  'Bunk + Double'] },
+  b5:  { name: 'Group Room',        code: 'B5', floor: 'First Floor',   bed: '3 Bunk Beds (6 Beds)',           max: 6, price: 225, img: 'twin-room',   tags: ['6 Guests',  'Bunk Beds'] },
+  c1:  { name: 'Group Room',        code: 'C1', floor: 'Second Floor',  bed: '3 Bunk Beds (6 Beds)',           max: 6, price: 225, img: 'twin-room',   tags: ['6 Guests',  'Bunk Beds'] },
+  c4:  { name: 'Group Room',        code: 'C4', floor: 'Second Floor',  bed: '3 Bunk Beds (6 Beds)',           max: 6, price: 225, img: 'twin-room',   tags: ['6 Guests',  'Bunk Beds'] },
+  d1:  { name: 'Group Room',        code: 'D1', floor: 'Third Floor',   bed: '3 Bunk Beds (6 Beds)',           max: 6, price: 225, img: 'twin-room',   tags: ['6 Guests',  'Bunk Beds'] },
+  d2:  { name: 'Group Room',        code: 'D2', floor: 'Third Floor',   bed: '3 Bunk Beds (6 Beds)',           max: 6, price: 225, img: 'twin-room',   tags: ['6 Guests',  'Bunk Beds'] },
+  d5:  { name: 'Group Room',        code: 'D5', floor: 'Third Floor',   bed: '3 Bunk Beds (6 Beds)',           max: 6, price: 225, img: 'twin-room',   tags: ['6 Guests',  'Bunk Beds'] },
+  b3:  { name: 'Group Room',        code: 'B3', floor: 'First Floor',   bed: '1 Double + 2 Single + 1 Bunk',  max: 6, price: 235, img: 'twin-room',   tags: ['6 Guests',  'Mixed Beds'] },
+  c5:  { name: 'Group Room',        code: 'C5', floor: 'Second Floor',  bed: '2 Bunk + 2 Single (6 Beds)',    max: 6, price: 235, img: 'twin-room',   tags: ['6 Guests',  'Mixed Beds'] },
+  d4:  { name: 'Group Room',        code: 'D4', floor: 'Third Floor',   bed: '2 Bunk + 2 Single (6 Beds)',    max: 6, price: 235, img: 'twin-room',   tags: ['6 Guests',  'Mixed Beds'] },
+  z6:  { name: 'Large Group Room',  code: 'Z6', floor: 'Basement',      bed: '3 Bunk + 1 Single (7 Beds)',    max: 7, price: 275, img: 'twin-room',   tags: ['7 Guests',  'Largest Room'] },
+  c2:  { name: 'Large Group Room',  code: 'C2', floor: 'Second Floor',  bed: '3 Bunk + 1 Single (7 Beds)',    max: 7, price: 275, img: 'twin-room',   tags: ['7 Guests',  'Largest Room'] },
 };
 
 // ---------- State ----------
@@ -29,14 +33,92 @@ const state = {
   checkin: '', checkout: '', nights: 0,
   adults: 2, children: 0,
   roomKey: null, payment: 'card',
-  guest: { firstName: '', lastName: '', email: '', phone: '', country: '' },
+  guest: { firstName: '', lastName: '', email: '', phone: '', country: '', requests: '' },
+  bookingRef: '',
+  emailSent: false,
 };
+
+// ---------- Helpers ----------
+function fmtDate(s) {
+  return new Date(s + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+function fmtDateShort(s) {
+  return new Date(s + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function genRef() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let r = 'BDW-';
+  for (let i = 0; i < 6; i++) r += chars[Math.floor(Math.random() * chars.length)];
+  return r;
+}
+
+// ---------- EmailJS sending ----------
+function sendBookingEmails(ref) {
+  if (typeof emailjs === 'undefined' || !EMAILJS || EMAILJS.publicKey === 'YOUR_PUBLIC_KEY') {
+    return Promise.resolve({ skipped: true });
+  }
+  const room = ROOMS[state.roomKey];
+  const total = state.nights * room.price;
+  const guestStr = `${state.adults} Adult${state.adults !== 1 ? 's' : ''}${state.children > 0 ? `, ${state.children} Child${state.children !== 1 ? 'ren' : ''}` : ''}`;
+  const payLabel = { card: 'Credit / Debit Card', bank: 'Bank Transfer', payathotel: 'Pay at Hotel' };
+  const now = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+  const baseParams = {
+    ref,
+    guest_name:  `${state.guest.firstName} ${state.guest.lastName}`,
+    guest_email: state.guest.email,
+    guest_phone: state.guest.phone,
+    room_name:   `${room.name} (${room.code}) — ${room.floor}`,
+    checkin:     fmtDateShort(state.checkin),
+    checkout:    fmtDateShort(state.checkout),
+    nights:      String(state.nights),
+    guests:      guestStr,
+    total:       total.toLocaleString(),
+    payment:     payLabel[state.payment] || state.payment,
+    requests:    state.guest.requests || 'None',
+    date_received: now,
+  };
+
+  const hotelEmail = emailjs.send(EMAILJS.serviceId, EMAILJS.bookingNotificationTemplate, {
+    ...baseParams, to_email: EMAILJS.hotelEmail,
+  });
+
+  const guestEmail = emailjs.send(EMAILJS.serviceId, EMAILJS.bookingConfirmTemplate, {
+    ...baseParams, to_email: state.guest.email, to_name: state.guest.firstName,
+  });
+
+  return Promise.allSettled([hotelEmail, guestEmail]);
+}
+
+function sendContactEmail(data) {
+  if (typeof emailjs === 'undefined' || !EMAILJS || EMAILJS.publicKey === 'YOUR_PUBLIC_KEY') {
+    return Promise.resolve({ skipped: true });
+  }
+  return emailjs.send(EMAILJS.serviceId, EMAILJS.contactTemplate, {
+    to_email:     EMAILJS.hotelEmail,
+    from_name:    `${data.firstName} ${data.lastName}`,
+    from_email:   data.email,
+    phone:        data.phone || 'Not provided',
+    subject_label: data.subjectLabel,
+    message:      data.message,
+  });
+}
+
+// ---------- Init EmailJS ----------
+if (typeof emailjs !== 'undefined' && EMAILJS && EMAILJS.publicKey !== 'YOUR_PUBLIC_KEY') {
+  emailjs.init({ publicKey: EMAILJS.publicKey });
+}
 
 // ---------- Step management ----------
 function showStep(n) {
   document.querySelectorAll('.booking-step').forEach((el, i) => {
     el.classList.toggle('hidden', i + 1 !== n);
   });
+  const successEl = document.getElementById('stepSuccess');
+  if (successEl) successEl.classList.add('hidden');
+
   document.querySelectorAll('.step').forEach((el, i) => {
     el.classList.remove('active', 'completed');
     if (i + 1 < n) el.classList.add('completed');
@@ -45,92 +127,183 @@ function showStep(n) {
   document.querySelectorAll('.step-line').forEach((el, i) => {
     el.classList.toggle('completed', i + 1 < n);
   });
-  if (n === 5) {
+
+  if (n === 5 && successEl) {
     document.querySelectorAll('.booking-step').forEach(el => el.classList.add('hidden'));
-    document.getElementById('stepSuccess').classList.remove('hidden');
+    successEl.classList.remove('hidden');
     document.querySelectorAll('.step, .step-line').forEach(el => el.classList.add('completed'));
   }
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  window.scrollTo({ top: 300, behavior: 'smooth' });
 }
 
-// ---------- Step 1: Dates ----------
-const checkin  = document.getElementById('checkin');
-const checkout = document.getElementById('checkout');
+// ---------- Date inputs ----------
+const checkinEl  = document.getElementById('checkin');
+const checkoutEl = document.getElementById('checkout');
 const durationDisplay = document.getElementById('durationDisplay');
 
-const today = new Date().toISOString().split('T')[0];
-if (checkin)  checkin.min  = today;
-if (checkout) checkout.min = today;
+const todayStr = new Date().toISOString().split('T')[0];
+if (checkinEl)  checkinEl.min  = todayStr;
+if (checkoutEl) checkoutEl.min = todayStr;
 
 // Pre-fill from URL params
 const urlParams = new URLSearchParams(window.location.search);
-if (urlParams.get('checkin')  && checkin)  checkin.value  = urlParams.get('checkin');
-if (urlParams.get('checkout') && checkout) checkout.value = urlParams.get('checkout');
-
-// Pre-select room from URL
-const roomParam = urlParams.get('room');
-if (roomParam && ROOMS[roomParam]) {
-  const radio = document.querySelector(`input[name="roomChoice"][value="${roomParam}"]`);
-  if (radio) radio.checked = true;
-  state.roomKey = roomParam;
+if (urlParams.get('checkin')  && checkinEl)  checkinEl.value  = urlParams.get('checkin');
+if (urlParams.get('checkout') && checkoutEl) checkoutEl.value = urlParams.get('checkout');
+if (urlParams.get('adults')) {
+  const aEl = document.getElementById('adults');
+  if (aEl) aEl.value = urlParams.get('adults');
 }
 
 function calcNights() {
-  if (!checkin.value || !checkout.value) { durationDisplay.classList.remove('visible'); return 0; }
-  const diff = (new Date(checkout.value) - new Date(checkin.value)) / 86400000;
-  if (diff <= 0) { durationDisplay.classList.remove('visible'); return 0; }
-  durationDisplay.textContent = `${diff} night${diff !== 1 ? 's' : ''} · ${formatDate(checkin.value)} → ${formatDate(checkout.value)}`;
-  durationDisplay.classList.add('visible');
+  if (!checkinEl.value || !checkoutEl.value) {
+    if (durationDisplay) durationDisplay.classList.remove('visible');
+    return 0;
+  }
+  const diff = (new Date(checkoutEl.value) - new Date(checkinEl.value)) / 86400000;
+  if (diff <= 0) {
+    if (durationDisplay) durationDisplay.classList.remove('visible');
+    return 0;
+  }
+  if (durationDisplay) {
+    durationDisplay.innerHTML = `<strong>${diff} night${diff !== 1 ? 's' : ''}</strong> &nbsp;·&nbsp; ${fmtDateShort(checkinEl.value)} &rarr; ${fmtDateShort(checkoutEl.value)}`;
+    durationDisplay.classList.add('visible');
+  }
   return diff;
 }
 
-function formatDate(s) {
-  return new Date(s).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+checkinEl.addEventListener('change', () => {
+  checkoutEl.min = checkinEl.value;
+  if (checkoutEl.value && checkoutEl.value <= checkinEl.value) {
+    const d = new Date(checkinEl.value + 'T12:00:00');
+    d.setDate(d.getDate() + 1);
+    checkoutEl.value = d.toISOString().split('T')[0];
+  }
+  state.nights = calcNights();
+  updateSummary();
+});
+checkoutEl.addEventListener('change', () => {
+  state.nights = calcNights();
+  updateSummary();
+});
+
+// ---------- Render room cards dynamically ----------
+function renderRooms(totalGuests) {
+  const container = document.getElementById('bookingRooms');
+  if (!container) return;
+
+  const badge = document.getElementById('guestFilterBadge');
+  if (badge) {
+    badge.textContent = `Showing rooms for ${totalGuests} guest${totalGuests !== 1 ? 's' : ''}`;
+  }
+
+  const eligible = Object.entries(ROOMS).filter(([, r]) => r.max >= totalGuests);
+
+  if (eligible.length === 0) {
+    container.innerHTML = `<p class="summary-empty" style="padding:24px 0">No rooms available for ${totalGuests} guests. Please call us to arrange a group stay.</p>`;
+    return;
+  }
+
+  // Group by max-guest tier
+  const groups = {};
+  eligible.forEach(([key, r]) => {
+    const tier = r.max;
+    if (!groups[tier]) groups[tier] = [];
+    groups[tier].push([key, r]);
+  });
+
+  const tierLabels = { 1: '1 Guest', 2: '2 Guests', 3: '3 Guests', 4: '4 Guests', 5: '5 Guests', 6: '6 Guests', 7: '7 Guests' };
+
+  let html = '';
+  Object.keys(groups).sort((a, b) => a - b).forEach(tier => {
+    html += `<div class="brc-group-label">${tierLabels[tier] || tier + ' Guests'}</div>`;
+    groups[tier].forEach(([key, r]) => {
+      const imgSrc = `assets/images/${r.img}.jpg`;
+      const popularBadge = r.popular ? `<span class="popular-tag">Popular</span>` : '';
+      const tagHtml = r.tags.filter(t => !t.includes('Guests')).map(t => `<span>${t}</span>`).join('');
+      html += `
+        <label class="booking-room-option">
+          <input type="radio" name="roomChoice" value="${key}" data-price="${r.price}" data-name="${r.name} (${r.code})">
+          <div class="booking-room-card">
+            <div class="brc-img" style="background-image:url('${imgSrc}')"></div>
+            <div class="brc-info">
+              <div class="brc-top">
+                <div>
+                  <h3>${r.name} <span class="room-code-tag">${r.code}</span> ${popularBadge}</h3>
+                  <p>${r.floor} &middot; ${r.bed} &middot; up to ${r.max} Guest${r.max !== 1 ? 's' : ''}</p>
+                </div>
+                <div class="brc-price">&pound;${r.price}<span>/night</span></div>
+              </div>
+              <div class="brc-tags"><span>Wi-Fi</span><span>Breakfast</span>${tagHtml}</div>
+            </div>
+            <div class="brc-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg></div>
+          </div>
+        </label>`;
+    });
+  });
+
+  container.innerHTML = html;
+
+  // Re-select room if already chosen
+  if (state.roomKey) {
+    const radio = container.querySelector(`input[value="${state.roomKey}"]`);
+    if (radio) radio.checked = true;
+  }
 }
 
-checkin.addEventListener('change', () => {
-  checkout.min = checkin.value;
-  if (checkout.value && checkout.value <= checkin.value) {
-    const d = new Date(checkin.value); d.setDate(d.getDate() + 1);
-    checkout.value = d.toISOString().split('T')[0];
-  }
-  state.nights = calcNights(); updateSummary();
-});
-checkout.addEventListener('change', () => { state.nights = calcNights(); updateSummary(); });
-
+// ---------- Step 1 → Step 2 ----------
 document.getElementById('toStep2').addEventListener('click', () => {
   let ok = true;
-  if (!checkin.value)  { document.getElementById('checkinErr').textContent  = 'Please select a check-in date.';  ok = false; }
-  else                   document.getElementById('checkinErr').textContent  = '';
-  if (!checkout.value) { document.getElementById('checkoutErr').textContent = 'Please select a check-out date.'; ok = false; }
-  else if (checkout.value <= checkin.value) { document.getElementById('checkoutErr').textContent = 'Check-out must be after check-in.'; ok = false; }
-  else document.getElementById('checkoutErr').textContent = '';
+  const ciErr = document.getElementById('checkinErr');
+  const coErr = document.getElementById('checkoutErr');
+
+  if (!checkinEl.value) {
+    ciErr.textContent = 'Please select a check-in date.'; ok = false;
+  } else {
+    ciErr.textContent = '';
+  }
+  if (!checkoutEl.value) {
+    coErr.textContent = 'Please select a check-out date.'; ok = false;
+  } else if (checkoutEl.value <= checkinEl.value) {
+    coErr.textContent = 'Check-out must be after check-in.'; ok = false;
+  } else {
+    coErr.textContent = '';
+  }
   if (!ok) return;
-  state.checkin  = checkin.value;
-  state.checkout = checkout.value;
+
+  state.checkin  = checkinEl.value;
+  state.checkout = checkoutEl.value;
   state.nights   = calcNights();
   state.adults   = +document.getElementById('adults').value;
   state.children = +document.getElementById('children').value;
-  updateSummary(); showStep(2);
+
+  renderRooms(state.adults + state.children);
+  updateSummary();
+  showStep(2);
 });
 
-// ---------- Step 2: Room ----------
+// ---------- Step 2 → Step 3 ----------
 document.getElementById('toStep3').addEventListener('click', () => {
   const sel = document.querySelector('input[name="roomChoice"]:checked');
-  if (!sel) { document.getElementById('roomErr').textContent = 'Please select a room to continue.'; return; }
-  document.getElementById('roomErr').textContent = '';
+  const errEl = document.getElementById('roomErr');
+  if (!sel) {
+    if (errEl) errEl.textContent = 'Please select a room to continue.';
+    return;
+  }
+  if (errEl) errEl.textContent = '';
   state.roomKey = sel.value;
-  updateSummary(); showStep(3);
+  updateSummary();
+  showStep(3);
 });
 document.getElementById('backToStep1').addEventListener('click', () => showStep(1));
 
-// ---------- Step 3: Details ----------
+// ---------- Step 3 → Step 4 ----------
 document.getElementById('toStep4').addEventListener('click', () => {
   const fields = [
-    { id: 'gFirstName', errId: 'gFirstNameErr', msg: 'First name required.' },
-    { id: 'gLastName',  errId: 'gLastNameErr',  msg: 'Last name required.' },
-    { id: 'gEmail',     errId: 'gEmailErr',     msg: 'Valid email required.' },
-    { id: 'gPhone',     errId: 'gPhoneErr',     msg: 'Phone number required.' },
+    { id: 'gFirstName', errId: 'gFirstNameErr', msg: 'First name is required.' },
+    { id: 'gLastName',  errId: 'gLastNameErr',  msg: 'Last name is required.' },
+    { id: 'gEmail',     errId: 'gEmailErr',     msg: 'A valid email address is required.' },
+    { id: 'gPhone',     errId: 'gPhoneErr',     msg: 'Phone number is required.' },
     { id: 'gCountry',   errId: 'gCountryErr',   msg: 'Please select your country.' },
   ];
   let ok = true;
@@ -143,96 +316,142 @@ document.getElementById('toStep4').addEventListener('click', () => {
     if (!valid) ok = false;
   });
   if (!ok) return;
+
   state.guest.firstName = document.getElementById('gFirstName').value.trim();
   state.guest.lastName  = document.getElementById('gLastName').value.trim();
   state.guest.email     = document.getElementById('gEmail').value.trim();
   state.guest.phone     = document.getElementById('gPhone').value.trim();
   state.guest.country   = document.getElementById('gCountry').value;
+  state.guest.requests  = (document.getElementById('gRequests') || {}).value || '';
   const payEl = document.querySelector('input[name="payment"]:checked');
   state.payment = payEl ? payEl.value : 'card';
-  buildConfirmSummary(); showStep(4);
+
+  buildConfirmSummary();
+  showStep(4);
 });
 document.getElementById('backToStep2').addEventListener('click', () => showStep(2));
 
-// ---------- Step 4: Confirm ----------
+// ---------- Confirm summary ----------
 function buildConfirmSummary() {
   const room  = ROOMS[state.roomKey];
   const total = room ? state.nights * room.price : 0;
   const payLabel = { card: 'Credit / Debit Card', bank: 'Bank Transfer', payathotel: 'Pay at Hotel' };
   const guestStr = `${state.adults} Adult${state.adults !== 1 ? 's' : ''}${state.children > 0 ? `, ${state.children} Child${state.children !== 1 ? 'ren' : ''}` : ''}`;
-  document.getElementById('confirmSummary').innerHTML = `
+
+  const el = document.getElementById('confirmSummary');
+  if (!el) return;
+  el.innerHTML = `
     <div class="confirm-row"><label>Guest</label><span>${state.guest.firstName} ${state.guest.lastName}</span></div>
     <div class="confirm-row"><label>Email</label><span>${state.guest.email}</span></div>
     <div class="confirm-row"><label>Phone</label><span>${state.guest.phone}</span></div>
     <div class="confirm-row"><label>Country</label><span>${state.guest.country}</span></div>
-    <div class="confirm-row"><label>Room</label><span>${room ? room.name : '—'}</span></div>
-    <div class="confirm-row"><label>Beds</label><span>${room ? room.bed : '—'}</span></div>
-    <div class="confirm-row"><label>Check-in</label><span>${formatDate(state.checkin)}</span></div>
-    <div class="confirm-row"><label>Check-out</label><span>${formatDate(state.checkout)}</span></div>
+    <div class="confirm-row"><label>Room</label><span>${room ? room.name + ' (' + room.code + ')' : '—'}</span></div>
+    <div class="confirm-row"><label>Floor / Beds</label><span>${room ? room.floor + ' · ' + room.bed : '—'}</span></div>
+    <div class="confirm-row"><label>Check-in</label><span>${fmtDate(state.checkin)} from 1:00 PM</span></div>
+    <div class="confirm-row"><label>Check-out</label><span>${fmtDate(state.checkout)} by 12:00 PM</span></div>
     <div class="confirm-row"><label>Duration</label><span>${state.nights} night${state.nights !== 1 ? 's' : ''}</span></div>
     <div class="confirm-row"><label>Guests</label><span>${guestStr}</span></div>
-    <div class="confirm-row"><label>Rate</label><span>£${room ? room.price : 0}/night</span></div>
+    <div class="confirm-row"><label>Rate</label><span>&pound;${room ? room.price : 0}/night</span></div>
     <div class="confirm-row"><label>Payment</label><span>${payLabel[state.payment] || state.payment}</span></div>
-    <div class="confirm-row confirm-total"><label>Total</label><span>£${total.toLocaleString()}</span></div>
+    ${state.guest.requests ? `<div class="confirm-row"><label>Requests</label><span>${state.guest.requests}</span></div>` : ''}
+    <div class="confirm-row confirm-total"><label>Total</label><span>&pound;${total.toLocaleString()}</span></div>
   `;
 }
 
-document.getElementById('confirmBooking').addEventListener('click', () => {
+// ---------- Final Confirm button ----------
+document.getElementById('confirmBooking').addEventListener('click', async () => {
   const terms = document.getElementById('termsCheck');
-  if (!terms.checked) { document.getElementById('termsErr').textContent = 'Please agree to the terms and conditions.'; return; }
-  document.getElementById('termsErr').textContent = '';
+  const termsErr = document.getElementById('termsErr');
+  if (!terms.checked) {
+    termsErr.textContent = 'Please agree to the terms and conditions.';
+    return;
+  }
+  termsErr.textContent = '';
+
   const btn = document.getElementById('confirmBooking');
-  btn.textContent = 'Processing…'; btn.disabled = true;
-  setTimeout(() => {
-    const ref = 'BDW-' + Date.now().toString(36).toUpperCase().slice(-6);
-    document.getElementById('successRef').textContent = `Booking Reference: ${ref}`;
+  btn.textContent = 'Sending…';
+  btn.disabled = true;
+
+  const ref = genRef();
+  state.bookingRef = ref;
+
+  try {
+    const results = await sendBookingEmails(ref);
+    const allOk = !results || results.skipped ||
+      results.every(r => r.status === 'fulfilled');
+
+    const refEl   = document.getElementById('successRef');
+    const emailEl = document.getElementById('successEmail');
+    if (refEl)   refEl.textContent   = `Booking Reference: ${ref}`;
+    if (emailEl) emailEl.textContent = state.guest.email;
+
     showStep(5);
-  }, 1500);
+  } catch (err) {
+    // Even if email fails, show success — email can be sent manually
+    const refEl = document.getElementById('successRef');
+    if (refEl) refEl.textContent = `Booking Reference: ${ref}`;
+    showStep(5);
+  } finally {
+    btn.textContent = 'Confirm Booking';
+    btn.disabled = false;
+  }
 });
 document.getElementById('backToStep3').addEventListener('click', () => showStep(3));
 
-// ---------- Summary Panel ----------
+// ---------- Summary panel ----------
 function updateSummary() {
-  const datesEl = document.getElementById('summaryDates');
-  const roomEl  = document.getElementById('summaryRoom');
-  const totalEl = document.getElementById('summaryTotal');
+  const datesEl  = document.getElementById('summaryDates');
+  const roomEl   = document.getElementById('summaryRoom');
+  const totalEl  = document.getElementById('summaryTotal');
   const totalAmt = document.getElementById('totalAmount');
   const totalDiv = document.getElementById('summaryTotalDivider');
 
   if (state.checkin && state.checkout && state.nights > 0) {
     const g = `${state.adults} adult${state.adults !== 1 ? 's' : ''}${state.children > 0 ? `, ${state.children} child${state.children !== 1 ? 'ren' : ''}` : ''}`;
     datesEl.innerHTML = `
-      <div class="summary-item"><label>Check-in</label><span>${formatDate(state.checkin)}</span></div>
-      <div class="summary-item"><label>Check-out</label><span>${formatDate(state.checkout)}</span></div>
+      <div class="summary-item"><label>Check-in</label><span>${fmtDateShort(state.checkin)}</span></div>
+      <div class="summary-item"><label>Check-out</label><span>${fmtDateShort(state.checkout)}</span></div>
       <div class="summary-item"><label>Nights</label><span>${state.nights}</span></div>
       <div class="summary-item"><label>Guests</label><span>${g}</span></div>
     `;
   } else {
-    datesEl.innerHTML = '<p class="summary-empty">Select your dates to see pricing.</p>';
+    datesEl.innerHTML = '<p class="summary-empty">Select your dates above.</p>';
   }
 
   const room = state.roomKey ? ROOMS[state.roomKey] : null;
   if (room) {
     roomEl.innerHTML = `
-      <div class="summary-item"><label>Room</label><span>${room.name}</span></div>
+      <div class="summary-item"><label>Room</label><span>${room.name} (${room.code})</span></div>
       <div class="summary-item"><label>Beds</label><span>${room.bed}</span></div>
-      <div class="summary-item"><label>Rate</label><span>£${room.price}/night</span></div>
+      <div class="summary-item"><label>Rate</label><span>&pound;${room.price}/night</span></div>
     `;
-    if (state.nights > 0) {
+    if (state.nights > 0 && totalEl && totalAmt) {
       totalEl.style.display  = 'flex';
-      totalDiv.style.display = 'block';
+      if (totalDiv) totalDiv.style.display = 'block';
       totalAmt.textContent   = `£${(state.nights * room.price).toLocaleString()}`;
     }
   } else {
     roomEl.innerHTML = '<p class="summary-empty">No room selected yet.</p>';
-    totalEl.style.display  = 'none';
-    totalDiv.style.display = 'none';
+    if (totalEl) totalEl.style.display  = 'none';
+    if (totalDiv) totalDiv.style.display = 'none';
   }
 }
 
-// Init
-if (checkin.value && checkout.value) state.nights = calcNights();
-if (state.roomKey) {
-  /* radio already checked by URL param above */
-}
+// ---------- Field validation helpers for step 3 ----------
+['gFirstName','gLastName','gEmail','gPhone'].forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('input', () => {
+    if (el.classList.contains('error')) {
+      let valid = el.value.trim() !== '';
+      if (id === 'gEmail') valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(el.value.trim());
+      if (valid) { el.classList.remove('error'); document.getElementById(id + 'Err').textContent = ''; }
+    }
+  });
+});
+
+// ---------- Init ----------
+if (checkinEl.value && checkoutEl.value) state.nights = calcNights();
+const totalGuests = (+document.getElementById('adults').value || 2) + (+document.getElementById('children').value || 0);
+renderRooms(totalGuests);
 updateSummary();

@@ -363,6 +363,48 @@
   line-height: 1.6;
 }
 
+/* ---------- Booking Guarantee Bar ---------- */
+.booking-guarantee {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: rgba(201,169,110,0.08);
+  border-left: 3px solid var(--gold);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  font-size: 0.78rem;
+  color: var(--body);
+  margin-bottom: 20px;
+}
+.booking-guarantee svg { color: var(--gold); flex-shrink: 0; }
+
+/* ---------- Step 2 Meta Row ---------- */
+.step2-meta {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.step2-meta .booking-rooms-intro { margin-bottom: 0; }
+
+.guest-filter-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: var(--dark);
+  color: var(--gold);
+  padding: 5px 14px;
+  border-radius: 30px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ---------- Success email line ---------- */
+.booking-success p + p { margin-top: 8px; }
+
 /* ---------- Responsive ---------- */
 @media (max-width: 900px) {
   .booking-body { grid-template-columns: 1fr; }
