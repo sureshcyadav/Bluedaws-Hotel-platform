@@ -55,10 +55,10 @@
 // ======================================================================
 
 const EMAILJS = {
-  publicKey:                   'YOUR_PUBLIC_KEY',         // Account → General → Public Key
-  serviceId:                   'YOUR_SERVICE_ID',         // Email Services → your Gmail service ID
-  bookingNotificationTemplate: 'YOUR_BOOKING_NOTIF_ID',  // Template 1 ID
-  bookingConfirmTemplate:      'YOUR_BOOKING_CONFIRM_ID', // Template 2 ID
-  contactTemplate:             'YOUR_CONTACT_TEMPLATE_ID',// Template 3 ID
-  hotelEmail:                  'reservations@bluedawshotel.com',
+  publicKey:                   'Tajjc_ip_Es4kTp0Z',
+  serviceId:                   'service_b6frwcw',
+  bookingNotificationTemplate: 'template_txhhhmk',  // Hotel receives new booking
+  bookingConfirmTemplate:      'template_b01onib',  // Guest receives confirmation
+  contactTemplate:             'template_txhhhmk',  // Contact form (reuses hotel template — add 3rd template later)
+  hotelEmail:                  'sureshyadav3645@gmail.com',
 };
