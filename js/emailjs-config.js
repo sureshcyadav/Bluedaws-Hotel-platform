@@ -60,5 +60,5 @@ const EMAILJS = {
   bookingNotificationTemplate: 'template_txhhhmk',  // Hotel receives new booking
   bookingConfirmTemplate:      'template_b01onib',  // Guest receives confirmation
   contactTemplate:             'template_txhhhmk',  // Contact form (reuses hotel template — add 3rd template later)
-  hotelEmail:                  'sureshyadav3645@gmail.com',
+  hotelEmail:                  'bluedawsprivatehotel@gmail.com',
 };

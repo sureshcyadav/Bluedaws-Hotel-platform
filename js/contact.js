@@ -1,4 +1,4 @@
-// ======================================================================
+﻿// ======================================================================
 // BLUEDAWS HOTEL — Contact Form + EmailJS
 // ======================================================================
 
@@ -84,7 +84,7 @@ if (form) {
     } catch (err) {
       // Email failed — show a fallback message with the hotel email
       if (formSuccess) {
-        formSuccess.textContent = `We couldn't send your message automatically. Please email us directly at reservations@bluedawshotel.com`;
+        formSuccess.textContent = `We couldn't send your message automatically. Please email us directly at bluedawsprivatehotel@gmail.com`;
         formSuccess.classList.add('visible');
       }
     } finally {
