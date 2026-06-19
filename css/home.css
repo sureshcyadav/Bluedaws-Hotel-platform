@@ -248,7 +248,7 @@
 .cta-banner {
   position: relative;
   padding: var(--pad) 0;
-  background: url('https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1800&q=80') center center / cover no-repeat;
+  background: url('../assets/images/dining-room.jpg') center center / cover no-repeat;
   text-align: center;
 }
 .cta-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.62); }
