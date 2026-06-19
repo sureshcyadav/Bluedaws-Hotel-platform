@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rooms — Bluedaws Hotel Paddington London</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/rooms.css">
+</head>
+<body>
+
+  <nav class="navbar dark-bg" id="navbar">
+    <a href="index.html" class="nav-logo">BLUEDAWS</a>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="rooms.html" class="active">Rooms</a></li>
+      <li><a href="gallery.html">Gallery</a></li>
+      <li><a href="contact.html">Contact</a></li>
+      <li><a href="booking.html" class="nav-cta">Book Now</a></li>
+    </ul>
+  </nav>
+
+  <section class="page-hero" style="background-image:url('assets/images/exterior.jpg')">
+    <div class="page-hero-overlay"></div>
+    <div class="page-hero-content">
+      <p class="section-label">Accommodation</p>
+      <h1>Our Rooms</h1>
+      <p>22 rooms across 5 floors — singles to groups of 7</p>
+      <nav class="breadcrumb">
+        <a href="index.html">Home</a>
+        <span class="breadcrumb-sep">—</span>
+        <span>Rooms</span>
+      </nav>
+    </div>
+  </section>
+
+  <!-- Info Bar -->
+  <div class="rooms-info-bar">
+    <div class="container">
+      <div class="info-bar-inner">
+        <div class="info-bar-item"><strong>Rooms from £85/night</strong><span>VAT included</span></div>
+        <div class="info-bar-divider"></div>
+        <div class="info-bar-item"><strong>Breakfast Included</strong><span>For all guests</span></div>
+        <div class="info-bar-divider"></div>
+        <div class="info-bar-item"><strong>Free Wi-Fi</strong><span>Throughout the hotel</span></div>
+        <div class="info-bar-divider"></div>
+        <div class="info-bar-item"><strong>Check-in 1:00 PM</strong><span>Check-out 12:00 PM</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <div class="container">
+      <div class="filter-inner">
+        <div class="filter-buttons" id="filterButtons">
+          <button class="filter-btn active" data-filter="all">All Rooms</button>
+          <button class="filter-btn" data-filter="single">1–2 Guests</button>
+          <button class="filter-btn" data-filter="family">3–5 Guests</button>
+          <button class="filter-btn" data-filter="group">6–7 Guests</button>
+        </div>
+        <div class="sort-wrap">
+          <label for="sortSelect">Sort:</label>
+          <select id="sortSelect">
+            <option value="default">Default</option>
+            <option value="price-asc">Price: Low to High</option>
+            <option value="price-desc">Price: High to Low</option>
+            <option value="size-desc">Capacity: Most First</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="rooms-section">
+    <div class="container">
+      <p class="results-count" id="resultsCount">Showing all 22 rooms</p>
+      <div class="rooms-grid" id="roomsGrid">
+
+        <!-- D6: Single -->
+        <article class="room-card reveal" data-type="single" data-price="85" data-size="1">
+          <div class="room-image" style="background-image:url('assets/images/double-room.jpg')">
+            <div class="room-overlay"><a href="booking.html?room=d6" class="btn btn-primary btn-sm">Book</a></div>
+          </div>
+          <div class="room-info">
+            <div class="room-meta"><span class="room-type-tag">Single</span><span class="room-size-tag">1 Guest</span></div>
+            <div class="room-header-row">
+              <h2>Single Room <small class="room-code">D6</small></h2>
+              <div class="room-price"><span class="price-amount">£85</span><span class="price-night">/night</span></div>
+            </div>
+            <p class="room-bed">Third Floor · 1 Single Bed</p>
+            <p class="room-desc">Our cosy single room — the best-value way to stay in central London. Ideal for solo travellers and business guests.</p>
+            <ul class="room-amenities"><li>Free Wi-Fi</li><li>Breakfast</li><li>Heating & Fan</li><li>Sink & Wardrobe</li><li>Hair Dryer</li><li>Iron</li><li>Towels & Toiletries</li><li>Luggage Storage</li></ul>
+            <div class="room-actions"><a href="booking.html?room=d6" class="btn btn-primary">Book This Room</a></div>
+          </div>
+        </article>
+
+        <!-- C3: Twin -->
+        <article class="room-card reveal" data-type="single" data-price="110" data-size="2">
+          <div class="room-image" style="background-image:url('assets/images/twin-room.jpg')">
+            <div class="room-overlay"><a href="booking.html?room=c3" class="btn btn-primary btn-sm">Book</a></div>
+          </div>
+          <div class="room-info">
+            <div class="room-meta"><span class="room-type-tag">Twin</span><span class="room-size-tag">2 Guests</span></div>
+            <div class="room-header-row">
+              <h2>Twin Room <small class="room-code">C3</small></h2>
+              <div class="room-price"><span class="price-amount">£110</span><span class="price-night">/night</span></div>
+            </div>
+            <p class="room-bed">Second Floor · 2 Single Beds</p>
+            <p class="room-desc">Two single beds — perfect for friends, colleagues, or siblings sharing a room. Comfortable and well-equipped.</p>
+            <ul class="room-amenities"><li>Free Wi-Fi</li><li>Breakfast</li><li>Heating & Fan</li><li>Sink & Wardrobe</li><li>Hair Dryer</li><li>Iron</li><li>Towels & Toiletries</li><li>Luggage Storage</li></ul>
+            <div class="room-actions"><a href="booking.html?room=c3" class="btn btn-primary">Book This Room</a></div>
+          </div>
+        </article>
+
+        <!-- D3: Twin -->
+        <article class="room-card reveal" data-type="single" data-price="110" data-size="2">
+          <div class="room-image" style="background-image:url('assets/images/twin-room.jpg')">
+            <div class="room-overlay"><a href="booking.html?room=d3" class="btn btn-primary btn-sm">Book</a></div>
+          </div>
+          <div class="room-info">
+            <div class="room-meta"><span class="room-type-tag">Twin</span><span class="room-size-tag">2 Guests</span></div>
+            <div class="room-header-row">
+              <h2>Twin Room <small class="room-code">D3</small></h2>
+              <div class="room-price"><span class="price-amount">£110</span><span class="price-night">/night</span></div>
+            </div>
+            <p class="room-bed">Third Floor · 2 Single Beds</p>
+            <p class="room-desc">Twin room on the third floor with two single beds. Great for two guests travelling together who want independent beds.</p>
+            <ul class="room-amenities"><li>Free Wi-Fi</li><li>Breakfast</li><li>Heating & Fan</li><li>Sink & Wardrobe</li><li>Hair Dryer</li><li>Iron</li><li>Towels & Toiletries</li><li>Luggage Storage</li></ul>
+            <div class="room-actions"><a href="booking.html?room=d3" class="btn btn-primary">Book This Room</a></div>
+          </div>
+        </article>
+
+        <!-- B6: Triple -->
+        <article class="room-card reveal" data-type="family" data-price="135" data-size="3">
+          <div class="room-image" style="background-image:url('assets/images/twin-room.jpg')">
+            <div class="room-overlay"><a href="booking.html?room=b6" class="btn btn-primary btn-sm">Book</a></div>
+          </div>
+          <div class="room-info">
+            <div class="room-meta"><span class="room-type-tag">Triple</span><span class="room-size-tag">3 Guests</span></div>
+            <div class="room-header-row">
+              <h2>Triple Room <small class="room-code">B6</small></h2>
+              <div class="room-price"><span class="price-amount">£135</span><span class="price-night">/night</span></div>
+            </div>
+            <p class="room-bed">First Floor · 1 Bunk + 1 Single</p>
+            <p class="room-desc">Sleeps 3 guests with a bunk bed and single bed combination. Great value for three people sharing.</p>
+            <ul class="room-amenities"><li>Free Wi-Fi</li><li>Breakfast</li><li>Heating & Fan</li><li>Sink & Wardrobe</li><li>Hair Dryer</li><li>Iron</li><li>Towels & Toiletries</li><li>Luggage Storage</li></ul>
+            <div class="room-actions"><a href="booking.html?room=b6" class="btn btn-primary">Book This Room</a></div>
+          </div>
+        </article>
+
+        <!-- C6: Triple -->
+        <article class="room-card reveal" data-type="family" data-price="135" data-size="3">
+          <div class="room-image" style="background-image:url('assets/images/twin-room.jpg')">
+            <div class="room-overlay"><a href="booking.html?room=c6" class="btn btn-primary btn-sm">Book</a></div>
+          </div>
+          <div class="room-info">
+            <div class="room-meta"><span class="room-type-tag">Triple</span><span class="room-size-tag">3 Guests</span></div>
+            <div class="room-header-row">
+              <h2>Triple Room <small class="room-code">C6</small></h2>
+              <div class="room-price"><span class="price-amount">£135</span><span class="price-night">/night</span></div>
+            </div>
+            <p class="room-bed">Second Floor · 1 Bunk + 1 Single</p>
+            <p class="room-desc">A triple room on the second floor with bunk and single beds. Comfortable for three guests at excellent London value.</p>
+            <ul class="room-amenities"><li>Free Wi-Fi</li><li>Breakfast</li><li>Heating & Fan</li><li>Sink & Wardrobe</li><li>Hair Dryer</li><li>Iron</li><li>Towels & Toiletries</li><li>Luggage Storage</li></ul>
+            <div class="room-actions"><a href="booking.html?room=c6" class="btn btn-primary">Book This Room</a></div>
+          </div>
+        </article>
+
+        <!-- B8: Triple (Double + Single) -->
+        <article class="room-card reveal" data-type="family" data-price="145" data-size="3">
+          <div class="room-image" style="background-image:url('assets/images/double-room.jpg')">
+            <div class="room-overlay"><a href="booking.html?room=b8" class="btn btn-primary btn-sm">Book</a></div>
+          </div>
+          <div class="room-info">
+            <div class="room-meta"><span class="room-type-tag">Triple</span><span class="room-size-tag">3 Guests</span></div>
+            <div class="room-header-row">
+              <h2>Double + Single <small class="room-code">B8</small></h2>
+              <div class="room-price"><span class="price-amount">£145</span><span class="price-night">/night</span></div>
+            </div>
+            <p class="room-bed">First Floor · 1 Double + 1 Single</p>
+            <p class="room-desc">A double bed and a single bed — ideal for a couple with a child, or three adults who prefer a double over bunks.</p>
+            <ul class="room-amenities"><li>Free Wi-Fi</li><li>Breakfast</li><li>Heating & Fan</li><li>Sink & Wardrobe</li><li>Hair Dryer</li><li>Iron</li><li>Towels & Toiletries</li><li>Luggage Storage</li></ul>
+            <div class="room-actions"><a href="booking.html?room=b8" class="btn btn-primary">Book This Room</a></div>
+          </div>
+        </article>
+
+        <!-- B7: Family 4 -->
+        <article class="room-card reveal" data-type="family" data-price="160" data-size="4">
+          <div class="room-image" style="background-image:url('assets/images/twin-room.jpg')">
+            <div class="room-badge">Popular Family</div>
+            <div class="room-overlay"><a href="booking.html?room=b7" class="btn btn-primary btn-sm">Book</a></div>
+          </div>
+          <div class="room-info">
+            <div class="room-meta"><span class="room-type-tag">Family</span><span class="room-size-tag">4 Guests</span></div>
+            <div class="room-header-row">
+              <h2>Family Room <small class="room-code">B7</small></h2>
+              <div class="room-price"><span class="price-amount">£160</span><span class="price-night">/night</span></div>
+            </div>
+            <p class="room-bed">First Floor · 1 Double + 2 Single</p>
+            <p class="room-desc">A spacious family room with a double and two single beds — the perfect option for a family of four visiting London together.</p>
+            <ul class="room-amenities"><li>Free Wi-Fi</li><li>Breakfast</li><li>Heating & Fan</li><li>Sink & Wardrobe</li><li>Hair Dryer</li><li>Iron</li><li>Towels & Toiletries</li><li>Luggage Storage</li></ul>
+            <div class="room-actions"><a href="booking.html?room=b7" class="btn btn-primary">Book This Room</a></div>
+          </div>
+        </article>
+
+        <!-- E2: Family 4 -->
+        <article class="room-card reveal" data-type="family" data-price="160" data-size="4">
+          <div class="room-image" style="background-image:url('assets/images/twin-room.jpg')">
+            <div class="room-overlay"><a href="booking.html?room=e2" class="btn btn-primary btn-sm">Book</a></div>
+          </div>
+          <div class="room-info">
+            <div class="room-meta"><span class="room-type-tag">Family</span><span class="room-size-tag">4 Guests</span></div>
+            <div class="room-header-row">
+              <h2>Family Room <small class="room-code">E2</small></h2>
+              <div class="room-price"><span class="price-amount">£160</span><span class="price-night">/night</span></div>
+            </div>
+            <p class="room-bed">Fourth Floor · 1 Double + 2 Single</p>
+            <p class="room-desc">Fourth-floor family room with great London views. Double and two single beds for a family or group of four.</p>
+            <ul class="room-amenities"><li>Free Wi-Fi</li><li>Breakfast</li><li>Heating & Fan</li><li>Sink & Wardrobe</li><li>Hair Dryer</li><li>Iron</li><li>Towels & Toiletries</li><li>Luggage Storage</li></ul>
+            <div class="room-actions"><a href="booking.html?room=e2" class="btn btn-primary">Book This Room</a></div>
+          </div>
+        </article>
+
+        <!-- E3: Family 4 -->
+        <article class="room-card reveal" data-type="family" data-price="160" data-size="4">
+          <div class="room-image" style="background-image:url('assets/images/twin-room.jpg')">
+            <div class="room-overlay"><a href="booking.html?room=e3" class="btn btn-primary btn-sm">Book</a></div>
+          </div>
+          <div class="room-info">
+            <div class="room-meta"><span class="room-type-tag">Family</span><span class="room-size-tag">4 Guests</span></div>
+            <div class="room-header-row">
+              <h2>Family Room <small class="room-code">E3</small></h2>
+              <div class="room-price"><span class="price-amount">£160</span><span class="price-night">/night</span></div>
+            </div>
+            <p class="room-bed">Fourth Floor · 1 Double + 2 Single</p>
+            <p class="room-desc">Another fourth-floor family room with double and two single beds. Quiet, comfortable, well-equipped for four guests.</p>
+            <ul class="room-amenities"><li>Free Wi-Fi</li><li>Breakfast</li><li>Heating & Fan</li><li>Sink & Wardrobe</li><li>Hair Dryer</li><li>Iron</li><li>Towels & Toiletries</li><li>Luggage Storage</li></ul>
+            <div class="room-actions"><a href="booking.html?room=e3" class="btn btn-primary">Book This Room</a></div>
+          </div>
+        </article>
+
+        <!-- B2: 5-pax -->
+        <article class="room-card reveal" data-type="family" data-price="195" data-size="5">
+          <div class="room-image" style="background-image:url('assets/images/twin-room.jpg')">
+            <div class="room-overlay"><a href="booking.html?room=b2" class="btn btn-primary btn-sm">Book</a></div>
+          </div>
+          <div class="room-info">
+            <div class="room-meta"><span class="room-type-tag">Large Family</span><span class="room-size-tag">5 Guests</span></div>
+            <div class="room-header-row">
+              <h2>Large Family Room <small class="room-code">B2</small></h2>
+              <div class="room-price"><span class="price-amount">£195</span><span class="price-night">/night</span></div>
+            </div>
+            <p class="room-bed">First Floor · 1 Double + 1 Single + 1 Bunk</p>
+            <p class="room-desc">Sleeps up to 5 guests. A double bed, single bed, and bunk bed — brilliant value for a larger family or group of five exploring London.</p>
+            <ul class="room-amenities"><li>Free Wi-Fi</li><li>Breakfast</li><li>Heating & Fan</li><li>Sink & Wardrobe</li><li>Hair Dryer</li><li>Iron</li><li>Towels & Toiletries</li><li>Luggage Storage</li></ul>
+            <div class="room-actions"><a href="booking.html?room=b2" class="btn btn-primary">Book This Room</a></div>
+          </div>
+        </article>
+
+        <!-- B4: 5-pax -->
+        <article class="room-card reveal" data-type="family" data-price="195" data-size="5">
+          <div class="room-image" style="background-image:url('assets/images/twin-room.jpg')">
+            <div class="room-overlay"><a href="booking.html?room=b4" class="btn btn-primary btn-sm">Book</a></div>
+          </div>
+          <div class="room-info">
+            <div class="room-meta"><span class="room-type-tag">Large Family</span><span class="room-size-tag">5 Guests</span></div>
+            <div class="room-header-row">
+              <h2>Large Family Room <small class="room-code">B4</small></h2>
+              <div class="room-price"><span class="price-amount">£195</span><span class="price-night">/night</span></div>
+            </div>
+            <p class="room-bed">First Floor · 1 Double + 1 Single + 1 Bunk</p>
+            <p class="room-desc">Five-guest room with a double, single, and bunk. Excellent choice for a family or small group looking for central London accommodation at a fair price.</p>
+            <ul class="room-amenities"><li>Free Wi-Fi</li><li>Breakfast</li><li>Heating & Fan</li><li>Sink & Wardrobe</li><li>Hair Dryer</li><li>Iron</li><li>Towels & Toiletries</li><li>Luggage Storage</li></ul>
+            <div class="room-actions"><a href="booking.html?room=b4" class="btn btn-primary">Book This Room</a></div>
+          </div>
+        </article>
+
+        <!-- B5: 6-pax bunk -->
+        <article class="room-card reveal" data-type="group" data-price="225" data-size="6">
+          <div class="room-image" style="background-image:url('assets/images/twin-room.jpg')">
+            <div class="room-overlay"><a href="booking.html?room=b5" class="btn btn-primary btn-sm">Book</a></div>
+          </div>
+          <div class="room-info">
+            <div class="room-meta"><span class="room-type-tag">Group</span><span class="room-size-tag">6 Guests</span></div>
+            <div class="room-header-row">
+              <h2>Group Room <small class="room-code">B5</small></h2>
+              <div class="room-price"><span class="price-amount">£225</span><span class="price-night">/night</span></div>
+            </div>
+            <p class="room-bed">First Floor · 3 Bunk Beds (6 berths)</p>
+            <p class="room-desc">Three bunk beds sleeping 6 guests — ideal for tour groups, football teams, school trips, or friends on a London adventure together.</p>
+            <ul class="room-amenities"><li>Free Wi-Fi</li><li>Breakfast</li><li>Heating & Fan</li><li>Sink & Wardrobe</li><li>Hair Dryer</li><li>Iron</li><li>Towels & Toiletries</li><li>Luggage Storage</li></ul>
+            <div class="room-actions"><a href="booking.html?room=b5" class="btn btn-primary">Book This Room</a></div>
+          </div>
+        </article>
+
+        <!-- B3: 6-pax mixed -->
+        <article class="room-card reveal" data-type="group" data-price="235" data-size="6">
+          <div class="room-image" style="background-image:url('assets/images/twin-room.jpg')">
+            <div class="room-overlay"><a href="booking.html?room=b3" class="btn btn-primary btn-sm">Book</a></div>
+          </div>
+          <div class="room-info">
+            <div class="room-meta"><span class="room-type-tag">Group</span><span class="room-size-tag">6 Guests</span></div>
+            <div class="room-header-row">
+              <h2>Group Room <small class="room-code">B3</small></h2>
+              <div class="room-price"><span class="price-amount">£235</span><span class="price-night">/night</span></div>
+            </div>
+            <p class="room-bed">First Floor · 1 Double + 2 Single + 1 Bunk</p>
+            <p class="room-desc">Flexible 6-person room with a mix of double, single, and bunk beds. Great for families with children or mixed-age groups.</p>
+            <ul class="room-amenities"><li>Free Wi-Fi</li><li>Breakfast</li><li>Heating & Fan</li><li>Sink & Wardrobe</li><li>Hair Dryer</li><li>Iron</li><li>Towels & Toiletries</li><li>Luggage Storage</li></ul>
+            <div class="room-actions"><a href="booking.html?room=b3" class="btn btn-primary">Book This Room</a></div>
+          </div>
+        </article>
+
+        <!-- C1, C4, D1, D2, D5: 6-pax bunk (showing as one representative card each) -->
+        <article class="room-card reveal" data-type="group" data-price="225" data-size="6">
+          <div class="room-image" style="background-image:url('assets/images/twin-room.jpg')">
+            <div class="room-overlay"><a href="booking.html?room=c1" class="btn btn-primary btn-sm">Book</a></div>
+          </div>
+          <div class="room-info">
+            <div class="room-meta"><span class="room-type-tag">Group</span><span class="room-size-tag">6 Guests</span></div>
+            <div class="room-header-row">
+              <h2>Group Room <small class="room-code">C1</small></h2>
+              <div class="room-price"><span class="price-amount">£225</span><span class="price-night">/night</span></div>
+            </div>
+            <p class="room-bed">Second Floor · 3 Bunk Beds</p>
+            <p class="room-desc">Three bunk beds on the second floor sleeping 6. Excellent per-person value at just £37.50 per head per night.</p>
+            <ul class="room-amenities"><li>Free Wi-Fi</li><li>Breakfast</li><li>Heating & Fan</li><li>Sink & Wardrobe</li><li>Hair Dryer</li><li>Iron</li><li>Towels & Toiletries</li><li>Luggage Storage</li></ul>
+            <div class="room-actions"><a href="booking.html?room=c1" class="btn btn-primary">Book This Room</a></div>
+          </div>
+        </article>
+
+        <!-- C5: 6-pax mixed -->
+        <article class="room-card reveal" data-type="group" data-price="235" data-size="6">
+          <div class="room-image" style="background-image:url('assets/images/twin-room.jpg')">
+            <div class="room-overlay"><a href="booking.html?room=c5" class="btn btn-primary btn-sm">Book</a></div>
+          </div>
+          <div class="room-info">
+            <div class="room-meta"><span class="room-type-tag">Group</span><span class="room-size-tag">6 Guests</span></div>
+            <div class="room-header-row">
+              <h2>Group Room <small class="room-code">C5</small></h2>
+              <div class="room-price"><span class="price-amount">£235</span><span class="price-night">/night</span></div>
+            </div>
+            <p class="room-bed">Second Floor · 2 Bunk + 2 Single</p>
+            <p class="room-desc">Six-guest room on the second floor with 2 bunk beds and 2 single beds — a great mix of sleeping arrangements for groups.</p>
+            <ul class="room-amenities"><li>Free Wi-Fi</li><li>Breakfast</li><li>Heating & Fan</li><li>Sink & Wardrobe</li><li>Hair Dryer</li><li>Iron</li><li>Towels & Toiletries</li><li>Luggage Storage</li></ul>
+            <div class="room-actions"><a href="booking.html?room=c5" class="btn btn-primary">Book This Room</a></div>
+          </div>
+        </article>
+
+        <!-- D4: 6-pax mixed -->
+        <article class="room-card reveal" data-type="group" data-price="235" data-size="6">
+          <div class="room-image" style="background-image:url('assets/images/twin-room.jpg')">
+            <div class="room-overlay"><a href="booking.html?room=d4" class="btn btn-primary btn-sm">Book</a></div>
+          </div>
+          <div class="room-info">
+            <div class="room-meta"><span class="room-type-tag">Group</span><span class="room-size-tag">6 Guests</span></div>
+            <div class="room-header-row">
+              <h2>Group Room <small class="room-code">D4</small></h2>
+              <div class="room-price"><span class="price-amount">£235</span><span class="price-night">/night</span></div>
+            </div>
+            <p class="room-bed">Third Floor · 2 Bunk + 2 Single</p>
+            <p class="room-desc">Third-floor group room with 2 bunk beds and 2 single beds sleeping 6 guests. Practical and well-located for exploring London.</p>
+            <ul class="room-amenities"><li>Free Wi-Fi</li><li>Breakfast</li><li>Heating & Fan</li><li>Sink & Wardrobe</li><li>Hair Dryer</li><li>Iron</li><li>Towels & Toiletries</li><li>Luggage Storage</li></ul>
+            <div class="room-actions"><a href="booking.html?room=d4" class="btn btn-primary">Book This Room</a></div>
+          </div>
+        </article>
+
+        <!-- Z6: 7-pax -->
+        <article class="room-card reveal" data-type="group" data-price="275" data-size="7">
+          <div class="room-image" style="background-image:url('assets/images/twin-room.jpg')">
+            <div class="room-badge room-badge-dark">Largest Room</div>
+            <div class="room-overlay"><a href="booking.html?room=z6" class="btn btn-primary btn-sm">Book</a></div>
+          </div>
+          <div class="room-info">
+            <div class="room-meta"><span class="room-type-tag">Group</span><span class="room-size-tag">7 Guests</span></div>
+            <div class="room-header-row">
+              <h2>Large Group Room <small class="room-code">Z6</small></h2>
+              <div class="room-price"><span class="price-amount">£275</span><span class="price-night">/night</span></div>
+            </div>
+            <p class="room-bed">Basement Floor · 3 Bunk + 1 Single</p>
+            <p class="room-desc">Our largest room, sleeping 7 guests — exceptional value at under £40 per person per night in central London. Perfect for large groups and families.</p>
+            <ul class="room-amenities"><li>Free Wi-Fi</li><li>Breakfast</li><li>Heating & Fan</li><li>Sink & Wardrobe</li><li>Hair Dryer</li><li>Iron</li><li>Towels & Toiletries</li><li>Luggage Storage</li></ul>
+            <div class="room-actions"><a href="booking.html?room=z6" class="btn btn-primary">Book This Room</a></div>
+          </div>
+        </article>
+
+        <!-- C2: 7-pax -->
+        <article class="room-card reveal" data-type="group" data-price="275" data-size="7">
+          <div class="room-image" style="background-image:url('assets/images/twin-room.jpg')">
+            <div class="room-badge room-badge-dark">Largest Room</div>
+            <div class="room-overlay"><a href="booking.html?room=c2" class="btn btn-primary btn-sm">Book</a></div>
+          </div>
+          <div class="room-info">
+            <div class="room-meta"><span class="room-type-tag">Group</span><span class="room-size-tag">7 Guests</span></div>
+            <div class="room-header-row">
+              <h2>Large Group Room <small class="room-code">C2</small></h2>
+              <div class="room-price"><span class="price-amount">£275</span><span class="price-night">/night</span></div>
+            </div>
+            <p class="room-bed">Second Floor · 3 Bunk + 1 Single</p>
+            <p class="room-desc">Sleeps 7 on the second floor — 3 bunk beds and 1 single. Brilliant per-person value for a large group visiting London on a budget.</p>
+            <ul class="room-amenities"><li>Free Wi-Fi</li><li>Breakfast</li><li>Heating & Fan</li><li>Sink & Wardrobe</li><li>Hair Dryer</li><li>Iron</li><li>Towels & Toiletries</li><li>Luggage Storage</li></ul>
+            <div class="room-actions"><a href="booking.html?room=c2" class="btn btn-primary">Book This Room</a></div>
+          </div>
+        </article>
+
+      </div>
+      <div class="no-results" id="noResults" style="display:none">
+        <p>No rooms match your filter. <button onclick="document.querySelector('[data-filter=all]').click()">Show all rooms</button></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <p class="footer-logo">BLUEDAWS</p>
+          <p class="footer-tagline">Private Hotel · Paddington, London</p>
+          <p class="footer-description">Comfortable, affordable accommodation in central London — ideally located for transport, sightseeing and business.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Navigate</h4>
+          <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="rooms.html">Rooms</a></li>
+            <li><a href="gallery.html">Gallery</a></li>
+            <li><a href="contact.html">Contact</a></li>
+            <li><a href="booking.html">Book Now</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>What's Included</h4>
+          <ul>
+            <li><a href="#">Free Wi-Fi</a></li>
+            <li><a href="#">Breakfast</a></li>
+            <li><a href="#">Luggage Storage</a></li>
+            <li><a href="#">In-Room Essentials</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Contact</h4>
+          <address>
+            <p>Paddington, London</p>
+            <p>Check-in: from 1:00 PM</p>
+            <p>Check-out: by 12:00 PM</p>
+            <p>reservations@bluedawshotel.com</p>
+          </address>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 Bluedaws Private Hotel. All rights reserved.</p>
+        <div class="footer-links"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a></div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script src="js/rooms.js"></script>
+</body>
+</html>

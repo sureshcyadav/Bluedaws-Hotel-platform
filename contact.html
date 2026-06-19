@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact — Bluedaws Hotel Paddington London</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/contact.css">
+</head>
+<body>
+
+  <nav class="navbar dark-bg" id="navbar">
+    <a href="index.html" class="nav-logo">BLUEDAWS</a>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="rooms.html">Rooms</a></li>
+      <li><a href="gallery.html">Gallery</a></li>
+      <li><a href="contact.html" class="active">Contact</a></li>
+      <li><a href="booking.html" class="nav-cta">Book Now</a></li>
+    </ul>
+  </nav>
+
+  <section class="page-hero" style="background-image:url('assets/images/exterior.jpg')">
+    <div class="page-hero-overlay"></div>
+    <div class="page-hero-content">
+      <p class="section-label">Get in Touch</p>
+      <h1>Contact Us</h1>
+      <p>We're happy to help with any questions</p>
+      <nav class="breadcrumb">
+        <a href="index.html">Home</a>
+        <span class="breadcrumb-sep">—</span>
+        <span>Contact</span>
+      </nav>
+    </div>
+  </section>
+
+  <!-- Contact Strips -->
+  <div class="contact-strips">
+    <div class="contact-strip">
+      <div class="strip-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.72 3.36 2 2 0 0 1 3.7 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6.06 6.06l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      </div>
+      <div>
+        <strong>Call Us</strong>
+        <span>Reception — available daily</span>
+      </div>
+    </div>
+    <div class="strip-divider"></div>
+    <div class="contact-strip">
+      <div class="strip-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      </div>
+      <div>
+        <strong>Email Us</strong>
+        <span>reservations@bluedawshotel.com</span>
+      </div>
+    </div>
+    <div class="strip-divider"></div>
+    <div class="contact-strip">
+      <div class="strip-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      </div>
+      <div>
+        <strong>Location</strong>
+        <span>Paddington, London</span>
+      </div>
+    </div>
+    <div class="strip-divider"></div>
+    <div class="contact-strip">
+      <div class="strip-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <div>
+        <strong>Check-in / Check-out</strong>
+        <span>From 1:00 PM / By 12:00 PM</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Contact Section -->
+  <section class="contact-main">
+    <div class="container">
+      <div class="contact-grid">
+
+        <!-- Form -->
+        <div class="contact-form-wrap reveal">
+          <p class="section-label">Send a Message</p>
+          <h2 class="section-title">How Can We Help?</h2>
+          <p class="form-intro">Whether you have questions about our rooms, want to arrange a group booking, or need any information before your stay, fill in the form and we'll get back to you promptly.</p>
+
+          <form class="contact-form" id="contactForm" novalidate>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="firstName">First Name *</label>
+                <input type="text" id="firstName" name="firstName" placeholder="John" required>
+                <span class="field-error" id="firstNameErr"></span>
+              </div>
+              <div class="form-group">
+                <label for="lastName">Last Name *</label>
+                <input type="text" id="lastName" name="lastName" placeholder="Doe" required>
+                <span class="field-error" id="lastNameErr"></span>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="email">Email Address *</label>
+                <input type="email" id="email" name="email" placeholder="john@example.com" required>
+                <span class="field-error" id="emailErr"></span>
+              </div>
+              <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <input type="tel" id="phone" name="phone" placeholder="+44 (0)20 ...">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="subject">Subject *</label>
+              <select id="subject" name="subject" required>
+                <option value="">Select a topic...</option>
+                <option value="booking">Booking Enquiry</option>
+                <option value="group">Group Booking (6+ guests)</option>
+                <option value="checkin">Check-in / Check-out</option>
+                <option value="breakfast">Breakfast Information</option>
+                <option value="luggage">Luggage Storage</option>
+                <option value="other">General Enquiry</option>
+              </select>
+              <span class="field-error" id="subjectErr"></span>
+            </div>
+            <div class="form-group">
+              <label for="message">Message *</label>
+              <textarea id="message" name="message" rows="5" placeholder="Tell us how we can help..." required></textarea>
+              <span class="field-error" id="messageErr"></span>
+            </div>
+            <button type="submit" class="btn btn-primary btn-full" id="submitBtn">Send Message</button>
+            <div class="form-success" id="formSuccess">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="20 6 9 17 4 12"/></svg>
+              Thank you — we'll get back to you as soon as possible.
+            </div>
+          </form>
+        </div>
+
+        <!-- Info Panel -->
+        <div class="contact-info-panel reveal">
+          <div class="info-card">
+            <h3>Find Us</h3>
+            <div class="info-map-placeholder">
+              <div class="map-pin">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              </div>
+              <p><strong>Bluedaws Private Hotel</strong></p>
+              <p>Paddington, London</p>
+              <a href="https://www.google.com/maps/search/Bluedaws+Hotel+Paddington" target="_blank" rel="noopener" class="map-link">Get Directions &rarr;</a>
+            </div>
+            <div class="info-details">
+              <div class="info-row">
+                <span class="info-label">Nearest Station</span>
+                <span>Paddington (2 min walk)</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Heathrow</span>
+                <span>15 min (Heathrow Express)</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Check-in</span>
+                <span>From 1:00 PM</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Check-out</span>
+                <span>By 12:00 PM</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Breakfast</span>
+                <span>Available for all guests</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-card info-card-dark">
+            <h3>Quick Booking</h3>
+            <p>Ready to book? Use our online booking form to check availability and reserve your room.</p>
+            <div class="reservation-contact">
+              <span class="res-hours">Rooms from £85/night · Breakfast included · Free Wi-Fi</span>
+              <a href="mailto:reservations@bluedawshotel.com" class="res-email">reservations@bluedawshotel.com</a>
+            </div>
+            <a href="booking.html" class="btn btn-primary btn-full" style="margin-top:24px">Book Online Now</a>
+          </div>
+
+          <div class="info-card">
+            <h3>House Rules</h3>
+            <div class="info-details">
+              <div class="info-row">
+                <span class="info-label">Smoking</span>
+                <span>Not permitted inside</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Noise</span>
+                <span>Quiet hours respected</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Guests</span>
+                <span>Registered guests only</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Luggage</span>
+                <span>Storage available</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <p class="footer-logo">BLUEDAWS</p>
+          <p class="footer-tagline">Private Hotel · Paddington, London</p>
+          <p class="footer-description">Comfortable, affordable accommodation in central London — ideally located for transport, sightseeing and business.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Navigate</h4>
+          <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="rooms.html">Rooms</a></li>
+            <li><a href="gallery.html">Gallery</a></li>
+            <li><a href="contact.html">Contact</a></li>
+            <li><a href="booking.html">Book Now</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>What's Included</h4>
+          <ul>
+            <li><a href="#">Free Wi-Fi</a></li>
+            <li><a href="#">Breakfast</a></li>
+            <li><a href="#">Luggage Storage</a></li>
+            <li><a href="#">In-Room Essentials</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Info</h4>
+          <address>
+            <p>Paddington, London</p>
+            <p>Check-in: from 1:00 PM</p>
+            <p>Check-out: by 12:00 PM</p>
+            <p>reservations@bluedawshotel.com</p>
+          </address>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 Bluedaws Private Hotel. All rights reserved.</p>
+        <div class="footer-links"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a></div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script src="js/contact.js"></script>
+</body>
+</html>

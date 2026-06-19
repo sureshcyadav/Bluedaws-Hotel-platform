@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gallery — Bluedaws Hotel Paddington London</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/gallery.css">
+</head>
+<body>
+
+  <nav class="navbar dark-bg" id="navbar">
+    <a href="index.html" class="nav-logo">BLUEDAWS</a>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="rooms.html">Rooms</a></li>
+      <li><a href="gallery.html" class="active">Gallery</a></li>
+      <li><a href="contact.html">Contact</a></li>
+      <li><a href="booking.html" class="nav-cta">Book Now</a></li>
+    </ul>
+  </nav>
+
+  <section class="page-hero" style="background-image:url('assets/images/exterior.jpg')">
+    <div class="page-hero-overlay"></div>
+    <div class="page-hero-content">
+      <p class="section-label">Photo Tour</p>
+      <h1>Our Gallery</h1>
+      <p>Take a look around Bluedaws Hotel</p>
+      <nav class="breadcrumb">
+        <a href="index.html">Home</a>
+        <span class="breadcrumb-sep">—</span>
+        <span>Gallery</span>
+      </nav>
+    </div>
+  </section>
+
+  <!-- Filter Tabs -->
+  <div class="gallery-filter-bar">
+    <div class="container">
+      <div class="gallery-filter-buttons" id="galleryFilter">
+        <button class="gallery-filter-btn active" data-cat="all">All Photos</button>
+        <button class="gallery-filter-btn" data-cat="exterior">Exterior</button>
+        <button class="gallery-filter-btn" data-cat="rooms">Rooms</button>
+        <button class="gallery-filter-btn" data-cat="dining">Dining Room</button>
+        <button class="gallery-filter-btn" data-cat="reception">Reception</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gallery Grid -->
+  <section class="gallery-section">
+    <div class="container">
+      <div class="gallery-grid" id="galleryGrid">
+
+        <!-- Exterior -->
+        <div class="gallery-item gallery-item--wide" data-cat="exterior" data-index="0">
+          <div class="gallery-img" style="background-image:url('assets/images/exterior.jpg')"></div>
+          <div class="gallery-item-overlay"><span>Bluedaws Hotel — Paddington, London</span></div>
+        </div>
+
+        <!-- Dining Room -->
+        <div class="gallery-item gallery-item--tall" data-cat="dining" data-index="1">
+          <div class="gallery-img" style="background-image:url('assets/images/dining-room.jpg')"></div>
+          <div class="gallery-item-overlay"><span>London-Themed Dining Room</span></div>
+        </div>
+
+        <!-- Twin Room -->
+        <div class="gallery-item" data-cat="rooms" data-index="2">
+          <div class="gallery-img" style="background-image:url('assets/images/twin-room.jpg')"></div>
+          <div class="gallery-item-overlay"><span>Twin Bedroom</span></div>
+        </div>
+
+        <!-- Double Room -->
+        <div class="gallery-item" data-cat="rooms" data-index="3">
+          <div class="gallery-img" style="background-image:url('assets/images/double-room.jpg')"></div>
+          <div class="gallery-item-overlay"><span>Double Bedroom</span></div>
+        </div>
+
+        <!-- Reception -->
+        <div class="gallery-item gallery-item--wide" data-cat="reception" data-index="4">
+          <div class="gallery-img" style="background-image:url('assets/images/reception.jpg')"></div>
+          <div class="gallery-item-overlay"><span>Hotel Reception & Lobby</span></div>
+        </div>
+
+        <!-- Dining Room 2 -->
+        <div class="gallery-item" data-cat="dining" data-index="5">
+          <div class="gallery-img" style="background-image:url('assets/images/dining-room.jpg'); background-position: right center"></div>
+          <div class="gallery-item-overlay"><span>Dining Room — London Photography</span></div>
+        </div>
+
+        <!-- Room View -->
+        <div class="gallery-item" data-cat="rooms" data-index="6">
+          <div class="gallery-img" style="background-image:url('assets/images/twin-room.jpg'); background-position: bottom center"></div>
+          <div class="gallery-item-overlay"><span>Guest Room — Yellow Décor</span></div>
+        </div>
+
+        <!-- Exterior Detail -->
+        <div class="gallery-item" data-cat="exterior" data-index="7">
+          <div class="gallery-img" style="background-image:url('assets/images/exterior.jpg'); background-position: center top"></div>
+          <div class="gallery-item-overlay"><span>Hotel Entrance — Blue Doors</span></div>
+        </div>
+
+        <!-- Room Window View -->
+        <div class="gallery-item gallery-item--tall" data-cat="rooms" data-index="8">
+          <div class="gallery-img" style="background-image:url('assets/images/double-room.jpg'); background-position: center top"></div>
+          <div class="gallery-item-overlay"><span>Room — Natural Light</span></div>
+        </div>
+
+        <!-- Reception Detail -->
+        <div class="gallery-item" data-cat="reception" data-index="9">
+          <div class="gallery-img" style="background-image:url('assets/images/reception.jpg'); background-position: left center"></div>
+          <div class="gallery-item-overlay"><span>Reception — Notice Board</span></div>
+        </div>
+
+        <!-- Dining Close -->
+        <div class="gallery-item" data-cat="dining" data-index="10">
+          <div class="gallery-img" style="background-image:url('assets/images/dining-room.jpg'); background-position: center bottom"></div>
+          <div class="gallery-item-overlay"><span>Breakfast Setting</span></div>
+        </div>
+
+        <!-- Exterior Wide -->
+        <div class="gallery-item" data-cat="exterior" data-index="11">
+          <div class="gallery-img" style="background-image:url('assets/images/exterior.jpg'); background-position: left center"></div>
+          <div class="gallery-item-overlay"><span>Victorian Façade — Paddington</span></div>
+        </div>
+
+      </div>
+
+      <!-- Add photos note -->
+      <div class="gallery-note">
+        <p>More photos coming soon. <a href="contact.html">Contact us</a> for a virtual tour or room-specific images.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Lightbox -->
+  <div class="lightbox" id="lightbox" aria-modal="true" role="dialog" aria-label="Image viewer">
+    <button class="lightbox-close" id="lightboxClose" aria-label="Close">&#x2715;</button>
+    <button class="lightbox-prev" id="lightboxPrev" aria-label="Previous">&#x2039;</button>
+    <button class="lightbox-next" id="lightboxNext" aria-label="Next">&#x203A;</button>
+    <div class="lightbox-img-wrap">
+      <div class="lightbox-img" id="lightboxImg"></div>
+    </div>
+    <div class="lightbox-caption" id="lightboxCaption"></div>
+    <div class="lightbox-counter" id="lightboxCounter"></div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <p class="footer-logo">BLUEDAWS</p>
+          <p class="footer-tagline">Private Hotel · Paddington, London</p>
+          <p class="footer-description">Comfortable, affordable accommodation in central London — ideally located for transport, sightseeing and business.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Navigate</h4>
+          <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="rooms.html">Rooms</a></li>
+            <li><a href="gallery.html">Gallery</a></li>
+            <li><a href="contact.html">Contact</a></li>
+            <li><a href="booking.html">Book Now</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>What's Included</h4>
+          <ul>
+            <li><a href="#">Free Wi-Fi</a></li>
+            <li><a href="#">Breakfast</a></li>
+            <li><a href="#">Luggage Storage</a></li>
+            <li><a href="#">In-Room Essentials</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Info</h4>
+          <address>
+            <p>Paddington, London</p>
+            <p>Check-in: from 1:00 PM</p>
+            <p>Check-out: by 12:00 PM</p>
+            <p>reservations@bluedawshotel.com</p>
+          </address>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 Bluedaws Private Hotel. All rights reserved.</p>
+        <div class="footer-links"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a></div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script src="js/gallery.js"></script>
+</body>
+</html>

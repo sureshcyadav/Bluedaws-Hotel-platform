@@ -1,40 +1,361 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bluedaws Private Hotel</title>
-
-    <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bluedaws Hotel — Paddington, London</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/home.css">
 </head>
-
 <body>
 
-    <header>
-        <h1>Bluedaws Private Hotel</h1>
-        <nav>
-            <a href="#">Home</a>
-            <a href="#">Rooms</a>
-            <a href="#">Gallery</a>
-            <a href="#">Contact</a>
-        </nav>
-    </header>
+  <!-- Navigation -->
+  <nav class="navbar" id="navbar">
+    <a href="index.html" class="nav-logo">BLUEDAWS</a>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html" class="active">Home</a></li>
+      <li><a href="rooms.html">Rooms</a></li>
+      <li><a href="gallery.html">Gallery</a></li>
+      <li><a href="contact.html">Contact</a></li>
+      <li><a href="booking.html" class="nav-cta">Book Now</a></li>
+    </ul>
+  </nav>
 
-    <section id="hero">
-        <h2>Welcome to Bluedaws Private Hotel</h2>
-        <p>Comfort, Luxury and Exceptional Service</p>
-    </section>
+  <!-- Hero -->
+  <section class="hero" id="home">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <p class="hero-eyebrow">Paddington, London</p>
+      <h1 class="hero-title">Bluedaws<br><em>Private Hotel</em></h1>
+      <p class="hero-subtitle">Comfortable, affordable accommodation in the heart of London — steps from Paddington Station with easy access to the whole city.</p>
+      <div class="hero-actions">
+        <a href="rooms.html" class="btn btn-primary">View Our Rooms</a>
+        <a href="booking.html" class="btn btn-outline">Book Your Stay</a>
+      </div>
+    </div>
+    <div class="hero-scroll-hint">
+      <span>Scroll</span>
+      <div class="scroll-line"></div>
+    </div>
+  </section>
 
-    <section id="about">
-        <h2>About Us</h2>
-        <p>Experience comfortable accommodation in the heart of London.</p>
-    </section>
+  <!-- Quick Booking Bar -->
+  <div class="quick-book">
+    <div class="quick-book-inner">
+      <div class="qb-field">
+        <label for="qbCheckin">Check-in</label>
+        <input type="date" id="qbCheckin">
+      </div>
+      <div class="qb-divider"></div>
+      <div class="qb-field">
+        <label for="qbCheckout">Check-out</label>
+        <input type="date" id="qbCheckout">
+      </div>
+      <div class="qb-divider"></div>
+      <div class="qb-field">
+        <label for="qbGuests">Guests</label>
+        <select id="qbGuests">
+          <option>1 Guest</option>
+          <option>2 Guests</option>
+          <option>3 Guests</option>
+          <option>4 Guests</option>
+          <option>5 Guests</option>
+          <option>6 Guests</option>
+          <option>7 Guests</option>
+        </select>
+      </div>
+      <a href="booking.html" class="btn btn-primary" id="qbSubmit">Check Availability</a>
+    </div>
+  </div>
 
-    <footer>
-        <p>© 2026 Bluedaws Private Hotel</p>
-    </footer>
+  <!-- About -->
+  <section class="about" id="about">
+    <div class="container">
+      <div class="about-grid">
+        <div class="about-image-wrap reveal">
+          <div class="about-image" style="background-image:url('assets/images/exterior.jpg')"></div>
+          <div class="about-badge">
+            <span class="badge-number">Est.</span>
+            <span class="badge-year">2004</span>
+          </div>
+        </div>
+        <div class="about-text reveal">
+          <p class="section-label">About Us</p>
+          <h2 class="section-title">Your Home in<br>Central London</h2>
+          <p class="about-description">Located in the heart of Paddington, Bluedaws Private Hotel offers a comfortable and convenient stay for guests looking to experience the best of the capital. Our position near Paddington Station makes arriving and getting around simple, with fast transport links to Heathrow Airport, the West End, and all of London's key districts.</p>
+          <p class="about-description">Whether visiting London for business, sightseeing, shopping, or a weekend break, we combine a central location with practical comfort and great value. Our friendly team is on hand to help make your stay as easy as possible.</p>
+          <div class="about-stats">
+            <div class="stat">
+              <span class="stat-number">22</span>
+              <span class="stat-label">Guest Rooms</span>
+            </div>
+            <div class="stat">
+              <span class="stat-number">7</span>
+              <span class="stat-label">Max per Room</span>
+            </div>
+            <div class="stat">
+              <span class="stat-number">20+</span>
+              <span class="stat-label">Years Open</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-    <script src="js/main.js"></script>
+  <!-- Location Highlights -->
+  <section class="location-section">
+    <div class="container">
+      <div class="section-header reveal">
+        <p class="section-label">Getting Around</p>
+        <h2 class="section-title">Everything Within Reach</h2>
+        <p class="section-subtitle">Paddington is one of London's best-connected areas — wherever you want to go, you can get there easily.</p>
+      </div>
+      <div class="location-grid">
+        <div class="location-card reveal">
+          <div class="location-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+          </div>
+          <h3>Paddington Station</h3>
+          <p>Minutes on foot — Elizabeth Line, Heathrow Express, National Rail and the Underground all from one hub.</p>
+        </div>
+        <div class="location-card reveal">
+          <div class="location-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          </div>
+          <h3>Hyde Park & Kensington</h3>
+          <p>Hyde Park, Kensington Gardens, and the museums of South Kensington are all a short walk or bus ride away.</p>
+        </div>
+        <div class="location-card reveal">
+          <div class="location-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h6v11a1 1 0 0 1-1 1h-5M1 16h15"/></svg>
+          </div>
+          <h3>Heathrow Airport</h3>
+          <p>Direct Heathrow Express from Paddington — central London to the airport in just 15 minutes.</p>
+        </div>
+        <div class="location-card reveal">
+          <div class="location-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </div>
+          <h3>Oxford Street & West End</h3>
+          <p>London's best shopping, theatres, restaurants, and nightlife are all easily accessible from Paddington.</p>
+        </div>
+        <div class="location-card reveal">
+          <div class="location-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          </div>
+          <h3>Notting Hill & Portobello</h3>
+          <p>The famous Portobello Road Market and Notting Hill are just a short journey from our door.</p>
+        </div>
+        <div class="location-card reveal">
+          <div class="location-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          </div>
+          <h3>Madame Tussauds & Regent's Park</h3>
+          <p>World-famous attractions including Madame Tussauds and Regent's Park are all within easy reach.</p>
+        </div>
+      </div>
+    </div>
+  </section>
 
+  <!-- Amenities -->
+  <section class="amenities" id="amenities">
+    <div class="container">
+      <div class="section-header reveal">
+        <p class="section-label">What's Included</p>
+        <h2 class="section-title" style="color:var(--white)">Everything You Need</h2>
+        <p class="section-subtitle" style="color:rgba(255,255,255,0.5)">Practical comfort for every guest — from solo travellers to large family and group bookings.</p>
+      </div>
+      <div class="amenities-grid">
+        <div class="amenity-card reveal">
+          <div class="amenity-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
+          </div>
+          <h3>Free Wi-Fi</h3>
+          <p>High-speed wireless internet available throughout the hotel for all guests at no extra charge.</p>
+        </div>
+        <div class="amenity-card reveal">
+          <div class="amenity-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3"/></svg>
+          </div>
+          <h3>Breakfast</h3>
+          <p>Start your day right with breakfast available for all guests — the perfect way to fuel your London adventures.</p>
+        </div>
+        <div class="amenity-card reveal">
+          <div class="amenity-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+          </div>
+          <h3>Luggage Storage</h3>
+          <p>Store your bags safely with us before check-in or after check-out — explore London hands-free.</p>
+        </div>
+        <div class="amenity-card reveal">
+          <div class="amenity-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <h3>In-Room Essentials</h3>
+          <p>Every room comes with towels, soap, shower gel, heating, fan, hair dryer, iron, and wardrobe.</p>
+        </div>
+        <div class="amenity-card reveal">
+          <div class="amenity-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <h3>Group & Family Rooms</h3>
+          <p>We cater for groups of up to 7 guests per room — ideal for families, friends, and group travellers.</p>
+        </div>
+        <div class="amenity-card reveal">
+          <div class="amenity-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <h3>Flexible Check-in</h3>
+          <p>Check-in from 1:00 PM and check-out by 12:00 PM. Early and late options available on request.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured Room Types -->
+  <section class="featured-rooms" id="rooms">
+    <div class="container">
+      <div class="section-header reveal">
+        <p class="section-label">Rooms</p>
+        <h2 class="section-title">Rooms for Every Group</h2>
+        <p class="section-subtitle">From solo travellers to groups of 7 — we have the right room at the right price across our 5 floors.</p>
+      </div>
+      <div class="rooms-grid">
+        <div class="room-card reveal">
+          <div class="room-image" style="background-image:url('assets/images/double-room.jpg')">
+            <div class="room-badge">From £85/night</div>
+          </div>
+          <div class="room-info">
+            <div class="room-header">
+              <div><h3>Single & Twin Rooms</h3><p class="room-size">1–2 Guests · Rooms D6, C3, D3</p></div>
+              <div class="room-price"><span class="price-from">from</span><span class="price-amount">£85</span><span class="price-night">/night</span></div>
+            </div>
+            <p class="room-desc">Perfect for solo travellers and couples. Our single room sleeps 1, and our twin rooms offer two single beds — ideal for friends or colleagues sharing.</p>
+            <div class="room-tags"><span>Free Wi-Fi</span><span>Breakfast</span><span>Hair Dryer</span><span>Heating</span></div>
+            <a href="booking.html" class="btn btn-primary btn-sm">Book Now</a>
+          </div>
+        </div>
+        <div class="room-card reveal">
+          <div class="room-image" style="background-image:url('assets/images/twin-room.jpg')">
+            <div class="room-badge">From £135/night</div>
+          </div>
+          <div class="room-info">
+            <div class="room-header">
+              <div><h3>Family Rooms</h3><p class="room-size">3–5 Guests · Multiple Rooms</p></div>
+              <div class="room-price"><span class="price-from">from</span><span class="price-amount">£135</span><span class="price-night">/night</span></div>
+            </div>
+            <p class="room-desc">Spacious rooms designed for families, with double and single bed combinations. Great value for small groups and families exploring London together.</p>
+            <div class="room-tags"><span>Free Wi-Fi</span><span>Breakfast</span><span>Iron</span><span>Wardrobe</span></div>
+            <a href="booking.html" class="btn btn-primary btn-sm">Book Now</a>
+          </div>
+        </div>
+        <div class="room-card reveal">
+          <div class="room-image" style="background-image:url('assets/images/twin-room.jpg')">
+            <div class="room-badge room-badge-dark">Group Rooms</div>
+          </div>
+          <div class="room-info">
+            <div class="room-header">
+              <div><h3>Group Rooms</h3><p class="room-size">6–7 Guests · Bunk Bed Rooms</p></div>
+              <div class="room-price"><span class="price-from">from</span><span class="price-amount">£225</span><span class="price-night">/night</span></div>
+            </div>
+            <p class="room-desc">Our larger bunk-bed rooms are perfect for groups of up to 7 — excellent per-person value for friends, tour groups, and family parties visiting London.</p>
+            <div class="room-tags"><span>Free Wi-Fi</span><span>Breakfast</span><span>Bunk Beds</span><span>Heating</span></div>
+            <a href="booking.html" class="btn btn-primary btn-sm">Book Now</a>
+          </div>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:48px">
+        <a href="rooms.html" class="btn btn-outline-dark">View All 22 Rooms</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Dining -->
+  <section class="dining-section">
+    <div class="container">
+      <div class="dining-grid reveal">
+        <div class="dining-image" style="background-image:url('assets/images/dining-room.jpg')"></div>
+        <div class="dining-text">
+          <p class="section-label">Breakfast</p>
+          <h2 class="section-title">Start Your Day Right</h2>
+          <p class="about-description">Our London-themed dining room is the perfect place to begin each day. Breakfast is available for all guests — a great way to fuel up before exploring the capital.</p>
+          <p class="about-description">Decorated with iconic London photography and artwork, our bright, welcoming dining room makes breakfast more than just a meal — it's a little piece of London culture every morning.</p>
+          <a href="contact.html" class="btn btn-outline-dark" style="margin-top:24px">Ask About Breakfast Times</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Banner -->
+  <section class="cta-banner">
+    <div class="cta-overlay"></div>
+    <div class="container cta-content reveal">
+      <p class="section-label">Ready to Visit?</p>
+      <h2 class="cta-title">Book Your London Stay Today</h2>
+      <p class="cta-subtitle">Rooms from £85 per night. Central Paddington location. Breakfast included.</p>
+      <div class="cta-actions">
+        <a href="booking.html" class="btn btn-primary">Book Now</a>
+        <a href="contact.html" class="btn btn-outline">Get in Touch</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <p class="footer-logo">BLUEDAWS</p>
+          <p class="footer-tagline">Private Hotel · Paddington, London</p>
+          <p class="footer-description">Comfortable, affordable accommodation in central London — ideally located for transport, sightseeing and business.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Navigate</h4>
+          <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="rooms.html">Rooms</a></li>
+            <li><a href="gallery.html">Gallery</a></li>
+            <li><a href="contact.html">Contact</a></li>
+            <li><a href="booking.html">Book Now</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>What's Included</h4>
+          <ul>
+            <li><a href="#">Free Wi-Fi</a></li>
+            <li><a href="#">Breakfast</a></li>
+            <li><a href="#">Luggage Storage</a></li>
+            <li><a href="#">In-Room Essentials</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Contact</h4>
+          <address>
+            <p>Paddington, London</p>
+            <p>Check-in: from 1:00 PM</p>
+            <p>Check-out: by 12:00 PM</p>
+            <p>reservations@bluedawshotel.com</p>
+          </address>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 Bluedaws Private Hotel. All rights reserved.</p>
+        <div class="footer-links">
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Service</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script src="js/home.js"></script>
 </body>
 </html>

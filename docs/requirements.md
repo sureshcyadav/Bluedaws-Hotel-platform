@@ -15,7 +15,7 @@ Develop a modern, responsive, and professional website for Bluedaws Private Hote
 - Contact information
 
 ### Rooms Page
-- Room listings
+- Room listing
 - Room descriptions
 - Room photos
 - Pricing information
