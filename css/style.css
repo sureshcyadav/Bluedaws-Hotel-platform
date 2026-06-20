@@ -4,13 +4,9 @@
 
 /* ---------- Promotion Banner (all pages, injected by main.js) ---------- */
 .promo-banner {
-  position: fixed;
-  left: 0; right: 0;
-  z-index: 1005;
   background: linear-gradient(135deg, #1a1208 0%, #2d1f0a 50%, #1a1208 100%);
-  border-top: 2px solid var(--gold);
   border-bottom: 2px solid rgba(201,169,110,0.3);
-  padding: 14px 0;
+  padding: 10px 0;
 }
 .promo-inner {
   display: flex;
@@ -66,9 +62,6 @@
 
 /* ---------- Announcement Banner ---------- */
 .site-announcement {
-  position: fixed;
-  top: 0; left: 0; right: 0;
-  z-index: 1010;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -196,17 +189,24 @@ button { cursor: pointer; }
 .btn-full { width: 100%; text-align: center; }
 
 /* ============================================================
-   NAVBAR
+   SITE HEADER WRAPPER (fixed container — holds bars + navbar)
    ============================================================ */
-.navbar {
+#site-header {
   position: fixed;
   top: 0; left: 0; right: 0;
   z-index: 1000;
+}
+
+/* ============================================================
+   NAVBAR
+   ============================================================ */
+.navbar {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 24px 48px;
-  transition: all var(--ease);
+  transition: background var(--ease), padding var(--ease), box-shadow var(--ease);
 }
 .navbar.scrolled {
   background: rgba(13,13,13,0.97);
