@@ -194,6 +194,48 @@ a:hover { text-decoration: underline; }
   text-decoration: underline;
 }
 
+/* ── Content Sub-tabs ────────────────────────────────────────── */
+.ctab-bar { display: flex; gap: 6px; margin-bottom: 18px; flex-wrap: wrap; }
+.ctab {
+  padding: 8px 18px; border: 1.5px solid #e2e8f0; background: white;
+  border-radius: 8px; font-size: 13px; font-weight: 500; color: #64748b;
+  cursor: pointer; transition: all 0.15s; font-family: inherit;
+}
+.ctab:hover { border-color: #c9a96e; color: #c9a96e; }
+.ctab.active { background: #0f172a; border-color: #0f172a; color: white; }
+
+/* ── Toggle Switch ───────────────────────────────────────────── */
+.cf-toggle-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.cf-toggle-wrap { display: flex; align-items: center; gap: 12px; }
+.toggle-switch { position: relative; display: inline-block; width: 46px; height: 25px; flex-shrink: 0; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute; inset: 0; background: #cbd5e1; border-radius: 25px; cursor: pointer;
+  transition: background 0.2s;
+}
+.toggle-slider::before {
+  content: ''; position: absolute; width: 19px; height: 19px;
+  left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: transform 0.2s;
+}
+.toggle-switch input:checked + .toggle-slider { background: #059669; }
+.toggle-switch input:checked + .toggle-slider::before { transform: translateX(21px); }
+.toggle-label { font-size: 13px; color: #475569; font-weight: 500; }
+
+/* ── Image Field ─────────────────────────────────────────────── */
+.cf-img-wrap { display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap; }
+.cf-img-preview {
+  width: 100px; height: 70px; object-fit: cover;
+  border-radius: 6px; border: 1px solid #e2e8f0; flex-shrink: 0;
+}
+.cf-img-placeholder {
+  width: 100px; height: 70px; border-radius: 6px;
+  border: 1.5px dashed #e2e8f0; display: flex; align-items: center;
+  justify-content: center; font-size: 11px; color: #94a3b8; flex-shrink: 0;
+}
+.cf-img-input-wrap { flex: 1; min-width: 200px; }
+.cf-img-input-wrap .cf-input { margin-bottom: 6px; }
+.cf-img-input-wrap .cf-row { flex-wrap: wrap; }
+
 /* ── Content Tab ─────────────────────────────────────────────── */
 .content-block {
   background: white; border-radius: 12px;

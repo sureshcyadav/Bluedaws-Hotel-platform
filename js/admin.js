@@ -40,7 +40,7 @@ function showApp() {
 function showSection(name) {
   document.querySelectorAll('.admin-section').forEach(s => s.classList.add('hidden'));
   const cap = name.charAt(0).toUpperCase() + name.slice(1);
-  document.getElementById(`section${cap}`).classList.remove('hidden');
+  document.getElementById('section' + cap).classList.remove('hidden');
   document.querySelectorAll('.nav-item').forEach(n =>
     n.classList.toggle('active', n.dataset.section === name)
   );
@@ -113,7 +113,7 @@ async function loadStats() {
     document.getElementById('statPending').textContent   = b.pending;
     document.getElementById('statConfirmed').textContent = b.confirmed;
     document.getElementById('statCancelled').textContent = b.cancelled;
-    document.getElementById('statRevenue').textContent   = `£${Number(b.revenue).toLocaleString('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+    document.getElementById('statRevenue').textContent   = '£' + Number(b.revenue).toLocaleString('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
     document.getElementById('statUnread').textContent    = c.unread;
 
     const pb = document.getElementById('pendingBadge');
@@ -152,32 +152,30 @@ function renderBookings() {
     return;
   }
   const payLabel = { card: 'Card', bank: 'Bank Transfer', payathotel: 'Pay at Hotel' };
-  tbody.innerHTML = list.map(b => `
-    <tr>
-      <td><span class="ref-badge">${b.ref}</span></td>
-      <td><strong>${b.guest_first_name} ${b.guest_last_name}</strong><br><small>${b.guest_country}</small></td>
-      <td><a href="mailto:${b.guest_email}">${b.guest_email}</a><br><small>${b.guest_phone}</small></td>
-      <td>${b.room_name}<br><small>${b.room_code}</small></td>
-      <td>${fmtDate(b.checkin_date)}</td>
-      <td>${fmtDate(b.checkout_date)}</td>
-      <td>${b.nights}</td>
-      <td>£${Number(b.total_amount).toLocaleString()}</td>
-      <td>${payLabel[b.payment_method] || b.payment_method}</td>
-      <td><span class="status-badge status-${b.status}">${b.status}</span></td>
-      <td class="actions-cell">
-        ${b.status === 'pending'   ? `<button class="btn-action btn-confirm" onclick="updateBooking(${b.id},'confirmed')">Confirm</button>` : ''}
-        ${b.status !== 'cancelled' ? `<button class="btn-action btn-cancel"  onclick="updateBooking(${b.id},'cancelled')">Cancel</button>`  : ''}
-        ${b.status === 'cancelled' ? `<button class="btn-action btn-restore" onclick="updateBooking(${b.id},'pending')">Restore</button>`   : ''}
-      </td>
-    </tr>
-  `).join('');
+  tbody.innerHTML = list.map(b => '<tr>'
+    + '<td><span class="ref-badge">' + b.ref + '</span></td>'
+    + '<td><strong>' + b.guest_first_name + ' ' + b.guest_last_name + '</strong><br><small>' + b.guest_country + '</small></td>'
+    + '<td><a href="mailto:' + b.guest_email + '">' + b.guest_email + '</a><br><small>' + b.guest_phone + '</small></td>'
+    + '<td>' + b.room_name + '<br><small>' + b.room_code + '</small></td>'
+    + '<td>' + fmtDate(b.checkin_date) + '</td>'
+    + '<td>' + fmtDate(b.checkout_date) + '</td>'
+    + '<td>' + b.nights + '</td>'
+    + '<td>£' + Number(b.total_amount).toLocaleString() + '</td>'
+    + '<td>' + (payLabel[b.payment_method] || b.payment_method) + '</td>'
+    + '<td><span class="status-badge status-' + b.status + '">' + b.status + '</span></td>'
+    + '<td class="actions-cell">'
+    + (b.status === 'pending'   ? '<button class="btn-action btn-confirm" onclick="updateBooking(' + b.id + ',\'confirmed\')">Confirm</button>' : '')
+    + (b.status !== 'cancelled' ? '<button class="btn-action btn-cancel"  onclick="updateBooking(' + b.id + ',\'cancelled\')">Cancel</button>'  : '')
+    + (b.status === 'cancelled' ? '<button class="btn-action btn-restore" onclick="updateBooking(' + b.id + ',\'pending\')">Restore</button>'   : '')
+    + '</td></tr>'
+  ).join('');
 }
 
 async function updateBooking(id, status) {
   const labels = { confirmed: 'confirm', cancelled: 'cancel', pending: 'restore' };
-  if (!confirm(`Are you sure you want to ${labels[status]} this booking?`)) return;
+  if (!confirm('Are you sure you want to ' + labels[status] + ' this booking?')) return;
   try {
-    const { ok, data } = await apiFetch('PATCH', `/api/admin/bookings/${id}/status`, { status });
+    const { ok, data } = await apiFetch('PATCH', '/api/admin/bookings/' + id + '/status', { status });
     if (!ok) { alert(data.message); return; }
     const b = allBookings.find(x => x.id === id);
     if (b) b.status = status;
@@ -218,29 +216,25 @@ function renderContacts() {
     tbody.innerHTML = '<tr><td colspan="8" class="table-empty">No messages found.</td></tr>';
     return;
   }
-  tbody.innerHTML = list.map(c => `
-    <tr>
-      <td><strong>${c.first_name} ${c.last_name}</strong></td>
-      <td><a href="mailto:${c.email}">${c.email}</a></td>
-      <td>${c.phone || '—'}</td>
-      <td>${c.subject}</td>
-      <td>
-        <span class="msg-preview">${c.message.substring(0, 55)}${c.message.length > 55 ? '…' : ''}</span>
-        <button class="btn-read-more" onclick="openModal(${c.id})">Read more</button>
-      </td>
-      <td>${fmtDateTime(c.created_at)}</td>
-      <td><span class="status-badge status-${c.status}">${c.status}</span></td>
-      <td class="actions-cell">
-        ${c.status === 'unread'   ? `<button class="btn-action btn-confirm" onclick="updateContact(${c.id},'read')">Mark Read</button>`       : ''}
-        ${c.status !== 'replied'  ? `<button class="btn-action btn-restore" onclick="updateContact(${c.id},'replied')">Mark Replied</button>` : ''}
-      </td>
-    </tr>
-  `).join('');
+  tbody.innerHTML = list.map(c => '<tr>'
+    + '<td><strong>' + c.first_name + ' ' + c.last_name + '</strong></td>'
+    + '<td><a href="mailto:' + c.email + '">' + c.email + '</a></td>'
+    + '<td>' + (c.phone || '—') + '</td>'
+    + '<td>' + c.subject + '</td>'
+    + '<td><span class="msg-preview">' + c.message.substring(0, 55) + (c.message.length > 55 ? '…' : '') + '</span>'
+    + '<button class="btn-read-more" onclick="openModal(' + c.id + ')">Read more</button></td>'
+    + '<td>' + fmtDateTime(c.created_at) + '</td>'
+    + '<td><span class="status-badge status-' + c.status + '">' + c.status + '</span></td>'
+    + '<td class="actions-cell">'
+    + (c.status === 'unread'  ? '<button class="btn-action btn-confirm" onclick="updateContact(' + c.id + ',\'read\')">Mark Read</button>' : '')
+    + (c.status !== 'replied' ? '<button class="btn-action btn-restore" onclick="updateContact(' + c.id + ',\'replied\')">Mark Replied</button>' : '')
+    + '</td></tr>'
+  ).join('');
 }
 
 async function updateContact(id, status) {
   try {
-    const { ok, data } = await apiFetch('PATCH', `/api/admin/contacts/${id}/status`, { status });
+    const { ok, data } = await apiFetch('PATCH', '/api/admin/contacts/' + id + '/status', { status });
     if (!ok) { alert(data.message); return; }
     const c = allContacts.find(x => x.id === id);
     if (c) c.status = status;
@@ -258,102 +252,178 @@ document.getElementById('contactFilters').addEventListener('click', e => {
 });
 
 // ── Content ───────────────────────────────────────────────────
+let _currentCtab    = 'prices';
+let _allSettingsData = [];
+
 async function loadContent() {
   document.getElementById('contentSections').innerHTML = '<div class="table-loading">Loading…</div>';
   try {
     const { ok, data } = await apiFetch('GET', '/api/admin/content');
     if (!ok) return;
-    renderContent(data.data);
+    _allSettingsData = data.data;
+    document.querySelectorAll('.ctab').forEach(btn => {
+      btn.onclick = () => switchCtab(btn.dataset.ctab);
+    });
+    switchCtab(_currentCtab);
   } catch {
     document.getElementById('contentSections').innerHTML = '<div class="table-error">Failed to load content.</div>';
   }
 }
 
-function renderContent(settings) {
-  const grouped = { rooms: [], hotel: [] };
-  settings.forEach(s => { if (grouped[s.category]) grouped[s.category].push(s); });
-
-  const html = `
-    <div class="content-block">
-      <div class="content-block-header">
-        <h3>Room Prices</h3>
-        <p>Price per night in GBP — updates apply to new bookings immediately</p>
-      </div>
-      <div class="content-grid">
-        ${grouped.rooms.map(s => `
-          <div class="cf-item">
-            <label class="cf-label">${s.label}</label>
-            <div class="cf-row">
-              <span class="cf-prefix">£</span>
-              <input type="number" class="cf-input" id="cfi-${s.key}" value="${esc(s.value)}" min="0" step="1">
-              <button class="btn-cf-save" onclick="saveContent('${s.key}')">Save</button>
-            </div>
-            <span class="cf-feedback hidden" id="cfb-${s.key}">Saved!</span>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-
-    <div class="content-block">
-      <div class="content-block-header">
-        <h3>Hotel Settings</h3>
-        <p>General hotel information and booking policies</p>
-      </div>
-      <div class="content-list">
-        ${grouped.hotel.map(s => `
-          <div class="cf-item">
-            <label class="cf-label">${s.label}</label>
-            <div class="cf-row">
-              <input type="text" class="cf-input" id="cfi-${s.key}" value="${esc(s.value)}">
-              <button class="btn-cf-save" onclick="saveContent('${s.key}')">Save</button>
-            </div>
-            <span class="cf-feedback hidden" id="cfb-${s.key}">Saved!</span>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-  `;
-  document.getElementById('contentSections').innerHTML = html;
+function switchCtab(tab) {
+  _currentCtab = tab;
+  document.querySelectorAll('.ctab').forEach(b => b.classList.toggle('active', b.dataset.ctab === tab));
+  const grouped = {};
+  _allSettingsData.forEach(s => { (grouped[s.category] = grouped[s.category] || []).push(s); });
+  const c = document.getElementById('contentSections');
+  if (tab === 'prices')       c.innerHTML = _renderPrices(grouped.rooms || []);
+  else if (tab === 'hotel')   c.innerHTML = _renderHotel(grouped.hotel || []);
+  else if (tab === 'images')  c.innerHTML = _renderImages(grouped.images || []);
+  else if (tab === 'promotion')    c.innerHTML = _renderPromotion(grouped.promotion || []);
+  else if (tab === 'announcement') c.innerHTML = _renderAnnounce(grouped.announcement || []);
 }
 
-async function saveContent(key) {
-  const input    = document.getElementById(`cfi-${key}`);
-  const feedback = document.getElementById(`cfb-${key}`);
-  const btn      = input.closest('.cf-row').querySelector('.btn-cf-save');
+function _cfField(s, type, prefix) {
+  type   = type   || 'text';
+  prefix = prefix || '';
+  return '<div class="cf-item">'
+    + '<label class="cf-label">' + s.label + '</label>'
+    + '<div class="cf-row">'
+    + (prefix ? '<span class="cf-prefix">' + prefix + '</span>' : '')
+    + '<input type="' + type + '" class="cf-input" id="cfi-' + s.key + '" value="' + esc(s.value) + '"' + (type === 'number' ? ' min="0" step="1"' : '') + '>'
+    + '<button class="btn-cf-save" onclick="saveContent(\'' + s.key + '\')">Save</button>'
+    + '</div>'
+    + '<span class="cf-feedback hidden" id="cfb-' + s.key + '">Saved!</span>'
+    + '</div>';
+}
+
+function _cfImageField(s) {
+  const hasImg = s.value && s.value.indexOf('http') === 0;
+  return '<div class="cf-item">'
+    + '<label class="cf-label">' + s.label + '</label>'
+    + '<div class="cf-img-wrap">'
+    + (hasImg
+        ? '<img class="cf-img-preview" id="cfp-' + s.key + '" src="' + esc(s.value) + '" alt="" onerror="this.style.display=\'none\'">'
+        : '<div class="cf-img-placeholder" id="cfp-' + s.key + '">No image</div>')
+    + '<div class="cf-img-input-wrap">'
+    + '<div class="cf-row">'
+    + '<input type="url" class="cf-input" id="cfi-' + s.key + '" value="' + esc(s.value) + '" placeholder="https://...">'
+    + '<button class="btn-cf-save" onclick="saveContent(\'' + s.key + '\',true)">Save</button>'
+    + '</div>'
+    + '<span class="cf-feedback hidden" id="cfb-' + s.key + '">Saved!</span>'
+    + '</div></div></div>';
+}
+
+function _cfToggle(s, liveLabel, offLabel) {
+  const on = s.value === 'true';
+  return '<div class="cf-item cf-toggle-row">'
+    + '<label class="cf-label">' + s.label + '</label>'
+    + '<div class="cf-toggle-wrap">'
+    + '<label class="toggle-switch">'
+    + '<input type="checkbox" id="cfi-' + s.key + '"' + (on ? ' checked' : '') + ' onchange="saveToggle(\'' + s.key + '\',\'' + liveLabel + '\',\'' + offLabel + '\')">'
+    + '<span class="toggle-slider"></span>'
+    + '</label>'
+    + '<span class="toggle-label" id="tgl-' + s.key + '">' + (on ? liveLabel : offLabel) + '</span>'
+    + '</div></div>';
+}
+
+function _renderPrices(list) {
+  return '<div class="content-block">'
+    + '<div class="content-block-header"><h3>Room Prices</h3><p>Price per night in GBP</p></div>'
+    + '<div class="content-grid">' + list.map(s => _cfField(s, 'number', '£')).join('') + '</div>'
+    + '</div>';
+}
+
+function _renderHotel(list) {
+  return '<div class="content-block">'
+    + '<div class="content-block-header"><h3>Hotel Settings</h3><p>General information and policies</p></div>'
+    + '<div class="content-list">' + list.map(s => _cfField(s)).join('') + '</div>'
+    + '</div>';
+}
+
+function _renderImages(list) {
+  return '<div class="content-block">'
+    + '<div class="content-block-header"><h3>Images</h3><p>Paste any public image URL (Cloudinary, Imgur, etc.)</p></div>'
+    + '<div class="content-list">' + list.map(s => _cfImageField(s)).join('') + '</div>'
+    + '</div>';
+}
+
+function _renderPromotion(list) {
+  const active = list.find(s => s.key === 'promo_active');
+  const rest   = list.filter(s => s.key !== 'promo_active');
+  return '<div class="content-block">'
+    + '<div class="content-block-header"><h3>Promotion</h3><p>A featured offer shown on the homepage when active</p></div>'
+    + '<div class="content-list">'
+    + (active ? _cfToggle(active, 'Promotion is LIVE', 'Promotion is OFF') : '')
+    + rest.map(s => _cfField(s)).join('')
+    + '</div></div>';
+}
+
+function _renderAnnounce(list) {
+  const active = list.find(s => s.key === 'ann_active');
+  const rest   = list.filter(s => s.key !== 'ann_active');
+  return '<div class="content-block">'
+    + '<div class="content-block-header"><h3>Announcement Banner</h3><p>A notice shown at the top of every page — toggle ON to make it live</p></div>'
+    + '<div class="content-list">'
+    + (active ? _cfToggle(active, 'Banner is LIVE on website', 'Banner is hidden') : '')
+    + rest.map(s => _cfField(s)).join('')
+    + '</div></div>';
+}
+
+async function saveToggle(key, liveLabel, offLabel) {
+  const input = document.getElementById('cfi-' + key);
+  const label = document.getElementById('tgl-' + key);
+  const value = input.checked ? 'true' : 'false';
+  try {
+    const { ok, data } = await apiFetch('PATCH', '/api/admin/content/' + key, { value });
+    if (!ok) { alert(data.message); input.checked = !input.checked; return; }
+    const item = _allSettingsData.find(s => s.key === key);
+    if (item) item.value = value;
+    if (label) label.textContent = input.checked ? liveLabel : offLabel;
+  } catch { alert('Failed to save.'); input.checked = !input.checked; }
+}
+
+async function saveContent(key, isImage) {
+  const input    = document.getElementById('cfi-' + key);
+  const feedback = document.getElementById('cfb-' + key);
+  const btn      = isImage
+    ? input.closest('.cf-img-input-wrap').querySelector('.btn-cf-save')
+    : input.closest('.cf-row').querySelector('.btn-cf-save');
 
   btn.textContent = 'Saving…';
   btn.disabled    = true;
 
   try {
-    const { ok, data } = await apiFetch('PATCH', `/api/admin/content/${key}`, { value: input.value });
+    const { ok, data } = await apiFetch('PATCH', '/api/admin/content/' + key, { value: input.value });
     if (!ok) { alert(data.message); return; }
+    const item = _allSettingsData.find(s => s.key === key);
+    if (item) item.value = input.value;
+    if (isImage && input.value) {
+      const prev = document.getElementById('cfp-' + key);
+      if (prev) prev.outerHTML = '<img class="cf-img-preview" id="cfp-' + key + '" src="' + esc(input.value) + '" alt="" onerror="this.style.display=\'none\'">';
+    }
     feedback.classList.remove('hidden');
     setTimeout(() => feedback.classList.add('hidden'), 2500);
   } catch { alert('Failed to save.'); }
   finally { btn.textContent = 'Save'; btn.disabled = false; }
 }
 
-function esc(str) {
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
 // ── Message Modal ─────────────────────────────────────────────
 function openModal(id) {
   const c = allContacts.find(x => x.id === id);
   if (!c) return;
-  document.getElementById('modalTitle').textContent = `${c.first_name} ${c.last_name} — ${c.subject}`;
-  document.getElementById('modalBody').innerHTML = `
-    <div class="modal-meta">
-      <span>Email: <a href="mailto:${c.email}">${c.email}</a></span>
-      ${c.phone ? `<span>Phone: ${c.phone}</span>` : ''}
-      <span>Received: ${fmtDateTime(c.created_at)}</span>
-      <span>Status: <span class="status-badge status-${c.status}">${c.status}</span></span>
-    </div>
-    <p class="modal-message">${c.message.replace(/\n/g, '<br>')}</p>
-    <div class="modal-actions">
-      <a href="mailto:${c.email}?subject=Re: ${encodeURIComponent(c.subject)}" class="btn-action btn-confirm" onclick="updateContact(${c.id},'replied')">Reply via Email</a>
-    </div>
-  `;
+  document.getElementById('modalTitle').textContent = c.first_name + ' ' + c.last_name + ' — ' + c.subject;
+  document.getElementById('modalBody').innerHTML =
+    '<div class="modal-meta">'
+    + '<span>Email: <a href="mailto:' + c.email + '">' + c.email + '</a></span>'
+    + (c.phone ? '<span>Phone: ' + c.phone + '</span>' : '')
+    + '<span>Received: ' + fmtDateTime(c.created_at) + '</span>'
+    + '<span>Status: <span class="status-badge status-' + c.status + '">' + c.status + '</span></span>'
+    + '</div>'
+    + '<p class="modal-message">' + c.message.replace(/\n/g, '<br>') + '</p>'
+    + '<div class="modal-actions">'
+    + '<a href="mailto:' + c.email + '?subject=Re: ' + encodeURIComponent(c.subject) + '" class="btn-action btn-confirm" onclick="updateContact(' + c.id + ',\'replied\')">Reply via Email</a>'
+    + '</div>';
   document.getElementById('messageModal').classList.remove('hidden');
   if (c.status === 'unread') updateContact(id, 'read');
 }
@@ -374,6 +444,9 @@ function fmtDate(s) {
 function fmtDateTime(s) {
   if (!s) return '—';
   return new Date(s).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+function esc(str) {
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 // ── Init ──────────────────────────────────────────────────────

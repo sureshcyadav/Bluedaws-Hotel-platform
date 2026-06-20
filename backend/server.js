@@ -97,7 +97,25 @@ async function initDb() {
       ('hotel_address',   'Paddington, London',             'Address',                     'hotel'),
       ('hotel_email',     'bluedawsprivatehotel@gmail.com', 'Contact Email',               'hotel'),
       ('hotel_phone',     '',                               'Contact Phone',               'hotel'),
-      ('deposit_percent', '50',                             'Deposit Required (%)',        'hotel')
+      ('deposit_percent', '50',                             'Deposit Required (%)',        'hotel'),
+      -- Images
+      ('img_hero',        '', 'Hero / Banner Image URL (all pages)',  'images'),
+      ('img_double_room', '', 'Double Room Image URL',                'images'),
+      ('img_twin_room',   '', 'Twin Room Image URL',                  'images'),
+      ('img_exterior',    '', 'Exterior Photo URL',                   'images'),
+      ('img_gallery_1',   '', 'Gallery Image 1 URL',                  'images'),
+      ('img_gallery_2',   '', 'Gallery Image 2 URL',                  'images'),
+      ('img_gallery_3',   '', 'Gallery Image 3 URL',                  'images'),
+      -- Promotion
+      ('promo_active',    'false',        'Active',                   'promotion'),
+      ('promo_title',     'Special Offer','Title',                    'promotion'),
+      ('promo_badge',     '',             'Badge Text (e.g. 20% OFF)','promotion'),
+      ('promo_desc',      '',             'Description',              'promotion'),
+      ('promo_expiry',    '',             'Valid Until (e.g. 30 Jun 2026)', 'promotion'),
+      -- Announcement
+      ('ann_active',      'false', 'Active',                          'announcement'),
+      ('ann_text',        '',      'Announcement Text',               'announcement'),
+      ('ann_type',        'info',  'Type  (info / warning / success)','announcement')
     ON CONFLICT (key) DO NOTHING;
   `);
 

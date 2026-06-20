@@ -33,6 +33,33 @@ if (navToggle && navLinks) {
   });
 }
 
+// ---------- Announcement banner ----------
+(function () {
+  const API_BASE = 'https://bluedaws-hotel-platform.onrender.com';
+  fetch(API_BASE + '/api/settings')
+    .then(r => r.json())
+    .then(function (res) {
+      if (!res || !res.data) return;
+      const d = res.data;
+      if (d.ann_active !== 'true' || !d.ann_text) return;
+      const type = ['info', 'warning', 'success'].includes(d.ann_type) ? d.ann_type : 'info';
+      const bar = document.createElement('div');
+      bar.className = 'site-announcement ann-' + type;
+      bar.innerHTML = '<span class="ann-text">' + d.ann_text.replace(/</g, '&lt;') + '</span>'
+        + '<button class="ann-close" aria-label="Dismiss">&times;</button>';
+      bar.querySelector('.ann-close').addEventListener('click', function () {
+        bar.style.height = bar.offsetHeight + 'px';
+        requestAnimationFrame(function () {
+          bar.style.height = '0';
+          bar.style.opacity = '0';
+          setTimeout(function () { bar.remove(); }, 300);
+        });
+      });
+      document.body.insertBefore(bar, document.body.firstChild);
+    })
+    .catch(function () {});
+})();
+
 // ---------- Scroll reveal ----------
 const revealObserver = new IntersectionObserver((entries) => {
   entries.forEach((entry, i) => {
