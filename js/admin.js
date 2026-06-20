@@ -6,6 +6,24 @@ let allContacts = [];
 let bookingFilter = 'all';
 let contactFilter = 'all';
 
+// ── Calendar state ────────────────────────────────────────────
+let calBookings  = [];
+let calWeekStart = calGetMonday(new Date());
+
+const CAL_ROOMS = [
+  { code:'D6', name:'Single Room'     }, { code:'C3', name:'Twin Room'       },
+  { code:'D3', name:'Twin Room'       }, { code:'B6', name:'Triple Room'     },
+  { code:'C6', name:'Triple Room'     }, { code:'B8', name:'Dbl + Single'    },
+  { code:'B7', name:'Family Room'     }, { code:'E2', name:'Family Room'     },
+  { code:'E3', name:'Family Room'     }, { code:'B2', name:'Large Family'    },
+  { code:'B4', name:'Large Family'    }, { code:'B5', name:'Group 6-bed'     },
+  { code:'C1', name:'Group 6-bed'     }, { code:'C4', name:'Group 6-bed'     },
+  { code:'D1', name:'Group 6-bed'     }, { code:'D2', name:'Group 6-bed'     },
+  { code:'D5', name:'Group 6-bed'     }, { code:'B3', name:'Group Mixed'     },
+  { code:'C5', name:'Group Mixed'     }, { code:'D4', name:'Group Mixed'     },
+  { code:'Z6', name:'Large Group'     }, { code:'C2', name:'Large Group'     },
+];
+
 // ── Auth helpers ──────────────────────────────────────────────
 const getToken   = () => localStorage.getItem('bdw_admin_token');
 const setToken   = t  => localStorage.setItem('bdw_admin_token', t);
@@ -46,6 +64,7 @@ function showSection(name) {
   );
   if (name === 'dashboard') loadStats();
   if (name === 'bookings')  loadBookings();
+  if (name === 'calendar')  loadCalendar();
   if (name === 'contacts')  loadContacts();
   if (name === 'content')   loadContent();
 }
@@ -406,6 +425,155 @@ async function saveContent(key, isImage) {
     setTimeout(() => feedback.classList.add('hidden'), 2500);
   } catch { alert('Failed to save.'); }
   finally { btn.textContent = 'Save'; btn.disabled = false; }
+}
+
+// ── Calendar ───────────────────────────────────────────────────
+document.getElementById('refreshCalendar').addEventListener('click', loadCalendar);
+
+function calGetMonday(date) {
+  var d = new Date(date); d.setHours(0,0,0,0);
+  var day = d.getDay();
+  d.setDate(d.getDate() - (day === 0 ? 6 : day - 1));
+  return d;
+}
+
+function calNav(dir) {
+  calWeekStart = new Date(calWeekStart);
+  calWeekStart.setDate(calWeekStart.getDate() + dir * 7);
+  renderCalendar();
+}
+
+function calGoToday() {
+  calWeekStart = calGetMonday(new Date());
+  renderCalendar();
+}
+
+async function loadCalendar() {
+  document.getElementById('calGrid').innerHTML = '<div class="table-loading">Loading…</div>';
+  try {
+    const { ok, data } = await apiFetch('GET', '/api/admin/bookings');
+    if (!ok) return;
+    calBookings = data.data;
+    renderCalendar();
+  } catch {
+    document.getElementById('calGrid').innerHTML = '<div class="table-error">Failed to load bookings.</div>';
+  }
+}
+
+function renderCalendar() {
+  var today   = new Date(); today.setHours(0,0,0,0);
+  var weekEnd = new Date(calWeekStart); weekEnd.setDate(weekEnd.getDate() + 7);
+
+  var days = [];
+  for (var i = 0; i < 7; i++) {
+    var d = new Date(calWeekStart); d.setDate(d.getDate() + i);
+    days.push(d);
+  }
+
+  // Range label
+  var fmt = function(d, o) { return d.toLocaleDateString('en-GB', o); };
+  document.getElementById('calRangeLabel').textContent =
+    fmt(days[0], { day:'numeric', month:'short' }) + ' – ' +
+    fmt(days[6], { day:'numeric', month:'short', year:'numeric' });
+
+  // Header
+  var html = '<div class="cal-head-row">';
+  html += '<div class="cal-room-col-hdr">Room</div>';
+  html += '<div class="cal-days-hdr">';
+  days.forEach(function(d) {
+    var isToday = d.getTime() === today.getTime();
+    html += '<div class="cal-day-hdr' + (isToday ? ' cal-today' : '') + '">'
+      + '<div class="cal-dname">' + fmt(d, { weekday:'short' }) + '</div>'
+      + '<div class="cal-dnum">'  + d.getDate() + ' ' + fmt(d, { month:'short' }) + '</div>'
+      + '</div>';
+  });
+  html += '</div></div>';
+
+  // Rows — one per room
+  CAL_ROOMS.forEach(function(room) {
+    var bookings = calBookings.filter(function(b) {
+      if (b.room_code.toUpperCase() !== room.code) return false;
+      if (b.status === 'cancelled') return false;
+      return new Date(b.checkout_date) > calWeekStart && new Date(b.checkin_date) < weekEnd;
+    });
+
+    html += '<div class="cal-row">';
+
+    // Room label (sticky left)
+    html += '<div class="cal-room-label">'
+      + '<strong class="cal-rcode">' + room.code + '</strong>'
+      + '<span class="cal-rname">'  + room.name  + '</span>'
+      + '</div>';
+
+    // Cells wrapper
+    html += '<div class="cal-cells">';
+
+    // Background day cells
+    days.forEach(function(d) {
+      html += '<div class="cal-cell' + (d.getTime() === today.getTime() ? ' cal-cell-today' : '') + '"></div>';
+    });
+
+    // Booking blocks (absolutely positioned)
+    bookings.forEach(function(b) {
+      var ci = new Date(b.checkin_date);
+      var co = new Date(b.checkout_date);
+      var bs = ci < calWeekStart ? calWeekStart : ci;
+      var be = co > weekEnd      ? weekEnd      : co;
+      var startDay = Math.round((bs - calWeekStart) / 86400000);
+      var spanDays = Math.round((be - bs)           / 86400000);
+      if (spanDays <= 0) return;
+
+      var left  = (startDay / 7 * 100).toFixed(3);
+      var width = (spanDays / 7 * 100).toFixed(3);
+      var guestName = b.guest_first_name + ' ' + b.guest_last_name;
+
+      html += '<div class="cal-block cal-bk-' + b.status + '"'
+        + ' style="left:' + left + '%;width:' + width + '%"'
+        + ' onclick="openCalBooking(' + b.id + ')"'
+        + ' title="' + esc(guestName) + ' · ' + b.ref + '">'
+        + '<span class="cal-bk-name">' + esc(guestName) + '</span>'
+        + (spanDays > 1 ? '<span class="cal-bk-ref">' + b.ref + '</span>' : '')
+        + '</div>';
+    });
+
+    html += '</div></div>'; // end cal-cells, cal-row
+  });
+
+  document.getElementById('calGrid').innerHTML = html;
+}
+
+function openCalBooking(id) {
+  var b = calBookings.find(function(x) { return x.id === id; });
+  if (!b) return;
+  var pay = { card:'Card', bank:'Bank Transfer', payathotel:'Pay at Hotel' };
+  document.getElementById('modalTitle').textContent =
+    b.guest_first_name + ' ' + b.guest_last_name + '  ·  Room ' + b.room_code.toUpperCase();
+  document.getElementById('modalBody').innerHTML =
+    '<div class="modal-meta">'
+    + '<span><strong>Ref:</strong> ' + b.ref + '</span>'
+    + '<span><strong>Room:</strong> ' + b.room_name + ' (' + b.room_code.toUpperCase() + ')</span>'
+    + '<span><strong>Check-in:</strong> ' + fmtDate(b.checkin_date) + '</span>'
+    + '<span><strong>Check-out:</strong> ' + fmtDate(b.checkout_date) + '</span>'
+    + '<span><strong>Nights:</strong> ' + b.nights + '</span>'
+    + '<span><strong>Guests:</strong> ' + b.adults + ' adult' + (b.adults !== 1 ? 's' : '')
+      + (b.children > 0 ? ', ' + b.children + ' child' + (b.children !== 1 ? 'ren' : '') : '') + '</span>'
+    + '<span><strong>Total:</strong> £' + Number(b.total_amount).toLocaleString() + '</span>'
+    + '<span><strong>Payment:</strong> ' + (pay[b.payment_method] || b.payment_method) + '</span>'
+    + '<span><strong>Status:</strong> <span class="status-badge status-' + b.status + '">' + b.status + '</span></span>'
+    + (b.special_requests ? '<span><strong>Requests:</strong> ' + esc(b.special_requests) + '</span>' : '')
+    + '</div>'
+    + (b.status === 'pending'
+        ? '<div class="modal-actions">'
+          + '<button class="btn-action btn-confirm" onclick="updateBooking(' + b.id + ',\'confirmed\');document.getElementById(\'messageModal\').classList.add(\'hidden\');loadCalendar()">Confirm Booking</button>'
+          + '<button class="btn-action btn-cancel"  onclick="updateBooking(' + b.id + ',\'cancelled\');document.getElementById(\'messageModal\').classList.add(\'hidden\');loadCalendar()">Cancel</button>'
+          + '</div>'
+        : '')
+    + (b.status === 'confirmed'
+        ? '<div class="modal-actions">'
+          + '<button class="btn-action btn-cancel" onclick="updateBooking(' + b.id + ',\'cancelled\');document.getElementById(\'messageModal\').classList.add(\'hidden\');loadCalendar()">Cancel Booking</button>'
+          + '</div>'
+        : '');
+  document.getElementById('messageModal').classList.remove('hidden');
 }
 
 // ── Message Modal ─────────────────────────────────────────────
