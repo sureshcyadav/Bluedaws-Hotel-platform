@@ -532,7 +532,7 @@ function renderCalendar() {
         + ' onclick="openCalBooking(' + b.id + ')"'
         + ' title="' + esc(guestName) + ' · ' + b.ref + '">'
         + '<span class="cal-bk-name">' + esc(guestName) + '</span>'
-        + (spanDays > 1 ? '<span class="cal-bk-ref">' + b.ref + '</span>' : '')
+        + '<span class="cal-bk-ref">' + b.ref + '</span>'
         + '</div>';
     });
 
