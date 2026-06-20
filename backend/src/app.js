@@ -5,6 +5,7 @@ const morgan   = require('morgan');
 
 const bookingRoutes = require('./routes/bookings');
 const contactRoutes = require('./routes/contacts');
+const adminRoutes   = require('./routes/admin');
 
 const app = express();
 
@@ -24,7 +25,7 @@ app.use(cors({
     if (allowedOrigins.includes(origin)) return callback(null, true);
     callback(new Error(`CORS: origin '${origin}' is not allowed.`));
   },
-  methods:          ['GET', 'POST', 'OPTIONS'],
+  methods:          ['GET', 'POST', 'PATCH', 'OPTIONS'],
   allowedHeaders:   ['Content-Type', 'Authorization'],
   optionsSuccessStatus: 200,
 }));
@@ -50,6 +51,7 @@ app.get('/api/health', (req, res) => {
 // ── Routes ──────────────────────────────────────────────────────────
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/contacts', contactRoutes);
+app.use('/api/admin',    adminRoutes);
 
 // ── 404 ─────────────────────────────────────────────────────────────
 app.use((req, res) => {
