@@ -3,9 +3,10 @@ const cors     = require('cors');
 const helmet   = require('helmet');
 const morgan   = require('morgan');
 
-const bookingRoutes = require('./routes/bookings');
-const contactRoutes = require('./routes/contacts');
-const adminRoutes   = require('./routes/admin');
+const bookingRoutes  = require('./routes/bookings');
+const contactRoutes  = require('./routes/contacts');
+const adminRoutes    = require('./routes/admin');
+const settingsRoutes = require('./routes/settings');
 
 const app = express();
 
@@ -52,6 +53,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/contacts', contactRoutes);
 app.use('/api/admin',    adminRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // ── 404 ─────────────────────────────────────────────────────────────
 app.use((req, res) => {

@@ -99,4 +99,30 @@ router.patch('/contacts/:id/status', adminAuth, async (req, res) => {
   }
 });
 
+// GET /api/admin/content
+router.get('/content', adminAuth, async (req, res) => {
+  try {
+    const { rows } = await pool.query('SELECT * FROM settings ORDER BY category, key');
+    res.json({ success: true, data: rows });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// PATCH /api/admin/content/:key
+router.patch('/content/:key', adminAuth, async (req, res) => {
+  const { value } = req.body || {};
+  if (value === undefined) return res.status(400).json({ success: false, message: 'Value required.' });
+  try {
+    const { rowCount } = await pool.query(
+      'UPDATE settings SET value=$1, updated_at=NOW() WHERE key=$2',
+      [String(value), req.params.key]
+    );
+    if (!rowCount) return res.status(404).json({ success: false, message: 'Setting not found.' });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 module.exports = router;

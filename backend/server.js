@@ -55,6 +55,52 @@ async function initDb() {
     CREATE INDEX IF NOT EXISTS idx_contacts_status  ON contacts (status);
   `);
 
+  // Settings table
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS settings (
+      key        VARCHAR(100) PRIMARY KEY,
+      value      TEXT         NOT NULL DEFAULT '',
+      label      VARCHAR(200) NOT NULL DEFAULT '',
+      category   VARCHAR(100) NOT NULL DEFAULT 'general',
+      updated_at TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+    );
+  `);
+
+  // Seed default settings (skip if already exist)
+  await pool.query(`
+    INSERT INTO settings (key, value, label, category) VALUES
+      ('price_d6',  '85',   'Single Room (D6)',              'rooms'),
+      ('price_c3',  '110',  'Twin Room (C3)',                'rooms'),
+      ('price_d3',  '110',  'Twin Room (D3)',                'rooms'),
+      ('price_b6',  '135',  'Triple Room (B6)',              'rooms'),
+      ('price_c6',  '135',  'Triple Room (C6)',              'rooms'),
+      ('price_b8',  '145',  'Double + Single (B8)',          'rooms'),
+      ('price_b7',  '160',  'Family Room (B7)',              'rooms'),
+      ('price_e2',  '160',  'Family Room (E2)',              'rooms'),
+      ('price_e3',  '160',  'Family Room (E3)',              'rooms'),
+      ('price_b2',  '195',  'Large Family Room (B2)',        'rooms'),
+      ('price_b4',  '195',  'Large Family Room (B4)',        'rooms'),
+      ('price_b5',  '225',  'Group Room 6 Beds (B5)',        'rooms'),
+      ('price_c1',  '225',  'Group Room 6 Beds (C1)',        'rooms'),
+      ('price_c4',  '225',  'Group Room 6 Beds (C4)',        'rooms'),
+      ('price_d1',  '225',  'Group Room 6 Beds (D1)',        'rooms'),
+      ('price_d2',  '225',  'Group Room 6 Beds (D2)',        'rooms'),
+      ('price_d5',  '225',  'Group Room 6 Beds (D5)',        'rooms'),
+      ('price_b3',  '235',  'Group Room Mixed Beds (B3)',    'rooms'),
+      ('price_c5',  '235',  'Group Room Mixed Beds (C5)',    'rooms'),
+      ('price_d4',  '235',  'Group Room Mixed Beds (D4)',    'rooms'),
+      ('price_z6',  '275',  'Large Group Room (Z6)',         'rooms'),
+      ('price_c2',  '275',  'Large Group Room (C2)',         'rooms'),
+      ('checkin_time',    '1:00 PM',                        'Check-in Time',               'hotel'),
+      ('checkout_time',   '12:00 PM',                       'Check-out Time',              'hotel'),
+      ('confirm_hours',   '2',                              'Booking Confirmation (hours)', 'hotel'),
+      ('hotel_address',   'Paddington, London',             'Address',                     'hotel'),
+      ('hotel_email',     'bluedawsprivatehotel@gmail.com', 'Contact Email',               'hotel'),
+      ('hotel_phone',     '',                               'Contact Phone',               'hotel'),
+      ('deposit_percent', '50',                             'Deposit Required (%)',        'hotel')
+    ON CONFLICT (key) DO NOTHING;
+  `);
+
   // Auto-update trigger for updated_at
   await pool.query(`
     CREATE OR REPLACE FUNCTION set_updated_at()

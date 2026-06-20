@@ -483,3 +483,20 @@ if (checkinEl.value && checkoutEl.value) state.nights = calcNights();
 const totalGuests = (+document.getElementById('adults').value || 2) + (+document.getElementById('children').value || 0);
 renderRooms(totalGuests);
 updateSummary();
+
+// Fetch dynamic room prices from backend (non-blocking, falls back to hardcoded)
+fetch(`${API_BASE}/api/settings`)
+  .then(r => r.json())
+  .then(({ data }) => {
+    if (!data) return;
+    let changed = false;
+    Object.keys(ROOMS).forEach(key => {
+      const val = data[`price_${key}`];
+      if (val && Number(val) !== ROOMS[key].price) {
+        ROOMS[key].price = Number(val);
+        changed = true;
+      }
+    });
+    if (changed) { renderRooms(totalGuests); updateSummary(); }
+  })
+  .catch(() => {});

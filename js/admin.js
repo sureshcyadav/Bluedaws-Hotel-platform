@@ -47,6 +47,7 @@ function showSection(name) {
   if (name === 'dashboard') loadStats();
   if (name === 'bookings')  loadBookings();
   if (name === 'contacts')  loadContacts();
+  if (name === 'content')   loadContent();
 }
 
 // ── Login ──────────────────────────────────────────────────────
@@ -255,6 +256,86 @@ document.getElementById('contactFilters').addEventListener('click', e => {
   contactFilter = e.target.dataset.filter;
   renderContacts();
 });
+
+// ── Content ───────────────────────────────────────────────────
+async function loadContent() {
+  document.getElementById('contentSections').innerHTML = '<div class="table-loading">Loading…</div>';
+  try {
+    const { ok, data } = await apiFetch('GET', '/api/admin/content');
+    if (!ok) return;
+    renderContent(data.data);
+  } catch {
+    document.getElementById('contentSections').innerHTML = '<div class="table-error">Failed to load content.</div>';
+  }
+}
+
+function renderContent(settings) {
+  const grouped = { rooms: [], hotel: [] };
+  settings.forEach(s => { if (grouped[s.category]) grouped[s.category].push(s); });
+
+  const html = `
+    <div class="content-block">
+      <div class="content-block-header">
+        <h3>Room Prices</h3>
+        <p>Price per night in GBP — updates apply to new bookings immediately</p>
+      </div>
+      <div class="content-grid">
+        ${grouped.rooms.map(s => `
+          <div class="cf-item">
+            <label class="cf-label">${s.label}</label>
+            <div class="cf-row">
+              <span class="cf-prefix">£</span>
+              <input type="number" class="cf-input" id="cfi-${s.key}" value="${esc(s.value)}" min="0" step="1">
+              <button class="btn-cf-save" onclick="saveContent('${s.key}')">Save</button>
+            </div>
+            <span class="cf-feedback hidden" id="cfb-${s.key}">Saved!</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <div class="content-block">
+      <div class="content-block-header">
+        <h3>Hotel Settings</h3>
+        <p>General hotel information and booking policies</p>
+      </div>
+      <div class="content-list">
+        ${grouped.hotel.map(s => `
+          <div class="cf-item">
+            <label class="cf-label">${s.label}</label>
+            <div class="cf-row">
+              <input type="text" class="cf-input" id="cfi-${s.key}" value="${esc(s.value)}">
+              <button class="btn-cf-save" onclick="saveContent('${s.key}')">Save</button>
+            </div>
+            <span class="cf-feedback hidden" id="cfb-${s.key}">Saved!</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+  document.getElementById('contentSections').innerHTML = html;
+}
+
+async function saveContent(key) {
+  const input    = document.getElementById(`cfi-${key}`);
+  const feedback = document.getElementById(`cfb-${key}`);
+  const btn      = input.closest('.cf-row').querySelector('.btn-cf-save');
+
+  btn.textContent = 'Saving…';
+  btn.disabled    = true;
+
+  try {
+    const { ok, data } = await apiFetch('PATCH', `/api/admin/content/${key}`, { value: input.value });
+    if (!ok) { alert(data.message); return; }
+    feedback.classList.remove('hidden');
+    setTimeout(() => feedback.classList.add('hidden'), 2500);
+  } catch { alert('Failed to save.'); }
+  finally { btn.textContent = 'Save'; btn.disabled = false; }
+}
+
+function esc(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 
 // ── Message Modal ─────────────────────────────────────────────
 function openModal(id) {
