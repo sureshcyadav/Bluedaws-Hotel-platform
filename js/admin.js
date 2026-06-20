@@ -489,7 +489,8 @@ function renderCalendar() {
   });
   html += '</div></div>';
 
-  // Rows — one per room
+  // Rows — one per room, wrapped in .cal-body for flex auto-sizing
+  html += '<div class="cal-body">';
   CAL_ROOMS.forEach(function(room) {
     var bookings = calBookings.filter(function(b) {
       if (b.room_code.toUpperCase() !== room.code) return false;
@@ -538,6 +539,7 @@ function renderCalendar() {
 
     html += '</div></div>'; // end cal-cells, cal-row
   });
+  html += '</div>'; // end cal-body
 
   document.getElementById('calGrid').innerHTML = html;
 }
