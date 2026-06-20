@@ -65,26 +65,42 @@ if (form) {
       message:      fields.message.el.value.trim(),
     };
 
+    const API_BASE = 'https://bluedaws-hotel-platform.onrender.com';
+
     try {
+      // Save to database
+      await fetch(`${API_BASE}/api/contacts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          first_name: data.firstName,
+          last_name:  data.lastName,
+          email:      data.email,
+          phone:      data.phone || null,
+          subject:    data.subjectLabel,
+          message:    data.message,
+        }),
+      });
+
+      // Send email notification (non-blocking)
       if (typeof emailjs !== 'undefined' && typeof EMAILJS !== 'undefined' && EMAILJS.publicKey !== 'YOUR_PUBLIC_KEY') {
-        await emailjs.send(EMAILJS.serviceId, EMAILJS.contactTemplate, {
+        emailjs.send(EMAILJS.serviceId, EMAILJS.contactTemplate, {
           to_email:      EMAILJS.hotelEmail,
           from_name:     `${data.firstName} ${data.lastName}`,
           from_email:    data.email,
           phone:         data.phone || 'Not provided',
           subject_label: data.subjectLabel,
           message:       data.message,
-        });
+        }).catch(() => {});
       }
-      // Show success regardless (even if EmailJS isn't configured yet)
+
       if (formSuccess) formSuccess.classList.add('visible');
       form.reset();
       Object.values(fields).forEach(({ el }) => el.classList.remove('error'));
       setTimeout(() => { if (formSuccess) formSuccess.classList.remove('visible'); }, 8000);
     } catch (err) {
-      // Email failed — show a fallback message with the hotel email
       if (formSuccess) {
-        formSuccess.textContent = `We couldn't send your message automatically. Please email us directly at bluedawsprivatehotel@gmail.com`;
+        formSuccess.textContent = `We couldn't send your message. Please email us at bluedawsprivatehotel@gmail.com`;
         formSuccess.classList.add('visible');
       }
     } finally {

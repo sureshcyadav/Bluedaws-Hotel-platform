@@ -2,6 +2,8 @@
 // BLUEDAWS HOTEL — Booking Engine
 // ======================================================================
 
+const API_BASE = 'https://bluedaws-hotel-platform.onrender.com';
+
 // ---------- Room data ----------
 const ROOMS = {
   d6:  { name: 'Single Room',       code: 'D6', floor: 'Third Floor',   bed: '1 Single Bed',                    max: 1, price: 85,  img: 'double-room', tags: ['1 Guest',   'Single Bed'] },
@@ -372,13 +374,43 @@ document.getElementById('confirmBooking').addEventListener('click', async () => 
   btn.textContent = 'Sending…';
   btn.disabled = true;
 
-  const ref = genRef();
-  state.bookingRef = ref;
-
   try {
-    const results = await sendBookingEmails(ref);
-    const allOk = !results || results.skipped ||
-      results.every(r => r.status === 'fulfilled');
+    // Save booking to database
+    const room = ROOMS[state.roomKey];
+    const response = await fetch(`${API_BASE}/api/bookings`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        checkin_date:      state.checkin,
+        checkout_date:     state.checkout,
+        adults:            state.adults,
+        children:          state.children,
+        room_code:         state.roomKey,
+        payment_method:    state.payment,
+        guest_first_name:  state.guest.firstName,
+        guest_last_name:   state.guest.lastName,
+        guest_email:       state.guest.email,
+        guest_phone:       state.guest.phone,
+        guest_country:     state.guest.country,
+        special_requests:  state.guest.requests || null,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      const msg = data.message || 'Booking failed. Please try again.';
+      termsErr.textContent = msg;
+      btn.textContent = 'Confirm Booking';
+      btn.disabled = false;
+      return;
+    }
+
+    const ref = data.data.ref;
+    state.bookingRef = ref;
+
+    // Send confirmation emails (non-blocking)
+    sendBookingEmails(ref).catch(() => {});
 
     const refEl   = document.getElementById('successRef');
     const emailEl = document.getElementById('successEmail');
@@ -387,11 +419,7 @@ document.getElementById('confirmBooking').addEventListener('click', async () => 
 
     showStep(5);
   } catch (err) {
-    // Even if email fails, show success — email can be sent manually
-    const refEl = document.getElementById('successRef');
-    if (refEl) refEl.textContent = `Booking Reference: ${ref}`;
-    showStep(5);
-  } finally {
+    termsErr.textContent = 'Network error. Please check your connection and try again.';
     btn.textContent = 'Confirm Booking';
     btn.disabled = false;
   }
