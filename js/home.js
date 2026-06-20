@@ -36,30 +36,6 @@ if (qbCheckin && qbCheckout) {
   });
 }
 
-// ---------- Promotion banner ----------
-(function () {
-  var API_BASE = 'https://bluedaws-hotel-platform.onrender.com';
-  fetch(API_BASE + '/api/settings')
-    .then(function (r) { return r.json(); })
-    .then(function (res) {
-      if (!res || !res.data) return;
-      var d = res.data;
-      if (d.promo_active !== 'true') return;
-      var banner = document.getElementById('promoBanner');
-      if (!banner) return;
-      var titleEl  = document.getElementById('promoTitle');
-      var badgeEl  = document.getElementById('promoBadge');
-      var descEl   = document.getElementById('promoDesc');
-      var expiryEl = document.getElementById('promoExpiry');
-      if (d.promo_title  && titleEl)  titleEl.textContent  = d.promo_title;
-      if (d.promo_badge  && badgeEl)  badgeEl.textContent  = d.promo_badge;
-      if (d.promo_desc   && descEl)   descEl.textContent   = d.promo_desc;
-      if (d.promo_expiry && expiryEl) expiryEl.textContent = 'Valid until ' + d.promo_expiry;
-      banner.classList.remove('hidden');
-    })
-    .catch(function () {});
-})();
-
 // ---------- Active nav on scroll ----------
 const sections   = document.querySelectorAll('section[id]');
 const navAnchors = document.querySelectorAll('.nav-links a[href^="#"], .nav-links a[href^="index.html"]');

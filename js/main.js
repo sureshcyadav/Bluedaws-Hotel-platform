@@ -33,29 +33,62 @@ if (navToggle && navLinks) {
   });
 }
 
-// ---------- Announcement banner ----------
+// ---------- Global settings: announcement + promotion ----------
 (function () {
-  const API_BASE = 'https://bluedaws-hotel-platform.onrender.com';
+  var API_BASE = 'https://bluedaws-hotel-platform.onrender.com';
   fetch(API_BASE + '/api/settings')
-    .then(r => r.json())
+    .then(function (r) { return r.json(); })
     .then(function (res) {
       if (!res || !res.data) return;
-      const d = res.data;
-      if (d.ann_active !== 'true' || !d.ann_text) return;
-      const type = ['info', 'warning', 'success'].includes(d.ann_type) ? d.ann_type : 'info';
-      const bar = document.createElement('div');
-      bar.className = 'site-announcement ann-' + type;
-      bar.innerHTML = '<span class="ann-text">' + d.ann_text.replace(/</g, '&lt;') + '</span>'
-        + '<button class="ann-close" aria-label="Dismiss">&times;</button>';
-      bar.querySelector('.ann-close').addEventListener('click', function () {
-        bar.style.height = bar.offsetHeight + 'px';
-        requestAnimationFrame(function () {
-          bar.style.height = '0';
-          bar.style.opacity = '0';
-          setTimeout(function () { bar.remove(); }, 300);
+      var d = res.data;
+      window._bdwSettings = d;
+
+      // Announcement bar (top of body, all pages)
+      if (d.ann_active === 'true' && d.ann_text) {
+        var type = ['info', 'warning', 'success'].includes(d.ann_type) ? d.ann_type : 'info';
+        var ann = document.createElement('div');
+        ann.className = 'site-announcement ann-' + type;
+        ann.innerHTML = '<span class="ann-text">' + d.ann_text.replace(/</g, '&lt;') + '</span>'
+          + '<button class="ann-close" aria-label="Dismiss">&times;</button>';
+        ann.querySelector('.ann-close').addEventListener('click', function () {
+          ann.style.height = ann.offsetHeight + 'px';
+          requestAnimationFrame(function () {
+            ann.style.height = '0';
+            ann.style.opacity = '0';
+            setTimeout(function () { ann.remove(); }, 300);
+          });
         });
-      });
-      document.body.insertBefore(bar, document.body.firstChild);
+        document.body.insertBefore(ann, document.body.firstChild);
+      }
+
+      // Promotion banner (below navbar, all pages)
+      if (d.promo_active === 'true' && d.promo_title) {
+        function safe(s) { return String(s || '').replace(/</g, '&lt;'); }
+        var badge  = d.promo_badge  ? '<span class="promo-badge-pill">' + safe(d.promo_badge)  + '</span>' : '';
+        var desc   = d.promo_desc   ? '<p class="promo-desc">'           + safe(d.promo_desc)   + '</p>'    : '';
+        var expiry = d.promo_expiry ? '<p class="promo-expiry">Valid until ' + safe(d.promo_expiry) + '</p>' : '';
+        var promo = document.createElement('section');
+        promo.className = 'promo-banner';
+        promo.innerHTML = '<div class="container"><div class="promo-inner">'
+          + '<div class="promo-left">' + badge + '<div><h3 class="promo-title">' + safe(d.promo_title) + '</h3>' + desc + '</div></div>'
+          + '<div class="promo-right">' + expiry + '<a href="booking.html" class="btn btn-primary btn-sm">Book &amp; Save</a></div>'
+          + '</div></div>';
+        var nav = document.querySelector('nav.navbar');
+        if (nav) nav.insertAdjacentElement('afterend', promo);
+        else document.body.appendChild(promo);
+
+        // Booking page: also inject promo card into the summary panel
+        var summaryNote = document.querySelector('.summary-note');
+        if (summaryNote) {
+          var card = document.createElement('div');
+          card.className = 'promo-summary-card';
+          card.innerHTML = (badge ? badge + ' ' : '')
+            + '<strong>' + safe(d.promo_title) + '</strong>'
+            + (d.promo_desc   ? '<br><span>' + safe(d.promo_desc)   + '</span>' : '')
+            + (d.promo_expiry ? '<br><small>Valid until ' + safe(d.promo_expiry) + '</small>' : '');
+          summaryNote.parentNode.insertBefore(card, summaryNote);
+        }
+      }
     })
     .catch(function () {});
 })();
