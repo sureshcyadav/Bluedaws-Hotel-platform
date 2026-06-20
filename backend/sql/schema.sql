@@ -1,77 +1,80 @@
 -- ======================================================================
--- BLUEDAWS HOTEL — MySQL Database Schema
+-- BLUEDAWS HOTEL — PostgreSQL Schema (Render.com)
 -- ======================================================================
--- Run this file once to set up the database:
---   mysql -u root -p < sql/schema.sql
+-- Render runs this automatically via the DATABASE_URL connection.
+-- You can also run it manually in Render's "Shell" tab:
+--   psql $DATABASE_URL -f sql/schema.sql
 -- ======================================================================
 
-CREATE DATABASE IF NOT EXISTS bluedaws_hotel
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_unicode_ci;
-
-USE bluedaws_hotel;
-
--- ------------------------------------------------------------------
--- bookings
--- ------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS bookings (
-  id                    INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  ref                   VARCHAR(12)  NOT NULL UNIQUE,           -- e.g. BDW-K4MX7Z
+  id                  SERIAL PRIMARY KEY,
+  ref                 VARCHAR(12)  NOT NULL UNIQUE,
 
   -- Guest
-  guest_first_name      VARCHAR(100) NOT NULL,
-  guest_last_name       VARCHAR(100) NOT NULL,
-  guest_email           VARCHAR(255) NOT NULL,
-  guest_phone           VARCHAR(50)  NOT NULL,
-  guest_country         VARCHAR(100) NOT NULL,
+  guest_first_name    VARCHAR(100) NOT NULL,
+  guest_last_name     VARCHAR(100) NOT NULL,
+  guest_email         VARCHAR(255) NOT NULL,
+  guest_phone         VARCHAR(50)  NOT NULL,
+  guest_country       VARCHAR(100) NOT NULL,
 
   -- Room
-  room_code             VARCHAR(10)  NOT NULL,                  -- e.g. D6, C3
-  room_name             VARCHAR(100) NOT NULL,
-  room_floor            VARCHAR(60)  DEFAULT NULL,
-  room_bed              VARCHAR(120) DEFAULT NULL,
-  price_per_night       DECIMAL(8,2) NOT NULL,
+  room_code           VARCHAR(10)  NOT NULL,
+  room_name           VARCHAR(100) NOT NULL,
+  room_floor          VARCHAR(60),
+  room_bed            VARCHAR(120),
+  price_per_night     NUMERIC(8,2) NOT NULL,
 
   -- Stay
-  checkin_date          DATE         NOT NULL,
-  checkout_date         DATE         NOT NULL,
-  nights                SMALLINT     NOT NULL,
-  adults                TINYINT      NOT NULL DEFAULT 1,
-  children              TINYINT      NOT NULL DEFAULT 0,
+  checkin_date        DATE         NOT NULL,
+  checkout_date       DATE         NOT NULL,
+  nights              SMALLINT     NOT NULL,
+  adults              SMALLINT     NOT NULL DEFAULT 1,
+  children            SMALLINT     NOT NULL DEFAULT 0,
 
   -- Financials
-  total_amount          DECIMAL(10,2) NOT NULL,
-  payment_method        ENUM('card','bank','payathotel') NOT NULL DEFAULT 'card',
-  special_requests      TEXT         DEFAULT NULL,
+  total_amount        NUMERIC(10,2) NOT NULL,
+  payment_method      VARCHAR(20)  NOT NULL DEFAULT 'card'
+                        CHECK (payment_method IN ('card','bank','payathotel')),
+  special_requests    TEXT,
 
   -- Status
-  status                ENUM('pending','confirmed','cancelled') NOT NULL DEFAULT 'pending',
+  status              VARCHAR(20)  NOT NULL DEFAULT 'pending'
+                        CHECK (status IN ('pending','confirmed','cancelled')),
 
   -- Timestamps
-  created_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  created_at          TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  updated_at          TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
 
-  -- Indexes
-  INDEX idx_email       (guest_email),
-  INDEX idx_checkin     (checkin_date),
-  INDEX idx_status      (status),
-  INDEX idx_room_code   (room_code)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE INDEX IF NOT EXISTS idx_bookings_email    ON bookings (guest_email);
+CREATE INDEX IF NOT EXISTS idx_bookings_checkin  ON bookings (checkin_date);
+CREATE INDEX IF NOT EXISTS idx_bookings_status   ON bookings (status);
+CREATE INDEX IF NOT EXISTS idx_bookings_room     ON bookings (room_code);
 
--- ------------------------------------------------------------------
--- contacts  (from the contact page form)
+-- Auto-update updated_at on every row change
+CREATE OR REPLACE FUNCTION set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN NEW.updated_at = NOW(); RETURN NEW; END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS bookings_updated_at ON bookings;
+CREATE TRIGGER bookings_updated_at
+  BEFORE UPDATE ON bookings
+  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
 -- ------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS contacts (
-  id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  first_name    VARCHAR(100)  NOT NULL,
-  last_name     VARCHAR(100)  NOT NULL,
-  email         VARCHAR(255)  NOT NULL,
-  phone         VARCHAR(50)   DEFAULT NULL,
-  subject       VARCHAR(100)  NOT NULL,
-  message       TEXT          NOT NULL,
-  status        ENUM('unread','read','replied') NOT NULL DEFAULT 'unread',
-  created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  id          SERIAL PRIMARY KEY,
+  first_name  VARCHAR(100)  NOT NULL,
+  last_name   VARCHAR(100)  NOT NULL,
+  email       VARCHAR(255)  NOT NULL,
+  phone       VARCHAR(50),
+  subject     VARCHAR(100)  NOT NULL,
+  message     TEXT          NOT NULL,
+  status      VARCHAR(20)   NOT NULL DEFAULT 'unread'
+                CHECK (status IN ('unread','read','replied')),
+  created_at  TIMESTAMPTZ   NOT NULL DEFAULT NOW()
+);
 
-  INDEX idx_email  (email),
-  INDEX idx_status (status)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE INDEX IF NOT EXISTS idx_contacts_email  ON contacts (email);
+CREATE INDEX IF NOT EXISTS idx_contacts_status ON contacts (status);
