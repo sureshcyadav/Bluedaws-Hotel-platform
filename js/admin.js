@@ -307,10 +307,13 @@ function renderBookings() {
     if (checkedIn && !checkedOut) statusHtml += ' <span class="status-badge status-checkedin">Checked In</span>';
     if (checkedOut)               statusHtml += ' <span class="status-badge status-checkedout">Checked Out</span>';
     const hasNotes = b.admin_notes || b.special_requests;
+    const hasId    = b.guest_id_number || b.guest_id_type;
     return '<tr>'
       + '<td><span class="ref-badge">' + b.ref + '</span>'
       + (hasNotes ? ' <span class="notes-dot" title="Has notes">●</span>' : '') + '</td>'
-      + '<td><strong>' + esc(b.guest_first_name) + ' ' + esc(b.guest_last_name) + '</strong><br><small>' + esc(b.guest_country) + '</small></td>'
+      + '<td><strong>' + esc(b.guest_first_name) + ' ' + esc(b.guest_last_name) + '</strong>'
+      + (hasId ? ' <span class="bpd-id-badge" title="Identity on file">ID&#10003;</span>' : '')
+      + '<br><small>' + esc(b.guest_country) + '</small></td>'
       + '<td><a href="mailto:' + esc(b.guest_email) + '">' + esc(b.guest_email) + '</a><br><small>' + esc(b.guest_phone) + '</small></td>'
       + '<td>' + esc(b.room_name) + '<br><small style="font-family:monospace">' + b.room_code.toUpperCase() + '</small></td>'
       + '<td>' + fmtDate(b.checkin_date) + '</td>'
@@ -323,7 +326,7 @@ function renderBookings() {
       + (b.status === 'pending'   ? '<button class="btn-action btn-confirm" onclick="updateBooking(' + b.id + ',\'confirmed\')">Confirm</button>' : '')
       + (b.status !== 'cancelled' ? '<button class="btn-action btn-cancel"  onclick="updateBooking(' + b.id + ',\'cancelled\')">Cancel</button>'  : '')
       + (b.status === 'cancelled' ? '<button class="btn-action btn-restore" onclick="updateBooking(' + b.id + ',\'pending\')">Restore</button>'   : '')
-      + '<button class="btn-action btn-edit" onclick="openEditBookingModal(' + b.id + ')" title="Edit notes">✎</button>'
+      + '<button class="btn-profile" onclick="openCalBooking(' + b.id + ')" title="Guest profile">&#128100; Profile</button>'
       + '</td></tr>';
   }).join('');
 }
@@ -770,16 +773,19 @@ function openCalBooking(id) {
 
   var pay = { card: 'Card', bank: 'Bank Transfer', payathotel: 'Pay at Hotel' };
 
-  // Header
-  document.getElementById('bpTitle').textContent = 'Booking — ' + b.ref;
-  var st = document.getElementById('bpStatus');
-  st.textContent = b.status; st.className = 'status-badge status-' + b.status;
-  document.getElementById('bpCheckinBadge').classList.toggle('hidden', !b.checked_in_at);
-  document.getElementById('bpCheckoutBadge').classList.toggle('hidden', !b.checked_out_at);
+  // Dark header
+  document.getElementById('bpName').textContent = b.guest_first_name + ' ' + b.guest_last_name;
+  document.getElementById('bpMeta').textContent =
+    (b.room_name || b.room_code.toUpperCase()) + ' (' + b.room_code.toUpperCase() + ')  ·  ' + b.ref;
+  var badgeHtml = '<span class="status-badge status-' + b.status + '">'
+    + b.status.charAt(0).toUpperCase() + b.status.slice(1) + '</span>';
+  if (b.checked_in_at && !b.checked_out_at)
+    badgeHtml += ' <span class="status-badge status-checkedin">Checked In</span>';
+  if (b.checked_out_at)
+    badgeHtml += ' <span class="status-badge status-checkedout">Checked Out</span>';
+  document.getElementById('bpBadges').innerHTML = badgeHtml;
 
-  // Stay details
-  document.getElementById('bpRef').textContent      = b.ref;
-  document.getElementById('bpRoom').textContent     = (b.room_name || b.room_code.toUpperCase()) + ' (' + b.room_code.toUpperCase() + ')';
+  // Stay card
   document.getElementById('bpCheckin').textContent  = fmtDate(b.checkin_date);
   document.getElementById('bpCheckout').textContent = fmtDate(b.checkout_date);
   document.getElementById('bpNights').textContent   = b.nights + (b.nights === 1 ? ' night' : ' nights');
@@ -788,7 +794,7 @@ function openCalBooking(id) {
   document.getElementById('bpTotal').textContent    = '£' + Number(b.total_amount).toLocaleString();
   document.getElementById('bpPayment').textContent  = pay[b.payment_method] || b.payment_method;
 
-  // Guest details
+  // Guest card
   document.getElementById('bpGuestName').textContent    = b.guest_first_name + ' ' + b.guest_last_name;
   var em = document.getElementById('bpGuestEmail');
   em.textContent = b.guest_email; em.href = 'mailto:' + b.guest_email;
@@ -796,28 +802,28 @@ function openCalBooking(id) {
   document.getElementById('bpGuestCountry').textContent = b.guest_country  || '—';
   document.getElementById('bpBookedOn').textContent     = fmtDate(b.created_at);
 
-  // Identity fields
+  // Identity form (pre-fill saved data)
   document.getElementById('bp_id_type').value    = b.guest_id_type     || '';
   document.getElementById('bp_id_number').value  = b.guest_id_number   || '';
   document.getElementById('bp_dob').value         = b.guest_dob ? b.guest_dob.slice(0, 10) : '';
   document.getElementById('bp_nationality').value = b.guest_nationality || '';
 
-  // Notes
+  // Notes form (pre-fill saved data)
   document.getElementById('bp_requests').value = b.special_requests || '';
   document.getElementById('bp_notes').value    = b.admin_notes      || '';
 
-  // Reset feedback
+  // Reset save feedback
   document.getElementById('bpSaveFeedback').classList.add('hidden');
   document.getElementById('bpSaveError').classList.add('hidden');
 
-  // Action footer buttons
+  // Action footer
   var foot = '';
   if (b.status === 'pending')
     foot += '<button class="btn-action btn-confirm" onclick="bpAction(\'confirmed\')">Confirm Booking</button>';
   if (b.status !== 'cancelled')
     foot += '<button class="btn-action btn-cancel" onclick="bpAction(\'cancelled\')">Cancel Booking</button>';
   if (b.status === 'cancelled')
-    foot += '<button class="btn-action" style="background:#475569;color:#fff" onclick="bpAction(\'pending\')">Restore Booking</button>';
+    foot += '<button class="btn-action" style="background:#475569;color:#fff;padding:6px 12px" onclick="bpAction(\'pending\')">Restore Booking</button>';
   foot += '<span style="flex:1"></span>';
   if (b.status === 'confirmed' && !b.checked_in_at)
     foot += '<button class="btn-fd-checkin" style="min-width:110px" onclick="bpCheckIn()">&#10003; Check In</button>';
@@ -896,6 +902,7 @@ async function saveGuestProfile() {
     });
     document.getElementById('bpSaveFeedback').classList.remove('hidden');
     setTimeout(() => document.getElementById('bpSaveFeedback').classList.add('hidden'), 3000);
+    renderBookings(); // refresh bookings list so ID badge updates
   } finally {
     btn.disabled = false; btn.textContent = 'Save Guest Info';
   }

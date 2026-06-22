@@ -467,101 +467,112 @@
     </div>
   </div>
 
-  <!-- Booking Profile Modal (eviivo-style) -->
+  <!-- Booking Profile Modal -->
   <div class="modal-overlay hidden" id="bookingProfileModal">
-    <div class="modal-card modal-xl">
-      <div class="modal-header">
-        <div class="bp-header-inner">
-          <h3 id="bpTitle">Booking Profile</h3>
-          <div id="bpBadges">
-            <span id="bpStatus" class="status-badge"></span>
-            <span id="bpCheckinBadge" class="status-badge status-checkedin hidden">Checked In</span>
-            <span id="bpCheckoutBadge" class="status-badge status-checkedout hidden">Checked Out</span>
-          </div>
+    <div class="bpd-card">
+
+      <!-- Dark branded header -->
+      <div class="bpd-hdr">
+        <div class="bpd-hdr-left">
+          <div class="bpd-name" id="bpName">—</div>
+          <div class="bpd-meta" id="bpMeta">—</div>
+          <div class="bpd-badges" id="bpBadges"></div>
         </div>
-        <button class="modal-close" id="bookingProfileClose">&times;</button>
+        <button class="bpd-close" id="bookingProfileClose">&#x2715;</button>
       </div>
-      <!-- Two-column: Stay + Guest -->
-      <div class="bp-top-row">
-        <div class="bp-panel">
-          <div class="bp-panel-title">Stay Details</div>
-          <div class="bp-info-list">
-            <div class="bp-row"><span class="bp-lbl">Reference</span><span id="bpRef" class="bp-val"></span></div>
-            <div class="bp-row"><span class="bp-lbl">Room</span><span id="bpRoom" class="bp-val"></span></div>
-            <div class="bp-row"><span class="bp-lbl">Check-in</span><span id="bpCheckin" class="bp-val"></span></div>
-            <div class="bp-row"><span class="bp-lbl">Check-out</span><span id="bpCheckout" class="bp-val"></span></div>
-            <div class="bp-row"><span class="bp-lbl">Duration</span><span id="bpNights" class="bp-val"></span></div>
-            <div class="bp-row"><span class="bp-lbl">Guests</span><span id="bpGuests" class="bp-val"></span></div>
-            <div class="bp-row"><span class="bp-lbl">Total</span><span id="bpTotal" class="bp-val bp-total-amt"></span></div>
-            <div class="bp-row"><span class="bp-lbl">Payment</span><span id="bpPayment" class="bp-val"></span></div>
+
+      <!-- Two info columns: Stay + Guest -->
+      <div class="bpd-cols">
+        <div class="bpd-col">
+          <div class="bpd-col-hdr">Stay Details</div>
+          <div class="bpd-rows">
+            <div class="bpd-row"><span class="bpd-k">Check-in</span><span class="bpd-v" id="bpCheckin"></span></div>
+            <div class="bpd-row"><span class="bpd-k">Check-out</span><span class="bpd-v" id="bpCheckout"></span></div>
+            <div class="bpd-row"><span class="bpd-k">Duration</span><span class="bpd-v" id="bpNights"></span></div>
+            <div class="bpd-row"><span class="bpd-k">Guests</span><span class="bpd-v" id="bpGuests"></span></div>
+            <div class="bpd-row"><span class="bpd-k">Total</span><span class="bpd-v bpd-total" id="bpTotal"></span></div>
+            <div class="bpd-row"><span class="bpd-k">Payment</span><span class="bpd-v" id="bpPayment"></span></div>
           </div>
         </div>
-        <div class="bp-panel bp-panel-right">
-          <div class="bp-panel-title">Guest Details</div>
-          <div class="bp-info-list">
-            <div class="bp-row"><span class="bp-lbl">Name</span><span id="bpGuestName" class="bp-val bp-guest-name"></span></div>
-            <div class="bp-row"><span class="bp-lbl">Email</span><a id="bpGuestEmail" class="bp-val" href="#"></a></div>
-            <div class="bp-row"><span class="bp-lbl">Phone</span><span id="bpGuestPhone" class="bp-val"></span></div>
-            <div class="bp-row"><span class="bp-lbl">Country</span><span id="bpGuestCountry" class="bp-val"></span></div>
-            <div class="bp-row"><span class="bp-lbl">Booked on</span><span id="bpBookedOn" class="bp-val"></span></div>
+        <div class="bpd-col bpd-col-r">
+          <div class="bpd-col-hdr">Guest Details</div>
+          <div class="bpd-rows">
+            <div class="bpd-row"><span class="bpd-k">Name</span><strong class="bpd-v bpd-gname" id="bpGuestName"></strong></div>
+            <div class="bpd-row"><span class="bpd-k">Email</span><a class="bpd-v bpd-link" id="bpGuestEmail" href="#"></a></div>
+            <div class="bpd-row"><span class="bpd-k">Phone</span><span class="bpd-v" id="bpGuestPhone"></span></div>
+            <div class="bpd-row"><span class="bpd-k">Country</span><span class="bpd-v" id="bpGuestCountry"></span></div>
+            <div class="bpd-row"><span class="bpd-k">Booked</span><span class="bpd-v" id="bpBookedOn"></span></div>
           </div>
         </div>
       </div>
 
-      <!-- Guest Identity -->
-      <div class="bp-section">
-        <div class="bp-section-title">Guest Identity <span class="bp-section-note">stored securely for hotel records</span></div>
-        <div class="bp-form-grid">
-          <div class="bp-field">
-            <label>ID Type</label>
-            <select id="bp_id_type" class="cf-input">
-              <option value="">— Not recorded —</option>
-              <option value="Passport">Passport</option>
-              <option value="National ID Card">National ID Card</option>
-              <option value="Driver's License">Driver's License</option>
-              <option value="Residence Permit">Residence Permit</option>
-              <option value="Other">Other</option>
-            </select>
+      <!-- Scrollable form body -->
+      <div class="bpd-body">
+
+        <!-- Guest Identity -->
+        <div class="bpd-section">
+          <div class="bpd-section-hdr">
+            <span class="bpd-section-icon">&#127988;&#65039;</span>
+            <span class="bpd-section-title">Guest Identity</span>
+            <span class="bpd-section-note">Stored securely &middot; Not shared publicly</span>
           </div>
-          <div class="bp-field">
-            <label>ID / Passport Number</label>
-            <input type="text" id="bp_id_number" class="cf-input" placeholder="Document number">
-          </div>
-          <div class="bp-field">
-            <label>Date of Birth</label>
-            <input type="date" id="bp_dob" class="cf-input">
-          </div>
-          <div class="bp-field">
-            <label>Nationality</label>
-            <input type="text" id="bp_nationality" class="cf-input" placeholder="e.g. British">
+          <div class="bpd-id-grid">
+            <div class="bpd-f">
+              <label class="bpd-lbl">ID Type</label>
+              <select id="bp_id_type" class="bpd-ctl">
+                <option value="">— Not recorded —</option>
+                <option value="Passport">Passport</option>
+                <option value="National ID Card">National ID Card</option>
+                <option value="Driver's License">Driver's License</option>
+                <option value="Residence Permit">Residence Permit</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="bpd-f">
+              <label class="bpd-lbl">Document Number</label>
+              <input type="text" id="bp_id_number" class="bpd-ctl" placeholder="e.g. GB1234567">
+            </div>
+            <div class="bpd-f">
+              <label class="bpd-lbl">Date of Birth</label>
+              <input type="date" id="bp_dob" class="bpd-ctl">
+            </div>
+            <div class="bpd-f">
+              <label class="bpd-lbl">Nationality</label>
+              <input type="text" id="bp_nationality" class="bpd-ctl" placeholder="e.g. British">
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Notes -->
-      <div class="bp-section">
-        <div class="bp-section-title">Notes</div>
-        <div class="bp-form-grid bp-form-2col">
-          <div class="bp-field">
-            <label>Special Requests <span class="bp-section-note">(from guest)</span></label>
-            <textarea id="bp_requests" class="cf-input" rows="3" placeholder="Dietary needs, accessibility, early arrival…"></textarea>
+        <!-- Notes -->
+        <div class="bpd-section">
+          <div class="bpd-section-hdr">
+            <span class="bpd-section-icon">&#128203;</span>
+            <span class="bpd-section-title">Notes</span>
           </div>
-          <div class="bp-field">
-            <label>Admin Notes <span class="bp-section-note">(internal only)</span></label>
-            <textarea id="bp_notes" class="cf-input" rows="3" placeholder="VIP, repeat guest, early check-in arranged…"></textarea>
+          <div class="bpd-notes-grid">
+            <div class="bpd-f">
+              <label class="bpd-lbl">Special Requests <span class="bpd-section-note">(from guest)</span></label>
+              <textarea id="bp_requests" class="bpd-ctl bpd-ta" rows="3" placeholder="Dietary needs, accessibility, early arrival…"></textarea>
+            </div>
+            <div class="bpd-f">
+              <label class="bpd-lbl">Admin Notes <span class="bpd-section-note">(internal only)</span></label>
+              <textarea id="bp_notes" class="bpd-ctl bpd-ta" rows="3" placeholder="VIP, repeat guest, early check-in arranged…"></textarea>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Save row -->
-      <div class="bp-save-row">
-        <span id="bpSaveFeedback" class="bp-save-ok hidden">&#10003; Saved successfully</span>
-        <span id="bpSaveError"    class="bp-save-err hidden"></span>
-        <button class="btn-modal-confirm bp-save-btn" id="bpSaveBtn" onclick="saveGuestProfile()">Save Guest Info</button>
+      </div><!-- end bpd-body -->
+
+      <!-- Save bar -->
+      <div class="bpd-save-bar">
+        <span id="bpSaveFeedback" class="bpd-save-ok hidden">&#10003; Guest info saved</span>
+        <span id="bpSaveError"    class="bpd-save-err hidden"></span>
+        <button class="bpd-save-btn" id="bpSaveBtn" onclick="saveGuestProfile()">Save Guest Info</button>
       </div>
 
       <!-- Action footer -->
-      <div class="bp-footer" id="bpFooter"></div>
+      <div class="bpd-actions" id="bpFooter"></div>
+
     </div>
   </div>
 
