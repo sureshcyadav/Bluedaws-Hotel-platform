@@ -62,7 +62,8 @@ function showSection(name) {
   document.querySelectorAll('.nav-item').forEach(n =>
     n.classList.toggle('active', n.dataset.section === name)
   );
-  if (name === 'dashboard') loadStats();
+  if (name === 'dashboard')  loadStats();
+  if (name === 'frontdesk') loadFrontDesk();
   if (name === 'bookings')  loadBookings();
   if (name === 'calendar')  loadCalendar();
   if (name === 'contacts')  loadContacts();
@@ -144,6 +145,99 @@ async function loadStats() {
       weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
     });
   } catch {}
+}
+
+// ── Front Desk ────────────────────────────────────────────────
+document.getElementById('refreshFrontdesk').addEventListener('click', loadFrontDesk);
+
+async function loadFrontDesk() {
+  document.getElementById('fdDate').textContent = new Date().toLocaleDateString('en-GB', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+  });
+  document.getElementById('fdSummary').innerHTML = '<div class="fd-loading">Loading…</div>';
+  document.getElementById('fdRoomGrid').innerHTML = '<div class="fd-loading">Loading…</div>';
+  document.getElementById('fdArrivalList').innerHTML   = '<div class="fd-empty">Loading…</div>';
+  document.getElementById('fdDepartureList').innerHTML = '<div class="fd-empty">Loading…</div>';
+
+  try {
+    const { ok, data } = await apiFetch('GET', '/api/admin/bookings');
+    if (!ok) return;
+
+    const today    = new Date().toISOString().slice(0, 10);
+    const bookings = (data.data || []).filter(b => b.status !== 'cancelled');
+
+    const roomStatus = {};
+    const arrivals   = [];
+    const departures = [];
+
+    bookings.forEach(b => {
+      const cin  = b.checkin_date  ? b.checkin_date.slice(0, 10)  : '';
+      const cout = b.checkout_date ? b.checkout_date.slice(0, 10) : '';
+      if (cin === today) {
+        roomStatus[b.room_code] = 'arriving';
+        arrivals.push(b);
+      } else if (cout === today) {
+        if (roomStatus[b.room_code] !== 'arriving') roomStatus[b.room_code] = 'departing';
+        departures.push(b);
+      } else if (cin < today && cout > today) {
+        if (!roomStatus[b.room_code]) roomStatus[b.room_code] = 'occupied';
+      }
+    });
+
+    _renderFrontDesk(roomStatus, arrivals, departures);
+  } catch {
+    document.getElementById('fdSummary').innerHTML = '<div class="fd-loading" style="color:#ef4444">Failed to load. Please refresh.</div>';
+  }
+}
+
+function _renderFrontDesk(roomStatus, arrivals, departures) {
+  const occupied  = Object.values(roomStatus).filter(s => s === 'occupied').length;
+  const available = CAL_ROOMS.length - Object.keys(roomStatus).length;
+
+  const SVG_ARR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>';
+  const SVG_DEP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>';
+  const SVG_BED = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/></svg>';
+  const SVG_CHK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>';
+
+  document.getElementById('fdSummary').innerHTML = [
+    { label: 'Arriving Today',     val: arrivals.length,   cls: 'fd-stat-arriving',  icon: SVG_ARR },
+    { label: 'Departing Today',    val: departures.length, cls: 'fd-stat-departing', icon: SVG_DEP },
+    { label: 'Currently Occupied', val: occupied,          cls: 'fd-stat-occupied',  icon: SVG_BED },
+    { label: 'Available Now',      val: available,         cls: 'fd-stat-available', icon: SVG_CHK },
+  ].map(s => '<div class="fd-stat-card ' + s.cls + '">'
+    + '<div class="fd-stat-icon">' + s.icon + '</div>'
+    + '<div><div class="fd-stat-val">' + s.val + '</div><div class="fd-stat-label">' + s.label + '</div></div>'
+    + '</div>'
+  ).join('');
+
+  const stLabel = { available: 'Free', arriving: 'Arriving', occupied: 'Occupied', departing: 'Check-out' };
+  document.getElementById('fdRoomGrid').innerHTML = CAL_ROOMS.map(r => {
+    const st = roomStatus[r.code] || 'available';
+    return '<div class="fd-room-tile fd-' + st + '" title="' + r.name + ' — ' + stLabel[st] + '">'
+      + '<span class="fd-room-code">' + r.code + '</span>'
+      + '<span class="fd-room-name">' + r.name + '</span>'
+      + '<span class="fd-room-st">' + stLabel[st] + '</span>'
+      + '</div>';
+  }).join('');
+
+  const payLabel = { card: 'Card', bank: 'Bank Transfer', payathotel: 'Pay at Hotel' };
+  const guestRow = (b, extra) => '<div class="fd-guest-row" onclick="openCalBooking(' + b.id + ')">'
+    + '<div class="fd-guest-info"><strong>' + esc(b.guest_first_name) + ' ' + esc(b.guest_last_name) + '</strong>'
+    + '<span>' + esc(b.room_name) + ' · ' + b.room_code + ' · ' + b.nights + ' night' + (b.nights > 1 ? 's' : '') + '</span></div>'
+    + '<div class="fd-guest-meta"><span class="fd-ref">' + b.ref + '</span>'
+    + '<span class="fd-meta-sub">' + extra + '</span></div>'
+    + '</div>';
+
+  document.getElementById('fdArrivalCount').textContent   = arrivals.length;
+  document.getElementById('fdDepartureCount').textContent = departures.length;
+
+  document.getElementById('fdArrivalList').innerHTML = arrivals.length
+    ? arrivals.map(b => guestRow(b, payLabel[b.payment_method] || b.payment_method)).join('')
+    : '<div class="fd-empty">No arrivals today</div>';
+
+  document.getElementById('fdDepartureList').innerHTML = departures.length
+    ? departures.map(b => guestRow(b, '£' + Number(b.total_amount).toLocaleString())).join('')
+    : '<div class="fd-empty">No departures today</div>';
 }
 
 // ── Bookings ──────────────────────────────────────────────────
@@ -347,10 +441,69 @@ function _cfToggle(s, liveLabel, offLabel) {
 }
 
 function _renderPrices(list) {
-  return '<div class="content-block">'
-    + '<div class="content-block-header"><h3>Room Prices</h3><p>Price per night in GBP</p></div>'
-    + '<div class="content-grid">' + list.map(s => _cfField(s, 'number', '£')).join('') + '</div>'
+  const byCode = {};
+  list.forEach(s => {
+    const code = s.key.replace('room_', '').replace('_price', '').toUpperCase();
+    byCode[code] = s;
+  });
+
+  const GROUPS = [
+    { label: 'Single Room',        codes: ['D6'],                             color: '#6366f1' },
+    { label: 'Twin Room',          codes: ['C3', 'D3'],                       color: '#0891b2' },
+    { label: 'Triple Room',        codes: ['B6', 'C6'],                       color: '#7c3aed' },
+    { label: 'Double + Single',    codes: ['B8'],                             color: '#0f766e' },
+    { label: 'Family Room',        codes: ['B7', 'E2', 'E3'],                 color: '#059669' },
+    { label: 'Large Family Room',  codes: ['B2', 'B4'],                       color: '#d97706' },
+    { label: 'Group Room (6-Bed)', codes: ['B5', 'C1', 'C4', 'D1', 'D2', 'D5'], color: '#c9a96e' },
+    { label: 'Group Room Mixed',   codes: ['B3', 'C5', 'D4'],                color: '#ea580c' },
+    { label: 'Large Group Room',   codes: ['Z6', 'C2'],                       color: '#0f172a' },
+  ];
+
+  const allGroupedCodes = GROUPS.flatMap(g => g.codes);
+  let html = '<div class="content-block">'
+    + '<div class="content-block-header" style="display:flex;align-items:center;justify-content:space-between;">'
+    + '<div><h3>Room Prices</h3><p>Price per night in GBP · Click Save on any room to update</p></div>'
     + '</div>';
+
+  GROUPS.forEach(g => {
+    const items = g.codes.map(code => byCode[code]).filter(Boolean);
+    if (!items.length) return;
+    html += '<div class="price-group">'
+      + '<div class="price-group-header">'
+      + '<span class="price-group-dot" style="background:' + g.color + '"></span>'
+      + '<span class="price-group-label">' + g.label + '</span>'
+      + '<span class="price-group-count">' + items.length + ' room' + (items.length > 1 ? 's' : '') + '</span>'
+      + '</div>'
+      + '<div class="price-cards-grid">'
+      + items.map(s => {
+          const code = s.key.replace('room_', '').replace('_price', '').toUpperCase();
+          const name = s.label.replace(/\s*\([A-Z0-9]+\)\s*$/, '').trim();
+          return '<div class="price-card">'
+            + '<div class="price-card-top">'
+            + '<span class="price-card-code" style="background:' + g.color + '">' + code + '</span>'
+            + '<span class="price-card-name">' + name + '</span>'
+            + '</div>'
+            + '<div class="cf-row">'
+            + '<span class="cf-prefix">£</span>'
+            + '<input type="number" class="cf-input" id="cfi-' + s.key + '" value="' + esc(s.value) + '" min="0" step="1">'
+            + '<button class="btn-cf-save" onclick="saveContent(\'' + s.key + '\')">Save</button>'
+            + '</div>'
+            + '<span class="cf-feedback hidden" id="cfb-' + s.key + '">&#10003; Saved!</span>'
+            + '</div>';
+        }).join('')
+      + '</div></div>';
+  });
+
+  const others = list.filter(s => {
+    const code = s.key.replace('room_', '').replace('_price', '').toUpperCase();
+    return !allGroupedCodes.includes(code);
+  });
+  if (others.length) {
+    html += '<div class="price-group"><div class="price-group-header"><span class="price-group-label">Other Rooms</span></div>'
+      + '<div class="price-cards-grid">' + others.map(s => _cfField(s, 'number', '£')).join('') + '</div></div>';
+  }
+
+  return html + '</div>';
 }
 
 function _renderHotel(list) {

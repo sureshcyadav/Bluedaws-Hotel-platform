@@ -40,6 +40,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="17" height="17"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
           Dashboard
         </a>
+        <a href="#" class="nav-item" data-section="frontdesk">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="17" height="17"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          Front Desk
+        </a>
         <a href="#" class="nav-item" data-section="bookings">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="17" height="17"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           Bookings
@@ -112,6 +116,63 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             </div>
             <div><p class="stat-label">Unread Messages</p><p class="stat-value" id="statUnread">—</p></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Front Desk -->
+      <section class="admin-section hidden" id="sectionFrontdesk">
+        <div class="section-header">
+          <div>
+            <h1>Front Desk</h1>
+            <p class="section-sub" id="fdDate">Today's overview</p>
+          </div>
+          <button class="btn-refresh" id="refreshFrontdesk">Refresh</button>
+        </div>
+
+        <!-- Summary Stats -->
+        <div class="fd-summary" id="fdSummary">
+          <div class="fd-stat-card fd-stat-arriving"><div class="fd-stat-icon"></div><div><div class="fd-stat-val">—</div><div class="fd-stat-label">Arriving Today</div></div></div>
+          <div class="fd-stat-card fd-stat-departing"><div class="fd-stat-icon"></div><div><div class="fd-stat-val">—</div><div class="fd-stat-label">Departing Today</div></div></div>
+          <div class="fd-stat-card fd-stat-occupied"><div class="fd-stat-icon"></div><div><div class="fd-stat-val">—</div><div class="fd-stat-label">Currently Occupied</div></div></div>
+          <div class="fd-stat-card fd-stat-available"><div class="fd-stat-icon"></div><div><div class="fd-stat-val">—</div><div class="fd-stat-label">Available Now</div></div></div>
+        </div>
+
+        <!-- Room Status Board -->
+        <div class="fd-board">
+          <div class="fd-board-header">
+            <h3>Room Status Board</h3>
+            <div class="fd-legend">
+              <span class="fd-legend-item"><span class="fd-legend-dot" style="background:#22c55e"></span>Available</span>
+              <span class="fd-legend-item"><span class="fd-legend-dot" style="background:#f59e0b"></span>Arriving</span>
+              <span class="fd-legend-item"><span class="fd-legend-dot" style="background:#ef4444"></span>Occupied</span>
+              <span class="fd-legend-item"><span class="fd-legend-dot" style="background:#3b82f6"></span>Departing</span>
+            </div>
+          </div>
+          <div class="fd-room-grid" id="fdRoomGrid">
+            <div class="table-loading">Loading…</div>
+          </div>
+        </div>
+
+        <!-- Arrivals & Departures -->
+        <div class="fd-lists">
+          <div class="fd-list-panel">
+            <div class="fd-list-header fd-list-header-amber">
+              <h3>Arriving Today</h3>
+              <span class="fd-count-badge fd-count-amber" id="fdArrivalCount">0</span>
+            </div>
+            <div class="fd-list-body" id="fdArrivalList">
+              <div class="fd-empty">Loading…</div>
+            </div>
+          </div>
+          <div class="fd-list-panel">
+            <div class="fd-list-header fd-list-header-blue">
+              <h3>Departing Today</h3>
+              <span class="fd-count-badge fd-count-blue" id="fdDepartureCount">0</span>
+            </div>
+            <div class="fd-list-body" id="fdDepartureList">
+              <div class="fd-empty">Loading…</div>
+            </div>
           </div>
         </div>
       </section>
