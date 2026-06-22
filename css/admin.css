@@ -106,22 +106,32 @@ a:hover { text-decoration: underline; }
   gap: 14px; margin-bottom: 0;
 }
 .stat-card {
-  background: white; border-radius: 12px; padding: 18px 16px;
+  background: white; border-radius: 14px; padding: 18px 16px;
   display: flex; align-items: center; gap: 14px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06); border: 1px solid #f1f5f9;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07); border: 1px solid #f1f5f9;
+  transition: box-shadow 0.15s, transform 0.15s;
+}
+.stat-card-hover:hover {
+  box-shadow: 0 6px 20px rgba(0,0,0,0.10);
+  transform: translateY(-2px);
 }
 .stat-icon {
-  width: 44px; height: 44px; border-radius: 10px;
+  width: 46px; height: 46px; border-radius: 12px;
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
-.stat-blue   { background: #eff6ff; } .stat-blue svg   { stroke: #3b82f6; }
-.stat-amber  { background: #fffbeb; } .stat-amber svg  { stroke: #f59e0b; }
-.stat-green  { background: #f0fdf4; } .stat-green svg  { stroke: #10b981; }
-.stat-red    { background: #fef2f2; } .stat-red svg    { stroke: #ef4444; }
-.stat-gold   { background: rgba(201,169,110,0.1); } .stat-gold svg { stroke: #c9a96e; }
-.stat-purple { background: #f5f3ff; } .stat-purple svg { stroke: #8b5cf6; }
-.stat-label { font-size: 11px; color: #64748b; font-weight: 500; margin-bottom: 3px; }
-.stat-value { font-size: 24px; font-weight: 700; color: #0f172a; line-height: 1; }
+/* color: drives stroke="currentColor" on inline SVGs */
+.stat-blue   { background: linear-gradient(135deg,#eff6ff,#dbeafe); color: #3b82f6; }
+.stat-amber  { background: linear-gradient(135deg,#fffbeb,#fef3c7); color: #f59e0b; }
+.stat-green  { background: linear-gradient(135deg,#f0fdf4,#dcfce7); color: #059669; }
+.stat-red    { background: linear-gradient(135deg,#fef2f2,#fee2e2); color: #ef4444; }
+.stat-gold   { background: linear-gradient(135deg,rgba(201,169,110,0.18),rgba(201,169,110,0.08)); color: #c9a96e; }
+.stat-purple { background: linear-gradient(135deg,#f5f3ff,#ede9fe); color: #8b5cf6; }
+.stat-teal   { background: linear-gradient(135deg,#ecfeff,#cffafe); color: #0891b2; }
+.stat-orange { background: linear-gradient(135deg,#fff7ed,#ffedd5); color: #f97316; }
+.stat-indigo { background: linear-gradient(135deg,#eef2ff,#e0e7ff); color: #6366f1; }
+/* Remove old explicit svg stroke rules — currentColor handles them */
+.stat-label { font-size: 11px; color: #64748b; font-weight: 600; margin-bottom: 3px; letter-spacing: 0.1px; }
+.stat-value { font-size: 24px; font-weight: 800; color: #0f172a; line-height: 1; }
 
 /* ── Filter Bar ──────────────────────────────────────────────── */
 .filter-bar { display: flex; gap: 7px; margin-bottom: 14px; flex-wrap: wrap; }
@@ -793,7 +803,7 @@ a:hover { text-decoration: underline; }
   width: 100%; background: #f1f5f9; border-radius: 4px 4px 0 0;
   height: 120px; display: flex; align-items: flex-end; overflow: hidden;
 }
-.rev-bar-fill { width: 100%; background: #c9a96e; border-radius: 4px 4px 0 0; min-height: 2px; }
+.rev-bar-fill { width: 100%; background: linear-gradient(180deg, #e8c98a 0%, #c9a96e 60%, #a07845 100%); border-radius: 4px 4px 0 0; min-height: 2px; transition: height 0.4s ease; }
 .rev-bar-label { font-size: 9.5px; color: #64748b; margin-top: 5px; text-align: center; }
 .rev-bar-count { font-size: 9px; color: #94a3b8; }
 .horiz-bar-row {

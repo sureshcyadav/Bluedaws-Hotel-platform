@@ -1957,6 +1957,20 @@ document.querySelectorAll('.rpt-tab').forEach(function(btn) {
 });
 document.getElementById('refreshEod').addEventListener('click', loadEod);
 
+// ── SVG icons for analytics stat cards ───────────────────────
+var RPT_ICONS = {
+  pound:    '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="11" x2="14" y2="11"/><path d="M16 18H7M8 7a4 4 0 014 4v7"/></svg>',
+  calendar: '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+  tag:      '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>',
+  moon:     '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>',
+  clipboard:'<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>',
+  trending: '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>',
+  hotel:    '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="9" y1="7" x2="9.01" y2="7"/><line x1="15" y1="7" x2="15.01" y2="7"/><line x1="9" y1="12" x2="9.01" y2="12"/><line x1="15" y1="12" x2="15.01" y2="12"/><path d="M9 17h6v5H9z"/></svg>',
+  xCircle:  '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+  checkOk:  '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+  alert:    '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+};
+
 // ── Overview Analytics ────────────────────────────────────────
 async function loadReports() {
   ['reportsSummary','reportsSummary2','revChart','roomsChart','paymentsChart','nationsChart','statusChart']
@@ -1982,27 +1996,29 @@ function renderReports(d) {
 
   // KPI strip 1
   document.getElementById('reportsSummary').innerHTML = [
-    { label: 'Total Revenue',      val: '£' + Number(s.total_revenue).toLocaleString(),     cls: 'stat-gold'   },
-    { label: 'This Month Revenue', val: '£' + Number(s.this_month_revenue).toLocaleString(), cls: 'stat-green'  },
-    { label: 'Avg Booking Value',  val: '£' + Number(s.avg_booking_value).toFixed(0),        cls: 'stat-blue'   },
-    { label: 'Avg Stay (nights)',  val: Number(s.avg_nights).toFixed(1),                     cls: 'stat-purple' },
-    { label: 'Total Bookings',     val: s.total_bookings,                                    cls: 'stat-blue'   },
-    { label: 'This Month',         val: s.this_month_bookings + ' bookings',                 cls: 'stat-green'  },
+    { label: 'Total Revenue',      val: '£' + Number(s.total_revenue).toLocaleString(),      cls: 'stat-gold',   icon: RPT_ICONS.pound    },
+    { label: 'This Month Revenue', val: '£' + Number(s.this_month_revenue).toLocaleString(), cls: 'stat-green',  icon: RPT_ICONS.calendar },
+    { label: 'Avg Booking Value',  val: '£' + Number(s.avg_booking_value).toFixed(0),        cls: 'stat-blue',   icon: RPT_ICONS.tag      },
+    { label: 'Avg Stay (nights)',  val: Number(s.avg_nights).toFixed(1),                     cls: 'stat-purple', icon: RPT_ICONS.moon     },
+    { label: 'Total Bookings',     val: s.total_bookings,                                    cls: 'stat-blue',   icon: RPT_ICONS.clipboard},
+    { label: 'This Month',         val: s.this_month_bookings + ' bookings',                 cls: 'stat-green',  icon: RPT_ICONS.trending },
   ].map(function(x) {
-    return '<div class="stat-card"><div class="stat-icon ' + x.cls + '"></div><div>'
-      + '<p class="stat-label">' + x.label + '</p>'
+    return '<div class="stat-card stat-card-hover">'
+      + '<div class="stat-icon ' + x.cls + '">' + x.icon + '</div>'
+      + '<div><p class="stat-label">' + x.label + '</p>'
       + '<p class="stat-value">' + x.val + '</p></div></div>';
   }).join('');
 
   // KPI strip 2 — operational metrics
   document.getElementById('reportsSummary2').innerHTML = [
-    { label: 'Occupancy Now',      val: occupancy + '%',                                     cls: 'stat-teal',   note: s.in_house_now + ' / 22 rooms' },
-    { label: 'Cancellation Rate',  val: cancelRate + '%',                                    cls: 'stat-orange', note: s.cancelled + ' cancelled' },
-    { label: 'Total Collected',    val: '£' + Number(s.total_collected).toLocaleString(),    cls: 'stat-green',  note: 'Payments received' },
-    { label: 'Outstanding',        val: '£' + Number(s.outstanding).toLocaleString(),        cls: 'stat-indigo', note: 'Confirmed unpaid' },
+    { label: 'Occupancy Now',     val: occupancy + '%',                                  cls: 'stat-teal',   icon: RPT_ICONS.hotel,   note: s.in_house_now + ' / 22 rooms' },
+    { label: 'Cancellation Rate', val: cancelRate + '%',                                 cls: 'stat-orange', icon: RPT_ICONS.xCircle, note: s.cancelled + ' cancelled' },
+    { label: 'Total Collected',   val: '£' + Number(s.total_collected).toLocaleString(), cls: 'stat-green',  icon: RPT_ICONS.checkOk, note: 'Payments received' },
+    { label: 'Outstanding',       val: '£' + Number(s.outstanding).toLocaleString(),     cls: 'stat-indigo', icon: RPT_ICONS.alert,   note: 'Confirmed unpaid' },
   ].map(function(x) {
-    return '<div class="stat-card rpt-kpi2-card"><div class="stat-icon ' + x.cls + '"></div><div>'
-      + '<p class="stat-label">' + x.label + '</p>'
+    return '<div class="stat-card stat-card-hover rpt-kpi2-card">'
+      + '<div class="stat-icon ' + x.cls + '">' + x.icon + '</div>'
+      + '<div><p class="stat-label">' + x.label + '</p>'
       + '<p class="stat-value">' + x.val + '</p>'
       + '<p class="stat-note">' + x.note + '</p></div></div>';
   }).join('');
@@ -2207,105 +2223,106 @@ function downloadEodPDF() {
   var today   = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   var genTime = new Date(d.generated_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 
-  var payL = { card: 'Card', bank: 'Bank Transfer', payathotel: 'Pay at Hotel' };
+  // ── helpers ──────────────────────────────────────────────────
+  // table-layout:fixed + explicit colgroup = consistent widths in html2canvas
+  var COLS = '<colgroup><col style="width:17%"><col style="width:26%"><col style="width:23%"><col style="width:16%"><col style="width:18%"></colgroup>';
+  var TH   = function(t, align) {
+    return '<th style="padding:6px 8px;font-size:9px;font-weight:700;text-align:' + (align||'left') + ';color:#475569;border-bottom:1.5px solid #e2e8f0">' + t + '</th>';
+  };
+  var THEAD = '<thead><tr style="background:#f8fafc">' + TH('REF') + TH('GUEST') + TH('ROOM') + TH('TOTAL','right') + TH('PAYMENT') + '</tr></thead>';
 
-  function guestRows(arr, cols) {
-    if (!arr || !arr.length) return '<tr><td colspan="' + cols + '" style="padding:10px;color:#94a3b8;text-align:center;font-size:11px">None</td></tr>';
+  function guestRows(arr) {
+    if (!arr || !arr.length) {
+      return '<tr><td colspan="5" style="padding:12px;color:#94a3b8;text-align:center;font-size:10.5px;font-style:italic">None</td></tr>';
+    }
     return arr.map(function(b) {
-      var paid = b.payment_status === 'paid';
-      var statusColor = paid ? '#16a34a' : '#ef4444';
-      var statusLabel = paid ? 'Paid' : '£' + (Number(b.total_amount || 0) - Number(b.amount_paid || 0)).toLocaleString() + ' due';
-      var base = '<td style="padding:7px 8px;font-size:10px;font-family:monospace;font-weight:700;white-space:nowrap">' + esc(b.ref) + '</td>'
-        + '<td style="padding:7px 8px;font-size:11px;font-weight:600">' + esc(b.guest_first_name) + ' ' + esc(b.guest_last_name) + '</td>'
-        + '<td style="padding:7px 8px;font-size:10.5px">' + b.room_code.toUpperCase() + ' ' + esc(b.room_name) + '</td>'
-        + '<td style="padding:7px 8px;font-size:10.5px;text-align:right;font-weight:700">£' + Number(b.total_amount).toLocaleString() + '</td>'
-        + '<td style="padding:7px 8px;font-size:10px;font-weight:700;color:' + statusColor + '">' + statusLabel + '</td>';
-      return '<tr style="border-bottom:1px solid #f1f5f9">' + base + '</tr>';
+      var paid   = b.payment_status === 'paid';
+      var bal    = Number(b.total_amount || 0) - Number(b.amount_paid || 0);
+      var pColor = paid ? '#16a34a' : '#ef4444';
+      var pLabel = paid ? '&#10003; Paid' : '£' + bal.toLocaleString() + ' due';
+      return '<tr style="border-bottom:1px solid #f4f6f8">'
+        + '<td style="padding:7px 8px;font-size:9.5px;font-family:monospace;font-weight:700;overflow:hidden">' + esc(b.ref) + '</td>'
+        + '<td style="padding:7px 8px;font-size:10.5px;font-weight:600;overflow:hidden">' + esc(b.guest_first_name) + ' ' + esc(b.guest_last_name) + '</td>'
+        + '<td style="padding:7px 8px;font-size:10px;overflow:hidden">' + b.room_code.toUpperCase() + ' ' + esc(b.room_name) + '</td>'
+        + '<td style="padding:7px 8px;font-size:10.5px;font-weight:700;text-align:right">£' + Number(b.total_amount).toLocaleString() + '</td>'
+        + '<td style="padding:7px 8px;font-size:10px;font-weight:700;color:' + pColor + '">' + pLabel + '</td>'
+        + '</tr>';
     }).join('');
   }
 
-  function sectionTable(title, arr, cols, headerHtml) {
+  function section(title, arr) {
     return '<div style="margin-bottom:20px">'
-      + '<div style="background:#0f172a;padding:8px 12px;border-radius:4px 4px 0 0">'
-      + '<span style="font-size:11px;font-weight:800;color:#c9a96e;letter-spacing:0.5px">' + title + '</span>'
-      + '<span style="font-size:10px;color:#94a3b8;margin-left:8px">(' + (arr ? arr.length : 0) + ')</span>'
+      + '<div style="background:#0f172a;padding:8px 14px;border-radius:5px 5px 0 0;display:flex;align-items:center;gap:10px">'
+      + '<span style="font-size:10.5px;font-weight:800;color:#c9a96e;letter-spacing:0.5px;text-transform:uppercase">' + title + '</span>'
+      + '<span style="font-size:10px;color:#94a3b8;background:rgba(255,255,255,0.1);padding:1px 7px;border-radius:10px">' + (arr ? arr.length : 0) + '</span>'
       + '</div>'
-      + '<table style="width:100%;border-collapse:collapse;border:1px solid #e2e8f0;border-top:none">'
-      + '<thead><tr style="background:#f8fafc">' + headerHtml + '</tr></thead>'
-      + '<tbody>' + guestRows(arr, cols) + '</tbody>'
+      + '<table style="width:100%;border-collapse:collapse;table-layout:fixed;border:1px solid #e2e8f0;border-top:none">'
+      + COLS + THEAD
+      + '<tbody>' + guestRows(arr) + '</tbody>'
       + '</table></div>';
   }
 
-  var th = function(t) { return '<th style="padding:7px 8px;font-size:9.5px;font-weight:700;text-align:left;color:#334155">' + t + '</th>'; };
+  // ── KPI row cells ─────────────────────────────────────────────
+  var kpiItems = [
+    { l: 'Arrivals',          v: s.arrivals_today,                                       c: '#0891b2' },
+    { l: 'Departures',        v: s.departures_today,                                     c: '#7c3aed' },
+    { l: 'In House',          v: s.in_house_count,                                       c: '#059669' },
+    { l: 'New Bookings',      v: s.new_bookings_today,                                   c: '#0f172a' },
+    { l: 'Revenue Today',     v: '£' + Number(s.new_revenue_today).toLocaleString(),     c: '#c9a96e' },
+    { l: 'Payments Received', v: '£' + Number(s.payments_today).toLocaleString(),        c: '#16a34a' },
+    { l: 'Outstanding',       v: '£' + Number(s.outstanding).toLocaleString(),           c: '#ef4444' },
+  ];
 
-  var html = '<div style="font-family:Arial,Helvetica,sans-serif;background:#fff;padding:0;width:760px">'
-    // Hotel header
-    + '<div style="background:#0f172a;padding:20px 30px">'
-    + '<table style="width:100%;border-collapse:collapse"><tr>'
-    + '<td style="vertical-align:top">'
-    + '<div style="font-size:8px;font-weight:700;letter-spacing:2px;color:#c9a96e;margin-bottom:2px">PRIVATE HOTEL &middot; LONDON</div>'
-    + '<div style="font-size:20px;font-weight:900;color:#fff">BLUEDAWS</div>'
-    + '<div style="font-size:10px;color:#94a3b8;margin-top:2px">133-135 Sussex Gardens, Hyde Park, London W2 2RX</div>'
+  var html =
+    // ── outer wrapper — width matches _runPDF default (730px) ───
+    '<div style="font-family:Arial,Helvetica,sans-serif;background:#fff;padding:0">'
+
+    // hotel header
+    + '<div style="background:#0f172a;padding:20px 28px">'
+    + '<table style="width:100%;border-collapse:collapse;table-layout:fixed"><tr>'
+    + '<td style="width:55%;vertical-align:top">'
+    + '<div style="font-size:8px;font-weight:700;letter-spacing:2px;color:#c9a96e;margin-bottom:3px">PRIVATE HOTEL &middot; LONDON</div>'
+    + '<div style="font-size:22px;font-weight:900;color:#fff;letter-spacing:1px">BLUEDAWS</div>'
+    + '<div style="font-size:10px;color:#64748b;margin-top:3px">133-135 Sussex Gardens, Hyde Park, London W2 2RX</div>'
     + '</td>'
-    + '<td style="text-align:right;vertical-align:top">'
-    + '<div style="font-size:15px;font-weight:900;color:#fff">END OF DAY REPORT</div>'
-    + '<div style="font-size:11px;color:#c9a96e;margin-top:4px">' + today + '</div>'
-    + '<div style="font-size:10px;color:#64748b;margin-top:2px">Generated at ' + genTime + '</div>'
+    + '<td style="width:45%;text-align:right;vertical-align:top">'
+    + '<div style="font-size:16px;font-weight:900;color:#fff;letter-spacing:0.5px">END OF DAY REPORT</div>'
+    + '<div style="font-size:11.5px;color:#c9a96e;margin-top:5px;font-weight:700">' + today + '</div>'
+    + '<div style="font-size:10px;color:#64748b;margin-top:3px">Generated at ' + genTime + '</div>'
     + '</td></tr></table>'
     + '</div>'
-    + '<div style="height:3px;background:#c9a96e"></div>'
+    + '<div style="height:3px;background:linear-gradient(90deg,#c9a96e,#e8c98a,#c9a96e)"></div>'
 
-    // KPI summary
-    + '<div style="padding:18px 30px 10px">'
-    + '<table style="width:100%;border-collapse:collapse;margin-bottom:20px">'
+    // KPI strip — table-layout:fixed prevents overflow
+    + '<div style="padding:16px 28px 8px;background:#f8fafc;border-bottom:1px solid #e2e8f0">'
+    + '<table style="width:100%;border-collapse:collapse;table-layout:fixed">'
     + '<tr>'
-    + [
-        { l: 'Arrivals Today',      v: s.arrivals_today },
-        { l: 'Departures Today',    v: s.departures_today },
-        { l: 'In House',            v: s.in_house_count },
-        { l: 'New Bookings',        v: s.new_bookings_today },
-        { l: 'Revenue Today',       v: '£' + Number(s.new_revenue_today).toLocaleString() },
-        { l: 'Payments Received',   v: '£' + Number(s.payments_today).toLocaleString() },
-        { l: 'Outstanding Balance', v: '£' + Number(s.outstanding).toLocaleString() },
-      ].map(function(k) {
-        return '<td style="padding:12px 8px;text-align:center;border-right:1px solid #f1f5f9">'
-          + '<div style="font-size:17px;font-weight:900;color:#0f172a">' + k.v + '</div>'
-          + '<div style="font-size:9px;color:#64748b;margin-top:2px;text-transform:uppercase;letter-spacing:0.3px">' + k.l + '</div>'
+    + kpiItems.map(function(k) {
+        return '<td style="padding:10px 4px;text-align:center">'
+          + '<div style="font-size:18px;font-weight:900;color:' + k.c + ';line-height:1">' + k.v + '</div>'
+          + '<div style="font-size:8.5px;color:#64748b;margin-top:3px;text-transform:uppercase;letter-spacing:0.4px;font-weight:600">' + k.l + '</div>'
           + '</td>';
       }).join('')
     + '</tr></table>'
+    + '</div>'
 
-    // Arrivals
-    + sectionTable('ARRIVALS TODAY', d.arrivals, 5,
-        th('REF') + th('GUEST') + th('ROOM') + th('TOTAL') + th('PAYMENT'))
+    // sections
+    + '<div style="padding:16px 28px 24px">'
+    + section('Arrivals Today',       d.arrivals)
+    + section('Departures Today',     d.departures)
+    + section('Currently In House',   d.in_house)
+    + section('New Bookings Today',   d.new_bookings)
+    + (d.cancellations && d.cancellations.length ? section('Cancellations Today', d.cancellations) : '')
 
-    // Departures
-    + sectionTable('DEPARTURES TODAY', d.departures, 5,
-        th('REF') + th('GUEST') + th('ROOM') + th('TOTAL') + th('PAYMENT'))
-
-    // In House
-    + sectionTable('CURRENTLY IN HOUSE', d.in_house, 5,
-        th('REF') + th('GUEST') + th('ROOM') + th('TOTAL') + th('PAYMENT'))
-
-    // New Bookings
-    + sectionTable('NEW BOOKINGS MADE TODAY', d.new_bookings, 5,
-        th('REF') + th('GUEST') + th('ROOM') + th('TOTAL') + th('PAYMENT'))
-
-    // Cancellations
-    + (d.cancellations && d.cancellations.length
-        ? sectionTable('CANCELLATIONS TODAY', d.cancellations, 5,
-            th('REF') + th('GUEST') + th('ROOM') + th('TOTAL') + th(''))
-        : '')
-
-    // Footer
-    + '<div style="margin-top:24px;padding-top:12px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center">'
-    + '<div style="font-size:9.5px;color:#94a3b8">Bluedaws Private Hotel &middot; Confidential</div>'
-    + '<div style="font-size:9.5px;color:#94a3b8">End of Day Report &middot; ' + today + '</div>'
+    // footer
+    + '<div style="margin-top:20px;padding-top:10px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center">'
+    + '<div style="font-size:9px;color:#94a3b8;font-weight:500">Bluedaws Private Hotel &mdash; Confidential</div>'
+    + '<div style="font-size:9px;color:#94a3b8;font-weight:500">End of Day Report &mdash; ' + today + '</div>'
     + '</div>'
     + '</div></div>';
 
   var filename = 'EOD-Report-' + new Date().toISOString().slice(0, 10) + '.pdf';
-  _runPDF(html, filename, 'eodPdfBtn', '&#x2B07; Download EOD PDF');
+  _runPDF(html, filename, 'eodPdfBtn', '&#x2B07; Download EOD PDF', { width: 730 });
 }
 
 // ── Init ──────────────────────────────────────────────────────
