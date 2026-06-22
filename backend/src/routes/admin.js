@@ -403,7 +403,7 @@ router.get('/guests', adminAuth, async (req, res) => {
 // GET /api/admin/analytics
 router.get('/analytics', adminAuth, async (req, res) => {
   try {
-    const [monthly, rooms, payments, summary] = await Promise.all([
+    const [monthly, rooms, payments, summary, nations, statusBreak] = await Promise.all([
       pool.query(`
         SELECT
           TO_CHAR(checkin_date, 'YYYY-MM') AS month,
@@ -428,18 +428,117 @@ router.get('/analytics', adminAuth, async (req, res) => {
       `),
       pool.query(`
         SELECT
-          COUNT(*)::int                                                                             AS total_bookings,
-          COUNT(*) FILTER (WHERE status='confirmed')::int                                           AS confirmed,
-          COUNT(*) FILTER (WHERE status='pending')::int                                             AS pending,
-          COALESCE(SUM(total_amount)     FILTER (WHERE status!='cancelled'), 0)                    AS total_revenue,
-          COALESCE(AVG(total_amount)     FILTER (WHERE status!='cancelled'), 0)::numeric(10,2)     AS avg_booking_value,
-          COALESCE(AVG(nights)           FILTER (WHERE status!='cancelled'), 0)::numeric(5,1)      AS avg_nights,
+          COUNT(*)::int                                                                                    AS total_bookings,
+          COUNT(*) FILTER (WHERE status='confirmed')::int                                                  AS confirmed,
+          COUNT(*) FILTER (WHERE status='pending')::int                                                    AS pending,
+          COUNT(*) FILTER (WHERE status='cancelled')::int                                                  AS cancelled,
+          COUNT(*) FILTER (WHERE checked_in_at IS NOT NULL AND checked_out_at IS NULL)::int               AS in_house_now,
+          COALESCE(SUM(total_amount)  FILTER (WHERE status!='cancelled'), 0)                              AS total_revenue,
+          COALESCE(AVG(total_amount)  FILTER (WHERE status!='cancelled'), 0)::numeric(10,2)               AS avg_booking_value,
+          COALESCE(AVG(nights)        FILTER (WHERE status!='cancelled'), 0)::numeric(5,1)                AS avg_nights,
+          COALESCE(SUM(amount_paid),  0)                                                                  AS total_collected,
+          COALESCE(SUM(total_amount - COALESCE(amount_paid,0))
+            FILTER (WHERE status='confirmed' AND payment_status != 'paid'), 0)                            AS outstanding,
           COUNT(*) FILTER (WHERE checkin_date >= DATE_TRUNC('month', NOW()) AND status!='cancelled')::int AS this_month_bookings,
           COALESCE(SUM(total_amount) FILTER (WHERE checkin_date >= DATE_TRUNC('month', NOW()) AND status!='cancelled'), 0) AS this_month_revenue
         FROM bookings
       `),
+      pool.query(`
+        SELECT guest_country AS country, COUNT(*)::int AS count
+        FROM bookings
+        WHERE status != 'cancelled'
+          AND guest_country IS NOT NULL AND guest_country <> ''
+        GROUP BY guest_country ORDER BY count DESC LIMIT 10
+      `),
+      pool.query(`
+        SELECT
+          COUNT(*) FILTER (WHERE status='confirmed' AND checked_in_at IS NULL)::int   AS confirmed_pending_checkin,
+          COUNT(*) FILTER (WHERE status='pending')::int                                AS awaiting_confirmation,
+          COUNT(*) FILTER (WHERE checked_in_at IS NOT NULL AND checked_out_at IS NULL)::int AS in_house,
+          COUNT(*) FILTER (WHERE checked_out_at IS NOT NULL)::int                     AS checked_out,
+          COUNT(*) FILTER (WHERE status='cancelled')::int                              AS cancelled
+        FROM bookings
+      `),
     ]);
-    res.json({ success: true, data: { monthly: monthly.rows, rooms: rooms.rows, payments: payments.rows, summary: summary.rows[0] } });
+
+    res.json({
+      success: true,
+      data: {
+        monthly:     monthly.rows,
+        rooms:       rooms.rows,
+        payments:    payments.rows,
+        summary:     summary.rows[0],
+        nations:     nations.rows,
+        status_break: statusBreak.rows[0],
+      }
+    });
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+});
+
+// GET /api/admin/eod  — End of Day report data
+router.get('/eod', adminAuth, async (req, res) => {
+  try {
+    const [summary, arrivals, departures, inHouse, newBk, cancels] = await Promise.all([
+      pool.query(`
+        SELECT
+          COUNT(*) FILTER (WHERE checkin_date  = CURRENT_DATE AND status != 'cancelled')::int AS arrivals_today,
+          COUNT(*) FILTER (WHERE checkout_date = CURRENT_DATE AND status != 'cancelled')::int AS departures_today,
+          COUNT(*) FILTER (WHERE checked_in_at IS NOT NULL AND checked_out_at IS NULL)::int   AS in_house_count,
+          COUNT(*) FILTER (WHERE DATE(created_at AT TIME ZONE 'UTC') = CURRENT_DATE)::int     AS new_bookings_today,
+          COUNT(*) FILTER (WHERE DATE(created_at AT TIME ZONE 'UTC') = CURRENT_DATE AND status = 'cancelled')::int AS cancellations_today,
+          COALESCE(SUM(total_amount) FILTER (WHERE DATE(created_at AT TIME ZONE 'UTC') = CURRENT_DATE AND status!='cancelled'), 0) AS new_revenue_today,
+          COALESCE(SUM(amount_paid)  FILTER (WHERE DATE(updated_at AT TIME ZONE 'UTC') = CURRENT_DATE), 0)                        AS payments_today,
+          COALESCE(SUM(total_amount - COALESCE(amount_paid,0)) FILTER (WHERE status='confirmed' AND payment_status!='paid'), 0)   AS outstanding
+        FROM bookings
+      `),
+      pool.query(`
+        SELECT ref, guest_first_name, guest_last_name, room_code, room_name,
+               nights, total_amount, amount_paid, payment_status, payment_method, status, checked_in_at, special_requests
+        FROM bookings
+        WHERE checkin_date = CURRENT_DATE AND status != 'cancelled'
+        ORDER BY guest_last_name
+      `),
+      pool.query(`
+        SELECT ref, guest_first_name, guest_last_name, room_code, room_name,
+               nights, total_amount, amount_paid, payment_status, checked_out_at
+        FROM bookings
+        WHERE checkout_date = CURRENT_DATE AND status != 'cancelled'
+        ORDER BY guest_last_name
+      `),
+      pool.query(`
+        SELECT ref, guest_first_name, guest_last_name, room_code, room_name,
+               checkin_date, checkout_date, nights, total_amount, amount_paid, payment_status
+        FROM bookings
+        WHERE checked_in_at IS NOT NULL AND checked_out_at IS NULL AND status != 'cancelled'
+        ORDER BY checkout_date, guest_last_name
+      `),
+      pool.query(`
+        SELECT ref, guest_first_name, guest_last_name, room_code, room_name,
+               checkin_date, checkout_date, total_amount, status, payment_method
+        FROM bookings
+        WHERE DATE(created_at AT TIME ZONE 'UTC') = CURRENT_DATE
+        ORDER BY created_at DESC
+      `),
+      pool.query(`
+        SELECT ref, guest_first_name, guest_last_name, room_code, room_name, total_amount
+        FROM bookings
+        WHERE DATE(updated_at AT TIME ZONE 'UTC') = CURRENT_DATE AND status = 'cancelled'
+        ORDER BY updated_at DESC
+      `),
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        generated_at:  new Date().toISOString(),
+        summary:       summary.rows[0],
+        arrivals:      arrivals.rows,
+        departures:    departures.rows,
+        in_house:      inHouse.rows,
+        new_bookings:  newBk.rows,
+        cancellations: cancels.rows,
+      }
+    });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 

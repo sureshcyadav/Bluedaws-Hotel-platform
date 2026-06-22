@@ -1608,3 +1608,188 @@ a:hover { text-decoration: underline; }
 }
 .bk-export-btn:hover:not(:disabled) { border-color: #c9a96e; color: #c9a96e; }
 .bk-export-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ═══════════════════════════════════════════════════════════════
+   REPORTS — TABS, ENHANCED GRID, EOD
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Report tab bar ─────────────────────────────────────────── */
+.rpt-tab-bar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #f1f5f9;
+  padding-bottom: 0;
+}
+.rpt-tab {
+  padding: 10px 22px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+  border-radius: 6px 6px 0 0;
+}
+.rpt-tab:hover  { color: #0f172a; background: #f8fafc; }
+.rpt-tab.active { color: #0f172a; border-bottom-color: #c9a96e; background: none; }
+
+/* ── KPI strip 2 ────────────────────────────────────────────── */
+.rpt-kpi2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.rpt-kpi2-card { position: relative; }
+.stat-note {
+  font-size: 11px;
+  color: #94a3b8;
+  margin: 2px 0 0;
+  font-weight: 400;
+}
+
+/* ── Bottom 4-panel quad grid ───────────────────────────────── */
+.reports-quad {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+@media (max-width: 900px) { .reports-quad { grid-template-columns: 1fr; } }
+
+/* ── EOD toolbar ────────────────────────────────────────────── */
+.eod-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding: 16px 20px;
+  background: #0f172a;
+  border-radius: 12px;
+}
+.eod-date {
+  font-size: 17px;
+  font-weight: 800;
+  color: #fff;
+}
+.eod-sub {
+  font-size: 11.5px;
+  color: #94a3b8;
+  margin-top: 3px;
+}
+.eod-generated {
+  font-size: 11px;
+  color: #64748b;
+}
+.eod-pdf-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  background: #c9a96e;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.eod-pdf-btn:hover:not(:disabled) { background: #b8924a; }
+.eod-pdf-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── EOD KPI strip ──────────────────────────────────────────── */
+.eod-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.eod-kpi-card {
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px 16px;
+  text-align: center;
+}
+.eod-kpi-val {
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1;
+}
+.eod-kpi-label {
+  font-size: 10.5px;
+  color: #64748b;
+  font-weight: 600;
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* ── EOD three-column grid ──────────────────────────────────── */
+.eod-grid3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.eod-grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+@media (max-width: 1100px) { .eod-grid3 { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 700px)  { .eod-grid3, .eod-grid2 { grid-template-columns: 1fr; } }
+
+/* ── EOD guest row cards ────────────────────────────────────── */
+.eod-guest-row {
+  padding: 10px 16px;
+  border-bottom: 1px solid #f8fafc;
+}
+.eod-guest-row:last-child { border-bottom: none; }
+.eod-guest-name   { font-size: 13px; font-weight: 700; color: #0f172a; }
+.eod-guest-detail { font-size: 11.5px; color: #475569; margin-top: 2px; display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.eod-guest-meta   { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 5px; }
+.eod-guest-note   { font-size: 11px; color: #64748b; margin-top: 4px; font-style: italic; }
+.eod-badge {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+.eod-badge-green  { background: #dcfce7; color: #16a34a; }
+.eod-badge-amber  { background: #fef9c3; color: #ca8a04; }
+.eod-badge-red    { background: #fee2e2; color: #dc2626; }
+.eod-badge-blue   { background: #e0f2fe; color: #0369a1; }
+
+/* ── EOD mini-tables (new bookings / cancellations) ─────────── */
+.eod-mini-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.eod-mini-table th {
+  padding: 8px 10px;
+  background: #f8fafc;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #64748b;
+  text-align: left;
+  border-bottom: 1.5px solid #e2e8f0;
+}
+.eod-mini-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #f8fafc;
+  color: #334155;
+}
+.eod-mini-table tr:last-child td { border-bottom: none; }

@@ -1939,13 +1939,31 @@ function renderGuests(list) {
 }
 
 // ── Reports ───────────────────────────────────────────────────
-document.getElementById('refreshReports').addEventListener('click', loadReports);
+// ── Reports tab switching ─────────────────────────────────────
+document.getElementById('refreshReports').addEventListener('click', function() {
+  if (document.getElementById('rptEod').classList.contains('hidden')) loadReports();
+  else loadEod();
+});
 
+document.querySelectorAll('.rpt-tab').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.rpt-tab').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    var tab = btn.dataset.rpt;
+    document.getElementById('rptOverview').classList.toggle('hidden', tab !== 'overview');
+    document.getElementById('rptEod').classList.toggle('hidden', tab !== 'eod');
+    if (tab === 'eod') loadEod();
+  });
+});
+document.getElementById('refreshEod').addEventListener('click', loadEod);
+
+// ── Overview Analytics ────────────────────────────────────────
 async function loadReports() {
-  document.getElementById('reportsSummary').innerHTML = '<div class="table-loading">Loading…</div>';
-  document.getElementById('revChart').innerHTML       = '<div class="table-loading">Loading…</div>';
-  document.getElementById('roomsChart').innerHTML     = '<div class="table-loading">Loading…</div>';
-  document.getElementById('paymentsChart').innerHTML  = '<div class="table-loading">Loading…</div>';
+  ['reportsSummary','reportsSummary2','revChart','roomsChart','paymentsChart','nationsChart','statusChart']
+    .forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.innerHTML = '<div class="table-loading">Loading…</div>';
+    });
   try {
     const { ok, data } = await apiFetch('GET', '/api/admin/analytics');
     if (!ok) return;
@@ -1956,24 +1974,47 @@ async function loadReports() {
 }
 
 function renderReports(d) {
-  const s = d.summary;
+  const s  = d.summary;
+  const sb = d.status_break || {};
+  const totalActive = Number(s.total_bookings) || 1;
+  const cancelRate  = totalActive ? ((Number(s.cancelled || 0) / totalActive) * 100).toFixed(1) : '0.0';
+  const occupancy   = ((Number(s.in_house_now || 0) / 22) * 100).toFixed(0);
+
+  // KPI strip 1
   document.getElementById('reportsSummary').innerHTML = [
-    { label: 'Total Revenue',     val: '£' + Number(s.total_revenue).toLocaleString(),           cls: 'stat-gold'   },
-    { label: 'This Month',        val: '£' + Number(s.this_month_revenue).toLocaleString(),       cls: 'stat-green'  },
-    { label: 'Avg Booking Value', val: '£' + Number(s.avg_booking_value).toFixed(0),              cls: 'stat-blue'   },
-    { label: 'Avg Stay (nights)', val: Number(s.avg_nights).toFixed(1),                           cls: 'stat-purple' },
-    { label: 'Total Bookings',    val: s.total_bookings,                                          cls: 'stat-blue'   },
-    { label: 'This Month',        val: s.this_month_bookings + ' bookings',                       cls: 'stat-green'  },
-  ].map(x => '<div class="stat-card"><div class="stat-icon ' + x.cls + '"></div><div><p class="stat-label">' + x.label + '</p><p class="stat-value">' + x.val + '</p></div></div>').join('');
+    { label: 'Total Revenue',      val: '£' + Number(s.total_revenue).toLocaleString(),     cls: 'stat-gold'   },
+    { label: 'This Month Revenue', val: '£' + Number(s.this_month_revenue).toLocaleString(), cls: 'stat-green'  },
+    { label: 'Avg Booking Value',  val: '£' + Number(s.avg_booking_value).toFixed(0),        cls: 'stat-blue'   },
+    { label: 'Avg Stay (nights)',  val: Number(s.avg_nights).toFixed(1),                     cls: 'stat-purple' },
+    { label: 'Total Bookings',     val: s.total_bookings,                                    cls: 'stat-blue'   },
+    { label: 'This Month',         val: s.this_month_bookings + ' bookings',                 cls: 'stat-green'  },
+  ].map(function(x) {
+    return '<div class="stat-card"><div class="stat-icon ' + x.cls + '"></div><div>'
+      + '<p class="stat-label">' + x.label + '</p>'
+      + '<p class="stat-value">' + x.val + '</p></div></div>';
+  }).join('');
+
+  // KPI strip 2 — operational metrics
+  document.getElementById('reportsSummary2').innerHTML = [
+    { label: 'Occupancy Now',      val: occupancy + '%',                                     cls: 'stat-teal',   note: s.in_house_now + ' / 22 rooms' },
+    { label: 'Cancellation Rate',  val: cancelRate + '%',                                    cls: 'stat-orange', note: s.cancelled + ' cancelled' },
+    { label: 'Total Collected',    val: '£' + Number(s.total_collected).toLocaleString(),    cls: 'stat-green',  note: 'Payments received' },
+    { label: 'Outstanding',        val: '£' + Number(s.outstanding).toLocaleString(),        cls: 'stat-indigo', note: 'Confirmed unpaid' },
+  ].map(function(x) {
+    return '<div class="stat-card rpt-kpi2-card"><div class="stat-icon ' + x.cls + '"></div><div>'
+      + '<p class="stat-label">' + x.label + '</p>'
+      + '<p class="stat-value">' + x.val + '</p>'
+      + '<p class="stat-note">' + x.note + '</p></div></div>';
+  }).join('');
 
   // Monthly revenue bar chart
   const monthly = d.monthly || [];
   if (!monthly.length) {
     document.getElementById('revChart').innerHTML = '<div class="fd-empty">No data yet.</div>';
   } else {
-    const maxRev = Math.max(...monthly.map(m => Number(m.revenue)), 1);
+    const maxRev = Math.max.apply(null, monthly.map(function(m) { return Number(m.revenue); }).concat([1]));
     document.getElementById('revChart').innerHTML = '<div class="rev-chart">'
-      + monthly.map(m => {
+      + monthly.map(function(m) {
           const pct = Math.round((Number(m.revenue) / maxRev) * 100);
           return '<div class="rev-bar-wrap">'
             + '<div class="rev-bar-label-top">£' + Number(m.revenue).toLocaleString() + '</div>'
@@ -1986,11 +2027,12 @@ function renderReports(d) {
   }
 
   // Top rooms
-  document.getElementById('roomsChart').innerHTML = (d.rooms || []).map((r, i) => {
+  document.getElementById('roomsChart').innerHTML = (d.rooms || []).map(function(r) {
     const maxBk = d.rooms[0].bookings || 1;
     const pct = Math.round((r.bookings / maxBk) * 100);
     return '<div class="horiz-bar-row">'
-      + '<span class="horiz-bar-label"><span class="price-card-code" style="background:#0f172a;font-size:10px">' + r.room_code.toUpperCase() + '</span> ' + esc(r.room_name) + '</span>'
+      + '<span class="horiz-bar-label"><span class="price-card-code" style="background:#0f172a;font-size:10px">'
+      + r.room_code.toUpperCase() + '</span> ' + esc(r.room_name) + '</span>'
       + '<div class="horiz-bar-track"><div class="horiz-bar-fill" style="width:' + pct + '%"></div></div>'
       + '<span class="horiz-bar-val">' + r.bookings + '</span>'
       + '</div>';
@@ -1999,13 +2041,271 @@ function renderReports(d) {
   // Payment methods
   const payLabels = { card: 'Card Payment', bank: 'Bank Transfer', payathotel: 'Pay at Hotel' };
   const payColors = { card: '#6366f1', bank: '#0891b2', payathotel: '#059669' };
-  document.getElementById('paymentsChart').innerHTML = (d.payments || []).map(p =>
-    '<div class="pay-row">'
-    + '<span class="pay-dot" style="background:' + (payColors[p.payment_method] || '#94a3b8') + '"></span>'
-    + '<span class="pay-label">' + (payLabels[p.payment_method] || p.payment_method) + '</span>'
-    + '<span class="pay-count">' + p.count + '</span>'
+  document.getElementById('paymentsChart').innerHTML = (d.payments || []).map(function(p) {
+    return '<div class="pay-row">'
+      + '<span class="pay-dot" style="background:' + (payColors[p.payment_method] || '#94a3b8') + '"></span>'
+      + '<span class="pay-label">' + (payLabels[p.payment_method] || p.payment_method) + '</span>'
+      + '<span class="pay-count">' + p.count + '</span>'
+      + '</div>';
+  }).join('') || '<div class="fd-empty">No data yet.</div>';
+
+  // Guest nationalities
+  const nations = d.nations || [];
+  const maxNat  = nations.length ? nations[0].count : 1;
+  document.getElementById('nationsChart').innerHTML = nations.map(function(n) {
+    const pct = Math.round((n.count / maxNat) * 100);
+    return '<div class="horiz-bar-row">'
+      + '<span class="horiz-bar-label" style="min-width:130px">' + esc(n.country || 'Unknown') + '</span>'
+      + '<div class="horiz-bar-track"><div class="horiz-bar-fill" style="width:' + pct + '%;background:#0891b2"></div></div>'
+      + '<span class="horiz-bar-val">' + n.count + '</span>'
+      + '</div>';
+  }).join('') || '<div class="fd-empty">No nationality data yet.</div>';
+
+  // Booking status breakdown
+  const statusItems = [
+    { label: 'Awaiting Confirmation', val: sb.awaiting_confirmation || 0, color: '#f59e0b' },
+    { label: 'Confirmed (pre arrival)', val: sb.confirmed_pending_checkin || 0, color: '#0891b2' },
+    { label: 'In House',              val: sb.in_house || 0,                  color: '#059669' },
+    { label: 'Checked Out',           val: sb.checked_out || 0,               color: '#475569' },
+    { label: 'Cancelled',             val: sb.cancelled || 0,                 color: '#ef4444' },
+  ];
+  const maxStatus = Math.max.apply(null, statusItems.map(function(x) { return x.val; }).concat([1]));
+  document.getElementById('statusChart').innerHTML = statusItems.map(function(x) {
+    const pct = Math.round((x.val / maxStatus) * 100);
+    return '<div class="horiz-bar-row">'
+      + '<span class="horiz-bar-label" style="min-width:160px">' + x.label + '</span>'
+      + '<div class="horiz-bar-track"><div class="horiz-bar-fill" style="width:' + pct + '%;background:' + x.color + '"></div></div>'
+      + '<span class="horiz-bar-val">' + x.val + '</span>'
+      + '</div>';
+  }).join('');
+}
+
+// ── End of Day ────────────────────────────────────────────────
+var _eodData = null;
+
+async function loadEod() {
+  ['eodKpis','eodArrivals','eodInHouse','eodDepartures','eodNewBookings','eodCancellations']
+    .forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.innerHTML = '<div class="table-loading">Loading…</div>';
+    });
+  document.getElementById('eodDate').textContent    = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  document.getElementById('eodGenAt').textContent   = '';
+  try {
+    const { ok, data } = await apiFetch('GET', '/api/admin/eod');
+    if (!ok) { document.getElementById('eodKpis').innerHTML = '<div class="table-error">Failed to load EOD data.</div>'; return; }
+    _eodData = data.data;
+    renderEod(data.data);
+  } catch {
+    document.getElementById('eodKpis').innerHTML = '<div class="table-error">Failed to load EOD data.</div>';
+  }
+}
+
+function renderEod(d) {
+  const s = d.summary;
+  document.getElementById('eodGenAt').textContent = 'Updated ' + new Date(d.generated_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+  // KPI strip
+  document.getElementById('eodKpis').innerHTML = [
+    { label: 'Arrivals Today',     val: s.arrivals_today,     color: '#0891b2' },
+    { label: 'Departures Today',   val: s.departures_today,   color: '#7c3aed' },
+    { label: 'In House',           val: s.in_house_count,     color: '#059669' },
+    { label: 'New Bookings',       val: s.new_bookings_today, color: '#0f172a' },
+    { label: 'Revenue Today',      val: '£' + Number(s.new_revenue_today).toLocaleString(), color: '#c9a96e' },
+    { label: 'Payments Received',  val: '£' + Number(s.payments_today).toLocaleString(),    color: '#16a34a' },
+    { label: 'Outstanding',        val: '£' + Number(s.outstanding).toLocaleString(),       color: '#ef4444' },
+  ].map(function(k) {
+    return '<div class="eod-kpi-card">'
+      + '<div class="eod-kpi-val" style="color:' + k.color + '">' + k.val + '</div>'
+      + '<div class="eod-kpi-label">' + k.label + '</div>'
+      + '</div>';
+  }).join('');
+
+  // Arrivals
+  document.getElementById('eodArrivalsCount').textContent = (d.arrivals || []).length + ' guest' + (d.arrivals.length !== 1 ? 's' : '');
+  document.getElementById('eodArrivals').innerHTML = (d.arrivals || []).length
+    ? (d.arrivals || []).map(function(b) {
+        const paid = b.payment_status === 'paid';
+        const ci   = b.checked_in_at ? '&#x2714; Checked in' : 'Not yet checked in';
+        return '<div class="eod-guest-row">'
+          + '<div class="eod-guest-name">' + esc(b.guest_first_name) + ' ' + esc(b.guest_last_name) + '</div>'
+          + '<div class="eod-guest-detail"><span class="price-card-code" style="background:#0f172a;font-size:10px">' + b.room_code.toUpperCase() + '</span> ' + esc(b.room_name) + ' &bull; ' + b.nights + ' nts</div>'
+          + '<div class="eod-guest-meta">'
+          + '<span class="eod-badge ' + (b.checked_in_at ? 'eod-badge-green' : 'eod-badge-amber') + '">' + ci + '</span>'
+          + '<span class="eod-badge ' + (paid ? 'eod-badge-green' : 'eod-badge-red') + '">' + (paid ? 'Paid' : '£' + (Number(b.total_amount) - Number(b.amount_paid)).toLocaleString() + ' due') + '</span>'
+          + '</div>'
+          + (b.special_requests ? '<div class="eod-guest-note">&#x1F4AC; ' + esc(b.special_requests) + '</div>' : '')
+          + '</div>';
+      }).join('')
+    : '<div class="fd-empty">No arrivals today.</div>';
+
+  // In House
+  document.getElementById('eodInHouseCount').textContent = (d.in_house || []).length + ' guest' + (d.in_house.length !== 1 ? 's' : '');
+  document.getElementById('eodInHouse').innerHTML = (d.in_house || []).length
+    ? (d.in_house || []).map(function(b) {
+        return '<div class="eod-guest-row">'
+          + '<div class="eod-guest-name">' + esc(b.guest_first_name) + ' ' + esc(b.guest_last_name) + '</div>'
+          + '<div class="eod-guest-detail"><span class="price-card-code" style="background:#0f172a;font-size:10px">' + b.room_code.toUpperCase() + '</span> ' + esc(b.room_name) + ' &bull; ' + b.nights + ' nts</div>'
+          + '<div class="eod-guest-meta"><span class="eod-badge eod-badge-blue">Out: ' + fmtDate(b.checkout_date) + '</span>'
+          + '<span class="eod-badge ' + (b.payment_status === 'paid' ? 'eod-badge-green' : 'eod-badge-red') + '">' + (b.payment_status === 'paid' ? 'Paid' : 'Balance due') + '</span></div>'
+          + '</div>';
+      }).join('')
+    : '<div class="fd-empty">No guests currently in house.</div>';
+
+  // Departures
+  document.getElementById('eodDepsCount').textContent = (d.departures || []).length + ' guest' + (d.departures.length !== 1 ? 's' : '');
+  document.getElementById('eodDepartures').innerHTML = (d.departures || []).length
+    ? (d.departures || []).map(function(b) {
+        const co = b.checked_out_at ? '&#x2714; Checked out' : 'Not yet checked out';
+        return '<div class="eod-guest-row">'
+          + '<div class="eod-guest-name">' + esc(b.guest_first_name) + ' ' + esc(b.guest_last_name) + '</div>'
+          + '<div class="eod-guest-detail"><span class="price-card-code" style="background:#0f172a;font-size:10px">' + b.room_code.toUpperCase() + '</span> ' + esc(b.room_name) + ' &bull; ' + b.nights + ' nts</div>'
+          + '<div class="eod-guest-meta">'
+          + '<span class="eod-badge ' + (b.checked_out_at ? 'eod-badge-green' : 'eod-badge-amber') + '">' + co + '</span>'
+          + '<span class="eod-badge ' + (b.payment_status === 'paid' ? 'eod-badge-green' : 'eod-badge-red') + '">' + (b.payment_status === 'paid' ? 'Fully Paid' : '£' + (Number(b.total_amount) - Number(b.amount_paid)).toLocaleString() + ' outstanding') + '</span>'
+          + '</div>'
+          + '</div>';
+      }).join('')
+    : '<div class="fd-empty">No departures today.</div>';
+
+  // New bookings today
+  document.getElementById('eodNewBkCount').textContent = (d.new_bookings || []).length + ' booking' + (d.new_bookings.length !== 1 ? 's' : '');
+  document.getElementById('eodNewBookings').innerHTML = (d.new_bookings || []).length
+    ? '<table class="eod-mini-table"><thead><tr><th>Ref</th><th>Guest</th><th>Room</th><th>Check-in</th><th>Check-out</th><th>Total</th><th>Status</th></tr></thead><tbody>'
+      + (d.new_bookings || []).map(function(b) {
+          return '<tr><td><span class="ref-badge">' + b.ref + '</span></td>'
+            + '<td>' + esc(b.guest_first_name) + ' ' + esc(b.guest_last_name) + '</td>'
+            + '<td>' + b.room_code.toUpperCase() + '</td>'
+            + '<td>' + fmtDate(b.checkin_date) + '</td>'
+            + '<td>' + fmtDate(b.checkout_date) + '</td>'
+            + '<td>£' + Number(b.total_amount).toLocaleString() + '</td>'
+            + '<td><span class="status-badge status-' + b.status + '">' + b.status + '</span></td></tr>';
+        }).join('')
+      + '</tbody></table>'
+    : '<div class="fd-empty">No new bookings made today.</div>';
+
+  // Cancellations today
+  document.getElementById('eodCancelCount').textContent = (d.cancellations || []).length + ' cancellation' + (d.cancellations.length !== 1 ? 's' : '');
+  document.getElementById('eodCancellations').innerHTML = (d.cancellations || []).length
+    ? '<table class="eod-mini-table"><thead><tr><th>Ref</th><th>Guest</th><th>Room</th><th>Total</th></tr></thead><tbody>'
+      + (d.cancellations || []).map(function(b) {
+          return '<tr><td><span class="ref-badge">' + b.ref + '</span></td>'
+            + '<td>' + esc(b.guest_first_name) + ' ' + esc(b.guest_last_name) + '</td>'
+            + '<td>' + b.room_code.toUpperCase() + '</td>'
+            + '<td>£' + Number(b.total_amount).toLocaleString() + '</td></tr>';
+        }).join('')
+      + '</tbody></table>'
+    : '<div class="fd-empty" style="color:#64748b">No cancellations today.</div>';
+}
+
+// ── EOD PDF download ──────────────────────────────────────────
+function downloadEodPDF() {
+  var d = _eodData;
+  if (!d) { alert('EOD data not yet loaded. Please wait for the report to load.'); return; }
+
+  var s       = d.summary;
+  var today   = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  var genTime = new Date(d.generated_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+  var payL = { card: 'Card', bank: 'Bank Transfer', payathotel: 'Pay at Hotel' };
+
+  function guestRows(arr, cols) {
+    if (!arr || !arr.length) return '<tr><td colspan="' + cols + '" style="padding:10px;color:#94a3b8;text-align:center;font-size:11px">None</td></tr>';
+    return arr.map(function(b) {
+      var paid = b.payment_status === 'paid';
+      var statusColor = paid ? '#16a34a' : '#ef4444';
+      var statusLabel = paid ? 'Paid' : '£' + (Number(b.total_amount || 0) - Number(b.amount_paid || 0)).toLocaleString() + ' due';
+      var base = '<td style="padding:7px 8px;font-size:10px;font-family:monospace;font-weight:700;white-space:nowrap">' + esc(b.ref) + '</td>'
+        + '<td style="padding:7px 8px;font-size:11px;font-weight:600">' + esc(b.guest_first_name) + ' ' + esc(b.guest_last_name) + '</td>'
+        + '<td style="padding:7px 8px;font-size:10.5px">' + b.room_code.toUpperCase() + ' ' + esc(b.room_name) + '</td>'
+        + '<td style="padding:7px 8px;font-size:10.5px;text-align:right;font-weight:700">£' + Number(b.total_amount).toLocaleString() + '</td>'
+        + '<td style="padding:7px 8px;font-size:10px;font-weight:700;color:' + statusColor + '">' + statusLabel + '</td>';
+      return '<tr style="border-bottom:1px solid #f1f5f9">' + base + '</tr>';
+    }).join('');
+  }
+
+  function sectionTable(title, arr, cols, headerHtml) {
+    return '<div style="margin-bottom:20px">'
+      + '<div style="background:#0f172a;padding:8px 12px;border-radius:4px 4px 0 0">'
+      + '<span style="font-size:11px;font-weight:800;color:#c9a96e;letter-spacing:0.5px">' + title + '</span>'
+      + '<span style="font-size:10px;color:#94a3b8;margin-left:8px">(' + (arr ? arr.length : 0) + ')</span>'
+      + '</div>'
+      + '<table style="width:100%;border-collapse:collapse;border:1px solid #e2e8f0;border-top:none">'
+      + '<thead><tr style="background:#f8fafc">' + headerHtml + '</tr></thead>'
+      + '<tbody>' + guestRows(arr, cols) + '</tbody>'
+      + '</table></div>';
+  }
+
+  var th = function(t) { return '<th style="padding:7px 8px;font-size:9.5px;font-weight:700;text-align:left;color:#334155">' + t + '</th>'; };
+
+  var html = '<div style="font-family:Arial,Helvetica,sans-serif;background:#fff;padding:0;width:760px">'
+    // Hotel header
+    + '<div style="background:#0f172a;padding:20px 30px">'
+    + '<table style="width:100%;border-collapse:collapse"><tr>'
+    + '<td style="vertical-align:top">'
+    + '<div style="font-size:8px;font-weight:700;letter-spacing:2px;color:#c9a96e;margin-bottom:2px">PRIVATE HOTEL &middot; LONDON</div>'
+    + '<div style="font-size:20px;font-weight:900;color:#fff">BLUEDAWS</div>'
+    + '<div style="font-size:10px;color:#94a3b8;margin-top:2px">133-135 Sussex Gardens, Hyde Park, London W2 2RX</div>'
+    + '</td>'
+    + '<td style="text-align:right;vertical-align:top">'
+    + '<div style="font-size:15px;font-weight:900;color:#fff">END OF DAY REPORT</div>'
+    + '<div style="font-size:11px;color:#c9a96e;margin-top:4px">' + today + '</div>'
+    + '<div style="font-size:10px;color:#64748b;margin-top:2px">Generated at ' + genTime + '</div>'
+    + '</td></tr></table>'
     + '</div>'
-  ).join('') || '<div class="fd-empty">No data yet.</div>';
+    + '<div style="height:3px;background:#c9a96e"></div>'
+
+    // KPI summary
+    + '<div style="padding:18px 30px 10px">'
+    + '<table style="width:100%;border-collapse:collapse;margin-bottom:20px">'
+    + '<tr>'
+    + [
+        { l: 'Arrivals Today',      v: s.arrivals_today },
+        { l: 'Departures Today',    v: s.departures_today },
+        { l: 'In House',            v: s.in_house_count },
+        { l: 'New Bookings',        v: s.new_bookings_today },
+        { l: 'Revenue Today',       v: '£' + Number(s.new_revenue_today).toLocaleString() },
+        { l: 'Payments Received',   v: '£' + Number(s.payments_today).toLocaleString() },
+        { l: 'Outstanding Balance', v: '£' + Number(s.outstanding).toLocaleString() },
+      ].map(function(k) {
+        return '<td style="padding:12px 8px;text-align:center;border-right:1px solid #f1f5f9">'
+          + '<div style="font-size:17px;font-weight:900;color:#0f172a">' + k.v + '</div>'
+          + '<div style="font-size:9px;color:#64748b;margin-top:2px;text-transform:uppercase;letter-spacing:0.3px">' + k.l + '</div>'
+          + '</td>';
+      }).join('')
+    + '</tr></table>'
+
+    // Arrivals
+    + sectionTable('ARRIVALS TODAY', d.arrivals, 5,
+        th('REF') + th('GUEST') + th('ROOM') + th('TOTAL') + th('PAYMENT'))
+
+    // Departures
+    + sectionTable('DEPARTURES TODAY', d.departures, 5,
+        th('REF') + th('GUEST') + th('ROOM') + th('TOTAL') + th('PAYMENT'))
+
+    // In House
+    + sectionTable('CURRENTLY IN HOUSE', d.in_house, 5,
+        th('REF') + th('GUEST') + th('ROOM') + th('TOTAL') + th('PAYMENT'))
+
+    // New Bookings
+    + sectionTable('NEW BOOKINGS MADE TODAY', d.new_bookings, 5,
+        th('REF') + th('GUEST') + th('ROOM') + th('TOTAL') + th('PAYMENT'))
+
+    // Cancellations
+    + (d.cancellations && d.cancellations.length
+        ? sectionTable('CANCELLATIONS TODAY', d.cancellations, 5,
+            th('REF') + th('GUEST') + th('ROOM') + th('TOTAL') + th(''))
+        : '')
+
+    // Footer
+    + '<div style="margin-top:24px;padding-top:12px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center">'
+    + '<div style="font-size:9.5px;color:#94a3b8">Bluedaws Private Hotel &middot; Confidential</div>'
+    + '<div style="font-size:9.5px;color:#94a3b8">End of Day Report &middot; ' + today + '</div>'
+    + '</div>'
+    + '</div></div>';
+
+  var filename = 'EOD-Report-' + new Date().toISOString().slice(0, 10) + '.pdf';
+  _runPDF(html, filename, 'eodPdfBtn', '&#x2B07; Download EOD PDF');
 }
 
 // ── Init ──────────────────────────────────────────────────────

@@ -441,21 +441,105 @@
       <section class="admin-section hidden" id="sectionReports">
         <div class="section-header">
           <div><h1>Reports</h1><p class="section-sub">Revenue, occupancy and booking analytics</p></div>
-          <button class="btn-refresh" id="refreshReports">Refresh</button>
+          <button class="btn-refresh" id="refreshReports">&#x21bb; Refresh</button>
         </div>
-        <div class="reports-summary" id="reportsSummary"><div class="table-loading">Loading…</div></div>
-        <div class="content-block" style="margin-bottom:16px">
-          <div class="content-block-header"><h3>Monthly Revenue</h3><p>Last 12 months — confirmed bookings by check-in date</p></div>
-          <div class="rev-chart-wrap" id="revChart"><div class="table-loading">Loading…</div></div>
+
+        <!-- Report tabs -->
+        <div class="rpt-tab-bar">
+          <button class="rpt-tab active" data-rpt="overview">&#x1F4CA; Overview Analytics</button>
+          <button class="rpt-tab" data-rpt="eod">&#x1F4CB; End of Day Report</button>
         </div>
-        <div class="reports-bottom">
-          <div class="content-block">
-            <div class="content-block-header"><h3>Top Rooms</h3><p>By number of bookings</p></div>
-            <div id="roomsChart"><div class="table-loading">Loading…</div></div>
+
+        <!-- ═══ OVERVIEW TAB ═══ -->
+        <div id="rptOverview">
+          <!-- KPI strip 1 -->
+          <div class="reports-summary" id="reportsSummary"><div class="table-loading">Loading…</div></div>
+          <!-- KPI strip 2 -->
+          <div class="rpt-kpi2" id="reportsSummary2"></div>
+
+          <!-- Monthly Revenue (full width) -->
+          <div class="content-block" style="margin-bottom:16px">
+            <div class="content-block-header">
+              <h3>Monthly Revenue</h3><p>Last 12 months &#x2014; confirmed bookings by check-in date</p>
+            </div>
+            <div class="rev-chart-wrap" id="revChart"><div class="table-loading">Loading…</div></div>
           </div>
-          <div class="content-block">
-            <div class="content-block-header"><h3>Payment Methods</h3></div>
-            <div id="paymentsChart"><div class="table-loading">Loading…</div></div>
+
+          <!-- Bottom 4-panel grid -->
+          <div class="reports-quad">
+            <div class="content-block">
+              <div class="content-block-header"><h3>Top Rooms</h3><p>By number of bookings</p></div>
+              <div id="roomsChart"><div class="table-loading">Loading…</div></div>
+            </div>
+            <div class="content-block">
+              <div class="content-block-header"><h3>Payment Methods</h3><p>By booking count</p></div>
+              <div id="paymentsChart"><div class="table-loading">Loading…</div></div>
+            </div>
+            <div class="content-block">
+              <div class="content-block-header"><h3>Guest Nationalities</h3><p>Top 10 origins</p></div>
+              <div id="nationsChart"><div class="table-loading">Loading…</div></div>
+            </div>
+            <div class="content-block">
+              <div class="content-block-header"><h3>Booking Status</h3><p>Current breakdown</p></div>
+              <div id="statusChart"><div class="table-loading">Loading…</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ END OF DAY TAB ═══ -->
+        <div id="rptEod" class="hidden">
+          <!-- EOD toolbar -->
+          <div class="eod-toolbar">
+            <div>
+              <div class="eod-date" id="eodDate"></div>
+              <div class="eod-sub">End of Day Report &#x2014; auto-refreshes on open</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span class="eod-generated" id="eodGenAt"></span>
+              <button class="btn-refresh" id="refreshEod">&#x21bb; Refresh</button>
+              <button class="eod-pdf-btn" id="eodPdfBtn" onclick="downloadEodPDF()">&#x2B07; Download EOD PDF</button>
+            </div>
+          </div>
+
+          <!-- EOD KPI strip -->
+          <div class="eod-kpis" id="eodKpis"><div class="table-loading">Loading…</div></div>
+
+          <!-- Arrivals / In House / Departures grid -->
+          <div class="eod-grid3">
+            <div class="content-block">
+              <div class="content-block-header">
+                <h3>&#x2708; Arrivals Today</h3><p id="eodArrivalsCount"></p>
+              </div>
+              <div id="eodArrivals"><div class="table-loading">Loading…</div></div>
+            </div>
+            <div class="content-block">
+              <div class="content-block-header">
+                <h3>&#x1F3E8; Currently In House</h3><p id="eodInHouseCount"></p>
+              </div>
+              <div id="eodInHouse"><div class="table-loading">Loading…</div></div>
+            </div>
+            <div class="content-block">
+              <div class="content-block-header">
+                <h3>&#x1F6AA; Departures Today</h3><p id="eodDepsCount"></p>
+              </div>
+              <div id="eodDepartures"><div class="table-loading">Loading…</div></div>
+            </div>
+          </div>
+
+          <!-- New bookings + cancellations -->
+          <div class="eod-grid2">
+            <div class="content-block">
+              <div class="content-block-header">
+                <h3>&#x2795; New Bookings Today</h3><p id="eodNewBkCount"></p>
+              </div>
+              <div id="eodNewBookings"><div class="table-loading">Loading…</div></div>
+            </div>
+            <div class="content-block">
+              <div class="content-block-header">
+                <h3>&#x274C; Cancellations Today</h3><p id="eodCancelCount"></p>
+              </div>
+              <div id="eodCancellations"><div class="table-loading">Loading…</div></div>
+            </div>
           </div>
         </div>
       </section>
