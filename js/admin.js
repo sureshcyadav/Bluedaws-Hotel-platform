@@ -3,7 +3,10 @@ const API = 'https://bluedaws-hotel-platform.onrender.com';
 
 let allBookings = [];
 let allContacts = [];
-let bookingFilter = 'all';
+let bookingFilter      = 'all';
+let _bookingSortField  = 'created_at';
+let _bookingSortDir    = 'desc';
+let _lastBookingList   = [];
 let contactFilter = 'all';
 
 // ── Calendar state ────────────────────────────────────────────
@@ -438,7 +441,13 @@ function filterBookings() {
 }
 
 function renderBookings() {
-  let list = bookingFilter === 'all' ? allBookings : allBookings.filter(b => b.status === bookingFilter);
+  // ── Filter ────────────────────────────────────────────────────
+  let list;
+  if (bookingFilter === 'all')        list = allBookings.slice();
+  else if (bookingFilter === 'checkedin')  list = allBookings.filter(b => b.checked_in_at && !b.checked_out_at);
+  else if (bookingFilter === 'checkedout') list = allBookings.filter(b => !!b.checked_out_at);
+  else                                list = allBookings.filter(b => b.status === bookingFilter);
+
   if (_bookingSearchTerm) {
     list = list.filter(b =>
       (b.guest_first_name + ' ' + b.guest_last_name).toLowerCase().includes(_bookingSearchTerm) ||
@@ -448,6 +457,33 @@ function renderBookings() {
       b.room_name.toLowerCase().includes(_bookingSearchTerm)
     );
   }
+
+  // ── Sort ──────────────────────────────────────────────────────
+  list.sort(function(a, b) {
+    var va, vb;
+    if (_bookingSortField === 'guest_name') {
+      va = (a.guest_first_name + ' ' + a.guest_last_name).toLowerCase();
+      vb = (b.guest_first_name + ' ' + b.guest_last_name).toLowerCase();
+    } else if (_bookingSortField === 'total_amount' || _bookingSortField === 'nights') {
+      va = Number(a[_bookingSortField]) || 0;
+      vb = Number(b[_bookingSortField]) || 0;
+    } else {
+      va = (a[_bookingSortField] || '').toString();
+      vb = (b[_bookingSortField] || '').toString();
+    }
+    if (va < vb) return _bookingSortDir === 'asc' ? -1 : 1;
+    if (va > vb) return _bookingSortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  // Store for PDF export
+  _lastBookingList = list;
+
+  // Update result count
+  var countEl = document.getElementById('bkResultsCount');
+  if (countEl) countEl.textContent = list.length + ' booking' + (list.length !== 1 ? 's' : '');
+
+  // ── Render table ──────────────────────────────────────────────
   const tbody = document.getElementById('bookingsBody');
   if (!list.length) {
     tbody.innerHTML = '<tr><td colspan="11" class="table-empty">No bookings found.</td></tr>';
@@ -457,7 +493,8 @@ function renderBookings() {
   tbody.innerHTML = list.map(b => {
     const checkedIn  = !!b.checked_in_at;
     const checkedOut = !!b.checked_out_at;
-    let statusHtml = '<span class="status-badge status-' + b.status + '">' + b.status + '</span>';
+    let statusHtml = '<span class="status-badge status-' + b.status + '">'
+      + b.status.charAt(0).toUpperCase() + b.status.slice(1) + '</span>';
     if (checkedIn && !checkedOut) statusHtml += ' <span class="status-badge status-checkedin">Checked In</span>';
     if (checkedOut)               statusHtml += ' <span class="status-badge status-checkedout">Checked Out</span>';
     const hasNotes = b.admin_notes || b.special_requests;
@@ -505,6 +542,114 @@ document.getElementById('bookingFilters').addEventListener('click', e => {
   bookingFilter = e.target.dataset.filter;
   renderBookings();
 });
+
+// ── Sort bar ─────────────────────────────────────────────────
+document.getElementById('bkSortBar').addEventListener('click', function(e) {
+  var chip = e.target.closest('.bk-sort-chip');
+  if (!chip) return;
+  var field = chip.dataset.sort;
+  if (_bookingSortField === field) {
+    _bookingSortDir = _bookingSortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    _bookingSortField = field;
+    _bookingSortDir = (field === 'guest_name') ? 'asc' : 'desc';
+  }
+  document.querySelectorAll('#bkSortBar .bk-sort-chip').forEach(function(c) {
+    c.classList.remove('active');
+    c.querySelector('.bk-arr').textContent = '';
+  });
+  chip.classList.add('active');
+  chip.querySelector('.bk-arr').textContent = _bookingSortDir === 'asc' ? '↑' : '↓';
+  renderBookings();
+});
+
+// ── Bookings PDF export ───────────────────────────────────────
+function downloadBookingsPDF() {
+  if (!_lastBookingList || !_lastBookingList.length) {
+    alert('No bookings to export.'); return;
+  }
+  var list  = _lastBookingList;
+  var today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  var filterNames = {
+    all: 'All Bookings', pending: 'Pending Bookings', confirmed: 'Confirmed Bookings',
+    checkedin: 'In-House Guests', checkedout: 'Checked Out', cancelled: 'Cancelled Bookings',
+  };
+  var sortNames = {
+    created_at: 'Booked On', checkin_date: 'Check-in Date', checkout_date: 'Check-out Date',
+    guest_name: 'Guest Name', total_amount: 'Total Amount', nights: 'Nights',
+  };
+  var filterName = filterNames[bookingFilter] || 'Bookings';
+  var sortName   = sortNames[_bookingSortField] || _bookingSortField;
+  var dirLabel   = _bookingSortDir === 'asc' ? 'A → Z' : 'Z → A';
+
+  var payLabel = { card: 'Card', bank: 'Bank Transfer', payathotel: 'Pay at Hotel' };
+  var totalRev = list.reduce(function(s, b) {
+    return s + (b.status !== 'cancelled' ? Number(b.total_amount) : 0);
+  }, 0);
+
+  var rows = list.map(function(b) {
+    var statusText  = b.status.charAt(0).toUpperCase() + b.status.slice(1);
+    if (b.checked_in_at && !b.checked_out_at) statusText += ' / In House';
+    else if (b.checked_out_at) statusText += ' / Out';
+    var statusColor = b.status === 'confirmed' ? '#16a34a' : b.status === 'pending' ? '#d97706' : '#94a3b8';
+    var paidLabel   = b.payment_status === 'paid' ? ' ✓' : b.payment_status === 'partial' ? ' (part)' : '';
+    return '<tr style="border-bottom:1px solid #f1f5f9">'
+      + '<td style="padding:7px 8px;font-size:10px;font-family:monospace;font-weight:700;white-space:nowrap;color:#0f172a">' + esc(b.ref) + '</td>'
+      + '<td style="padding:7px 8px;font-size:11px;font-weight:600;color:#0f172a">' + esc(b.guest_first_name) + ' ' + esc(b.guest_last_name) + '</td>'
+      + '<td style="padding:7px 8px;font-size:10.5px;color:#475569">' + esc(b.room_name) + ' <span style="font-family:monospace;font-size:9.5px">' + b.room_code.toUpperCase() + '</span></td>'
+      + '<td style="padding:7px 8px;font-size:10.5px;color:#334155;white-space:nowrap">' + fmtDate(b.checkin_date) + '</td>'
+      + '<td style="padding:7px 8px;font-size:10.5px;color:#334155;white-space:nowrap">' + fmtDate(b.checkout_date) + '</td>'
+      + '<td style="padding:7px 8px;font-size:10.5px;text-align:center;color:#334155">' + b.nights + '</td>'
+      + '<td style="padding:7px 8px;font-size:11px;font-weight:700;text-align:right;color:#0f172a">&pound;' + Number(b.total_amount).toLocaleString() + '</td>'
+      + '<td style="padding:7px 8px;font-size:10px;color:#475569">' + (payLabel[b.payment_method] || b.payment_method || '—') + paidLabel + '</td>'
+      + '<td style="padding:7px 8px;font-size:10.5px;font-weight:700;color:' + statusColor + '">' + statusText + '</td>'
+      + '</tr>';
+  }).join('');
+
+  var html =
+    '<div style="font-family:Arial,Helvetica,sans-serif;background:#fff;padding:0;width:1050px">'
+
+    // Dark header
+    + '<div style="background:#0f172a;padding:18px 28px">'
+    + '<table style="width:100%;border-collapse:collapse"><tr>'
+    + '<td style="vertical-align:top">'
+    + '<div style="font-size:8px;font-weight:700;letter-spacing:2px;color:#c9a96e;margin-bottom:2px">PRIVATE HOTEL &middot; LONDON</div>'
+    + '<div style="font-size:18px;font-weight:900;color:#fff">BLUEDAWS</div>'
+    + '</td>'
+    + '<td style="text-align:right;vertical-align:top">'
+    + '<div style="font-size:13px;font-weight:800;color:#fff">' + filterName + '</div>'
+    + '<div style="font-size:10px;color:#94a3b8;margin-top:3px">Generated: ' + today + ' &middot; Sorted by ' + sortName + ' (' + dirLabel + ') &middot; ' + list.length + ' records</div>'
+    + '</td></tr></table></div>'
+    + '<div style="height:3px;background:#c9a96e"></div>'
+
+    // Table
+    + '<div style="padding:16px 28px">'
+    + '<table style="width:100%;border-collapse:collapse">'
+    + '<thead><tr style="background:#0f172a">'
+    + '<th style="padding:8px;font-size:9px;font-weight:700;text-align:left;color:#fff">REF</th>'
+    + '<th style="padding:8px;font-size:9px;font-weight:700;text-align:left;color:#fff">GUEST</th>'
+    + '<th style="padding:8px;font-size:9px;font-weight:700;text-align:left;color:#fff">ROOM</th>'
+    + '<th style="padding:8px;font-size:9px;font-weight:700;text-align:left;color:#fff">CHECK-IN</th>'
+    + '<th style="padding:8px;font-size:9px;font-weight:700;text-align:left;color:#fff">CHECK-OUT</th>'
+    + '<th style="padding:8px;font-size:9px;font-weight:700;text-align:center;color:#fff">NTS</th>'
+    + '<th style="padding:8px;font-size:9px;font-weight:700;text-align:right;color:#fff">TOTAL</th>'
+    + '<th style="padding:8px;font-size:9px;font-weight:700;text-align:left;color:#fff">PAYMENT</th>'
+    + '<th style="padding:8px;font-size:9px;font-weight:700;text-align:left;color:#fff">STATUS</th>'
+    + '</tr></thead>'
+    + '<tbody>' + rows + '</tbody>'
+    + '</table>'
+
+    // Footer totals
+    + '<div style="margin-top:14px;padding-top:12px;border-top:2px solid #0f172a;display:flex;justify-content:space-between;align-items:center">'
+    + '<div style="font-size:10.5px;color:#64748b">' + list.length + ' record' + (list.length !== 1 ? 's' : '') + ' &middot; ' + filterName + '</div>'
+    + '<div style="font-size:14px;font-weight:800;color:#0f172a">Total Revenue: &pound;' + totalRev.toLocaleString('en-GB') + '</div>'
+    + '</div>'
+    + '</div></div>';
+
+  var filename = 'Bookings-' + filterName.replace(/\s+/g, '-') + '-' + new Date().toISOString().slice(0, 10) + '.pdf';
+  _runPDF(html, filename, 'bkExportBtn', '&#x2B07; Export PDF', { orientation: 'landscape', width: 1050 });
+}
 
 // ── Contacts ──────────────────────────────────────────────────
 document.getElementById('refreshContacts').addEventListener('click', loadContacts);
@@ -1085,14 +1230,17 @@ async function saveGuestProfile() {
 // Creates a fresh off-screen container (no z-index tricks that block
 // html2canvas), loads html2pdf on-demand if not yet available, then
 // downloads the result and cleans up.
-function _runPDF(html, filename, btnId, btnLabel) {
+function _runPDF(html, filename, btnId, btnLabel, opts) {
   var btn = document.getElementById(btnId);
   if (btn) { btn.disabled = true; btn.textContent = 'Generating…'; }
+
+  var orientation = (opts && opts.orientation) || 'portrait';
+  var pageWidth   = (opts && opts.width)       || 730;
 
   function doRender() {
     // Fresh container appended to body — visible to html2canvas
     var wrap = document.createElement('div');
-    wrap.style.cssText = 'position:absolute;left:-99999px;top:0;width:730px;background:#fff;overflow:visible;z-index:0';
+    wrap.style.cssText = 'position:absolute;left:-99999px;top:0;width:' + pageWidth + 'px;background:#fff;overflow:visible;z-index:0';
     document.body.appendChild(wrap);
     wrap.innerHTML = html;
 
@@ -1101,8 +1249,8 @@ function _runPDF(html, filename, btnId, btnLabel) {
       filename:    filename,
       image:       { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true, logging: false,
-                     backgroundColor: '#ffffff', windowWidth: 730 },
-      jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                     backgroundColor: '#ffffff', windowWidth: pageWidth },
+      jsPDF:       { unit: 'mm', format: 'a4', orientation: orientation }
     }).from(wrap.firstElementChild).save()
       .then(function() {
         document.body.removeChild(wrap);

@@ -1506,3 +1506,105 @@ a:hover { text-decoration: underline; }
   border-color: #b8894e;
   color: #b8894e;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   BOOKINGS — TWO-ROW TOOLBAR
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Override: toolbar is now a column */
+.bookings-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 0 14px;
+}
+
+/* Row 1: filter tabs + search */
+.bk-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.bk-row1 .filter-bar { margin-bottom: 0; }
+
+/* In-House / Checked-Out tinted filter buttons */
+.bk-f-checkedin.active  { background: #0891b2; color: #fff; border-color: #0891b2; }
+.bk-f-checkedout.active { background: #64748b; color: #fff; border-color: #64748b; }
+
+/* Row 2: sort chips + count + export */
+.bk-row2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.bk-sort-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+/* Sort chip strip */
+.bk-sort-chips {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.bk-sort-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 11px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 20px;
+  background: #fff;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.12s;
+  white-space: nowrap;
+}
+.bk-sort-chip:hover { border-color: #c9a96e; color: #c9a96e; }
+.bk-sort-chip.active {
+  background: #0f172a;
+  border-color: #0f172a;
+  color: #c9a96e;
+}
+.bk-arr {
+  font-size: 11px;
+  min-width: 10px;
+  display: inline-block;
+}
+
+/* Result count */
+.bk-results-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+/* Export PDF button */
+.bk-export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #334155;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.12s;
+  white-space: nowrap;
+}
+.bk-export-btn:hover:not(:disabled) { border-color: #c9a96e; color: #c9a96e; }
+.bk-export-btn:disabled { opacity: 0.5; cursor: not-allowed; }

@@ -270,13 +270,33 @@
           </div>
         </div>
         <div class="bookings-toolbar">
-          <div class="filter-bar" id="bookingFilters">
-            <button class="filter-btn active" data-filter="all">All</button>
-            <button class="filter-btn" data-filter="pending">Pending</button>
-            <button class="filter-btn" data-filter="confirmed">Confirmed</button>
-            <button class="filter-btn" data-filter="cancelled">Cancelled</button>
+          <!-- Row 1: Status filters + search -->
+          <div class="bk-row1">
+            <div class="filter-bar" id="bookingFilters" style="margin-bottom:0">
+              <button class="filter-btn active" data-filter="all">All</button>
+              <button class="filter-btn" data-filter="pending">Pending</button>
+              <button class="filter-btn" data-filter="confirmed">Confirmed</button>
+              <button class="filter-btn bk-f-checkedin" data-filter="checkedin">In House</button>
+              <button class="filter-btn bk-f-checkedout" data-filter="checkedout">Checked Out</button>
+              <button class="filter-btn" data-filter="cancelled">Cancelled</button>
+            </div>
+            <input type="text" class="booking-search" id="bookingSearch" placeholder="Search guest, ref or room…" oninput="filterBookings()">
           </div>
-          <input type="text" class="booking-search" id="bookingSearch" placeholder="Search guest, ref or room…" oninput="filterBookings()">
+          <!-- Row 2: Sort chips + count + Export PDF -->
+          <div class="bk-row2">
+            <span class="bk-sort-label">Sort by:</span>
+            <div class="bk-sort-chips" id="bkSortBar">
+              <button class="bk-sort-chip active" data-sort="created_at">Booked On <span class="bk-arr">&#x2193;</span></button>
+              <button class="bk-sort-chip" data-sort="checkin_date">Check-in <span class="bk-arr"></span></button>
+              <button class="bk-sort-chip" data-sort="checkout_date">Check-out <span class="bk-arr"></span></button>
+              <button class="bk-sort-chip" data-sort="guest_name">Guest A&#x2013;Z <span class="bk-arr"></span></button>
+              <button class="bk-sort-chip" data-sort="total_amount">Total &#xa3; <span class="bk-arr"></span></button>
+              <button class="bk-sort-chip" data-sort="nights">Nights <span class="bk-arr"></span></button>
+            </div>
+            <span style="flex:1"></span>
+            <span class="bk-results-count" id="bkResultsCount"></span>
+            <button class="bk-export-btn" id="bkExportBtn" onclick="downloadBookingsPDF()">&#x2B07; Export PDF</button>
+          </div>
         </div>
         <div class="table-wrap">
           <table class="data-table">
