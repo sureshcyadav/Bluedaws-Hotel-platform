@@ -1708,6 +1708,7 @@ a:hover { text-decoration: underline; }
   margin-bottom: 16px;
 }
 .rpt-kpi2-card { position: relative; }
+.rpt-clickable { cursor: pointer; }
 .stat-note {
   font-size: 11px;
   color: #94a3b8;

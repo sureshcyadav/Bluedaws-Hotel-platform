@@ -2013,6 +2013,20 @@ var RPT_ICONS = {
   alert:    '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
 };
 
+// ── Reports KPI card click navigation ─────────────────────────
+['reportsSummary', 'reportsSummary2'].forEach(function(id) {
+  document.getElementById(id).addEventListener('click', function(e) {
+    var card = e.target.closest('[data-goto]');
+    if (!card) return;
+    showSection(card.dataset.goto);
+    var f = card.dataset.bkfilter;
+    if (f) {
+      var btn = document.querySelector('#bookingFilters [data-filter="' + f + '"]');
+      if (btn) btn.click();
+    }
+  });
+});
+
 // ── Overview Analytics ────────────────────────────────────────
 async function loadReports() {
   ['reportsSummary','reportsSummary2','revChart','roomsChart','paymentsChart','nationsChart','statusChart']
@@ -2038,14 +2052,14 @@ function renderReports(d) {
 
   // KPI strip 1
   document.getElementById('reportsSummary').innerHTML = [
-    { label: 'Total Revenue',      val: '£' + Number(s.total_revenue).toLocaleString(),      cls: 'stat-gold',   icon: RPT_ICONS.pound    },
-    { label: 'This Month Revenue', val: '£' + Number(s.this_month_revenue).toLocaleString(), cls: 'stat-green',  icon: RPT_ICONS.calendar },
-    { label: 'Avg Booking Value',  val: '£' + Number(s.avg_booking_value).toFixed(0),        cls: 'stat-blue',   icon: RPT_ICONS.tag      },
-    { label: 'Avg Stay (nights)',  val: Number(s.avg_nights).toFixed(1),                     cls: 'stat-purple', icon: RPT_ICONS.moon     },
-    { label: 'Total Bookings',     val: s.total_bookings,                                    cls: 'stat-blue',   icon: RPT_ICONS.clipboard},
-    { label: 'This Month',         val: s.this_month_bookings + ' bookings',                 cls: 'stat-green',  icon: RPT_ICONS.trending },
+    { label: 'Total Revenue',      val: '£' + Number(s.total_revenue).toLocaleString(),      cls: 'stat-gold',   icon: RPT_ICONS.pound,    goto: 'bookings', bkf: 'all',        tip: 'View all bookings breakdown' },
+    { label: 'This Month Revenue', val: '£' + Number(s.this_month_revenue).toLocaleString(), cls: 'stat-green',  icon: RPT_ICONS.calendar, goto: 'bookings', bkf: 'all',        tip: 'View bookings this month' },
+    { label: 'Avg Booking Value',  val: '£' + Number(s.avg_booking_value).toFixed(0),        cls: 'stat-blue',   icon: RPT_ICONS.tag,      goto: 'bookings', bkf: 'confirmed',  tip: 'View confirmed bookings' },
+    { label: 'Avg Stay (nights)',  val: Number(s.avg_nights).toFixed(1),                     cls: 'stat-purple', icon: RPT_ICONS.moon,     goto: 'bookings', bkf: 'all',        tip: 'View all bookings' },
+    { label: 'Total Bookings',     val: s.total_bookings,                                    cls: 'stat-blue',   icon: RPT_ICONS.clipboard,goto: 'bookings', bkf: 'all',        tip: 'View all bookings' },
+    { label: 'This Month',         val: s.this_month_bookings + ' bookings',                 cls: 'stat-green',  icon: RPT_ICONS.trending, goto: 'bookings', bkf: 'all',        tip: 'View this month\'s bookings' },
   ].map(function(x) {
-    return '<div class="stat-card stat-card-hover">'
+    return '<div class="stat-card stat-card-hover rpt-clickable" data-goto="' + x.goto + '" data-bkfilter="' + x.bkf + '" title="' + x.tip + '">'
       + '<div class="stat-icon ' + x.cls + '">' + x.icon + '</div>'
       + '<div><p class="stat-label">' + x.label + '</p>'
       + '<p class="stat-value">' + x.val + '</p></div></div>';
@@ -2053,12 +2067,14 @@ function renderReports(d) {
 
   // KPI strip 2 — operational metrics
   document.getElementById('reportsSummary2').innerHTML = [
-    { label: 'Occupancy Now',     val: occupancy + '%',                                  cls: 'stat-teal',   icon: RPT_ICONS.hotel,   note: s.in_house_now + ' / 22 rooms' },
-    { label: 'Cancellation Rate', val: cancelRate + '%',                                 cls: 'stat-orange', icon: RPT_ICONS.xCircle, note: s.cancelled + ' cancelled' },
-    { label: 'Total Collected',   val: '£' + Number(s.total_collected).toLocaleString(), cls: 'stat-green',  icon: RPT_ICONS.checkOk, note: 'Payments received' },
-    { label: 'Outstanding',       val: '£' + Number(s.outstanding).toLocaleString(),     cls: 'stat-indigo', icon: RPT_ICONS.alert,   note: 'Confirmed unpaid' },
+    { label: 'Occupancy Now',     val: occupancy + '%',                                  cls: 'stat-teal',   icon: RPT_ICONS.hotel,   note: s.in_house_now + ' / 22 rooms', goto: 'frontdesk',  bkf: '',            tip: 'Open Front Desk — live room status' },
+    { label: 'Cancellation Rate', val: cancelRate + '%',                                 cls: 'stat-orange', icon: RPT_ICONS.xCircle, note: s.cancelled + ' cancelled',      goto: 'bookings',   bkf: 'cancelled',   tip: 'View cancelled bookings' },
+    { label: 'Total Collected',   val: '£' + Number(s.total_collected).toLocaleString(), cls: 'stat-green',  icon: RPT_ICONS.checkOk, note: 'Payments received',             goto: 'bookings',   bkf: 'checkedout',  tip: 'View checked-out (paid) bookings' },
+    { label: 'Outstanding',       val: '£' + Number(s.outstanding).toLocaleString(),     cls: 'stat-indigo', icon: RPT_ICONS.alert,   note: 'Confirmed unpaid',              goto: 'bookings',   bkf: 'confirmed',   tip: 'View confirmed bookings with balance due' },
   ].map(function(x) {
-    return '<div class="stat-card stat-card-hover rpt-kpi2-card">'
+    return '<div class="stat-card stat-card-hover rpt-kpi2-card rpt-clickable" data-goto="' + x.goto + '"'
+      + (x.bkf ? ' data-bkfilter="' + x.bkf + '"' : '')
+      + ' title="' + x.tip + '">'
       + '<div class="stat-icon ' + x.cls + '">' + x.icon + '</div>'
       + '<div><p class="stat-label">' + x.label + '</p>'
       + '<p class="stat-value">' + x.val + '</p>'
