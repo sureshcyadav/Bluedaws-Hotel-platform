@@ -1080,3 +1080,56 @@ a:hover { text-decoration: underline; }
   .bpd-notes-grid { grid-template-columns: 1fr; }
   .bpd-name { font-size: 18px; }
 }
+
+/* ── Calendar block colours — full redesign ─────────────────── */
+/* Override any earlier .cal-bk-* definitions */
+.cal-bk-confirmed {
+  background: #22c55e !important;
+  border: 1.5px solid #16a34a !important;
+  color: #fff !important;
+}
+.cal-bk-pending {
+  background: #f59e0b !important;
+  border: 1.5px solid #d97706 !important;
+  color: #fff !important;
+}
+/* In-house guest — teal */
+.cal-bk-checkedin {
+  background: #0891b2 !important;
+  border: 1.5px solid #0e7490 !important;
+  border-left: 5px solid #0e7490 !important;
+  color: #fff !important;
+}
+/* Departed guest — slate grey */
+.cal-bk-checkedout {
+  background: #64748b !important;
+  border: 1.5px solid #475569 !important;
+  color: #e2e8f0 !important;
+  opacity: 0.8;
+}
+
+/* Calendar legend items */
+.cal-leg.confirmed::before  { background: #22c55e; }
+.cal-leg.pending::before    { background: #f59e0b; }
+.cal-leg.checkedin::before  { background: #0891b2; }
+.cal-leg.checkedout::before { background: #64748b; }
+.cal-leg.blocked::before {
+  background: repeating-linear-gradient(
+    -45deg, #e2e8f0, #e2e8f0 3px, #f8fafc 3px, #f8fafc 7px
+  );
+}
+
+/* Payment grid in booking profile */
+.bpd-pay-grid {
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  gap: 10px;
+}
+@media (max-width: 640px) {
+  .bpd-pay-grid { grid-template-columns: 1fr 1fr; }
+}
+
+/* Payment status select colour cues */
+#bp_payment_status option[value="paid"]    { color: #059669; font-weight: 700; }
+#bp_payment_status option[value="partial"] { color: #d97706; font-weight: 700; }
+#bp_payment_status option[value="unpaid"]  { color: #dc2626; font-weight: 700; }

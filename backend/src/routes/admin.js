@@ -18,6 +18,10 @@ const secret = () => process.env.ADMIN_PASSWORD || 'changeme';
     await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS guest_id_number  VARCHAR(100)`);
     await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS guest_dob        DATE`);
     await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS guest_nationality VARCHAR(100)`);
+    await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS payment_status   VARCHAR(20) DEFAULT 'unpaid'`);
+    await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS amount_paid      NUMERIC(10,2) DEFAULT 0`);
+    await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS payment_mode     VARCHAR(50)`);
+    await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS payment_note     TEXT`);
     await pool.query(`
       CREATE TABLE IF NOT EXISTS room_blocks (
         id         SERIAL PRIMARY KEY,
@@ -213,11 +217,12 @@ router.patch('/bookings/:id/checkout', adminAuth, async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
-// PATCH /api/admin/bookings/:id/guest — save guest identity info + notes
+// PATCH /api/admin/bookings/:id/guest — save guest identity, notes + payment info
 router.patch('/bookings/:id/guest', adminAuth, async (req, res) => {
   const {
-    guest_id_type, guest_id_number, guest_dob,
-    guest_nationality, admin_notes, special_requests,
+    guest_id_type, guest_id_number, guest_dob, guest_nationality,
+    admin_notes, special_requests,
+    payment_status, amount_paid, payment_mode, payment_note,
   } = req.body || {};
   try {
     const { rowCount } = await pool.query(`
@@ -227,8 +232,12 @@ router.patch('/bookings/:id/guest', adminAuth, async (req, res) => {
         guest_dob         = $3,
         guest_nationality = $4,
         admin_notes       = $5,
-        special_requests  = $6
-      WHERE id = $7
+        special_requests  = $6,
+        payment_status    = COALESCE($7, payment_status),
+        amount_paid       = COALESCE($8, amount_paid),
+        payment_mode      = $9,
+        payment_note      = $10
+      WHERE id = $11
     `, [
       guest_id_type     || null,
       guest_id_number   || null,
@@ -236,6 +245,10 @@ router.patch('/bookings/:id/guest', adminAuth, async (req, res) => {
       guest_nationality || null,
       admin_notes       || null,
       special_requests  || null,
+      payment_status    || null,
+      amount_paid != null ? Number(amount_paid) : null,
+      payment_mode      || null,
+      payment_note      || null,
       req.params.id,
     ]);
     if (!rowCount) return res.status(404).json({ success: false, message: 'Booking not found.' });

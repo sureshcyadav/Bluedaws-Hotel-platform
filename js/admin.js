@@ -176,17 +176,25 @@ async function loadFrontDesk() {
     const departures = [];
 
     bookings.forEach(b => {
+      // Always use UPPERCASE to match CAL_ROOMS codes (DB stores lowercase)
+      const code = b.room_code.toUpperCase();
       const cin  = b.checkin_date  ? b.checkin_date.slice(0, 10)  : '';
       const cout = b.checkout_date ? b.checkout_date.slice(0, 10) : '';
-      if (cin === today) {
-        roomStatus[b.room_code] = 'arriving';
+
+      if (b.checked_in_at && !b.checked_out_at) {
+        // Guest is physically in the hotel
+        if (cout === today) {
+          roomStatus[code] = 'departing';
+          departures.push(b);
+        } else {
+          roomStatus[code] = 'occupied';
+        }
+      } else if (cin === today && !b.checked_in_at) {
+        // Due to arrive today, not yet checked in
+        roomStatus[code] = 'arriving';
         arrivals.push(b);
-      } else if (cout === today) {
-        if (roomStatus[b.room_code] !== 'arriving') roomStatus[b.room_code] = 'departing';
-        departures.push(b);
-      } else if (cin < today && cout > today) {
-        if (!roomStatus[b.room_code]) roomStatus[b.room_code] = 'occupied';
       }
+      // Future bookings and past checkouts don't affect the room board
     });
 
     _renderFrontDesk(roomStatus, arrivals, departures);
@@ -746,13 +754,22 @@ function renderCalendar() {
 
       var left  = (startDay / 7 * 100).toFixed(3);
       var width = (spanDays / 7 * 100).toFixed(3);
-      var guestName  = b.guest_first_name + ' ' + b.guest_last_name;
-      var extraClass = b.checked_in_at ? ' cal-bk-checkedin' : '';
+      var guestName = b.guest_first_name + ' ' + b.guest_last_name;
 
-      html += '<div class="cal-block cal-bk-' + b.status + extraClass + '"'
+      // Pick colour class based on actual in-hotel state, not just status field
+      var blockClass;
+      if (b.checked_out_at)     blockClass = 'cal-bk-checkedout';
+      else if (b.checked_in_at) blockClass = 'cal-bk-checkedin';
+      else                       blockClass = 'cal-bk-' + b.status; // confirmed / pending
+
+      var titleTip = esc(guestName) + ' · ' + b.ref
+        + (b.checked_in_at && !b.checked_out_at ? ' · In House' : '')
+        + (b.checked_out_at ? ' · Checked Out' : '');
+
+      html += '<div class="cal-block ' + blockClass + '"'
         + ' style="left:' + left + '%;width:' + width + '%;z-index:2"'
         + ' onclick="openCalBooking(' + b.id + ')"'
-        + ' title="' + esc(guestName) + ' · ' + b.ref + (b.checked_in_at ? ' · Checked In' : '') + '">'
+        + ' title="' + titleTip + '">'
         + '<span class="cal-bk-name">' + esc(guestName) + '</span>'
         + '<span class="cal-bk-ref">'  + b.ref + '</span>'
         + '</div>';
@@ -807,6 +824,12 @@ function openCalBooking(id) {
   document.getElementById('bp_id_number').value  = b.guest_id_number   || '';
   document.getElementById('bp_dob').value         = b.guest_dob ? b.guest_dob.slice(0, 10) : '';
   document.getElementById('bp_nationality').value = b.guest_nationality || '';
+
+  // Payment form
+  document.getElementById('bp_payment_status').value = b.payment_status || 'unpaid';
+  document.getElementById('bp_amount_paid').value    = b.amount_paid    || '';
+  document.getElementById('bp_payment_mode').value   = b.payment_mode   || '';
+  document.getElementById('bp_payment_note').value   = b.payment_note   || '';
 
   // Notes form (pre-fill saved data)
   document.getElementById('bp_requests').value = b.special_requests || '';
@@ -883,12 +906,16 @@ async function saveGuestProfile() {
   document.getElementById('bpSaveError').classList.add('hidden');
   try {
     const payload = {
-      guest_id_type:     document.getElementById('bp_id_type').value    || null,
-      guest_id_number:   document.getElementById('bp_id_number').value  || null,
-      guest_dob:         document.getElementById('bp_dob').value         || null,
-      guest_nationality: document.getElementById('bp_nationality').value || null,
-      admin_notes:       document.getElementById('bp_notes').value       || null,
-      special_requests:  document.getElementById('bp_requests').value    || null,
+      guest_id_type:     document.getElementById('bp_id_type').value        || null,
+      guest_id_number:   document.getElementById('bp_id_number').value      || null,
+      guest_dob:         document.getElementById('bp_dob').value            || null,
+      guest_nationality: document.getElementById('bp_nationality').value    || null,
+      payment_status:    document.getElementById('bp_payment_status').value || null,
+      amount_paid:       document.getElementById('bp_amount_paid').value    || null,
+      payment_mode:      document.getElementById('bp_payment_mode').value   || null,
+      payment_note:      document.getElementById('bp_payment_note').value   || null,
+      admin_notes:       document.getElementById('bp_notes').value          || null,
+      special_requests:  document.getElementById('bp_requests').value       || null,
     };
     const { ok, data } = await apiFetch('PATCH', '/api/admin/bookings/' + _calCurrentBookingId + '/guest', payload);
     if (!ok) {
