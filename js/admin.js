@@ -147,7 +147,14 @@ async function loadStats() {
     document.getElementById('statInHouse').textContent      = td.in_house;
     document.getElementById('statArrivingToday').textContent = td.arrivals.length;
     document.getElementById('statDepartingToday').textContent = td.departures.length;
-    document.getElementById('statRevenue').textContent      = '£' + Number(b.revenue).toLocaleString('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    (function() {
+      var rev = Number(b.revenue);
+      var short = rev >= 1000000 ? '£' + (rev/1000000).toFixed(1) + 'M'
+                : rev >= 1000    ? '£' + (rev/1000).toFixed(rev % 1000 === 0 ? 0 : 1) + 'k'
+                :                  '£' + rev;
+      document.getElementById('statRevenue').textContent = short;
+      document.getElementById('statRevenue').title = '£' + rev.toLocaleString('en-GB');
+    }());
     var occPct = Math.round(td.in_house / TOTAL_ROOMS * 100);
     document.getElementById('statOccupancy').textContent    = occPct + '%';
     document.getElementById('statUnread').textContent       = c.unread;
