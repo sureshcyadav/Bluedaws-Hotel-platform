@@ -8,7 +8,7 @@ function generateRef() {
   return ref;
 }
 
-// POST /api/bookings
+// POST /api/bookings — create a new booking (with double-booking protection)
 async function createBooking(req, res) {
   const {
     checkin_date, checkout_date,
@@ -23,45 +23,76 @@ async function createBooking(req, res) {
   const nights = Math.round((new Date(checkout_date) - new Date(checkin_date)) / 86400000);
   const total  = nights * room.price;
 
-  // Collision-safe reference
-  let ref;
-  for (let i = 0; i < 10; i++) {
-    ref = generateRef();
-    const { rows } = await pool.query('SELECT id FROM bookings WHERE ref = $1', [ref]);
-    if (rows.length === 0) break;
-    if (i === 9) return res.status(500).json({ success: false, message: 'Could not generate unique reference. Try again.' });
-  }
-
-  const sql = `
-    INSERT INTO bookings (
-      ref,
-      guest_first_name, guest_last_name, guest_email, guest_phone, guest_country,
-      room_code, room_name, room_floor, room_bed, price_per_night,
-      checkin_date, checkout_date, nights,
-      adults, children,
-      total_amount, payment_method, special_requests, status
-    ) VALUES (
-      $1, $2, $3, $4, $5, $6,
-      $7, $8, $9, $10, $11,
-      $12, $13, $14,
-      $15, $16,
-      $17, $18, $19, 'pending'
-    ) RETURNING id, ref, created_at
-  `;
-
-  const values = [
-    ref,
-    guest_first_name.trim(), guest_last_name.trim(),
-    guest_email.trim(), guest_phone.trim(), guest_country.trim(),
-    room_code.toLowerCase(), room.name, room.floor, room.bed, room.price,
-    checkin_date, checkout_date, nights,
-    Number(adults), Number(children),
-    total, payment_method, special_requests || null,
-  ];
-
+  // Use a transaction + FOR UPDATE lock so two simultaneous requests
+  // for the same room cannot both pass the availability check.
+  const client = await pool.connect();
   try {
-    const { rows } = await pool.query(sql, values);
+    await client.query('BEGIN');
+
+    // Overlap condition: new stay overlaps any existing stay when
+    //   existing.checkin  < new.checkout  AND
+    //   existing.checkout > new.checkin
+    const { rows: conflicts } = await client.query(
+      `SELECT id FROM bookings
+       WHERE room_code     = $1
+         AND status       != 'cancelled'
+         AND checkin_date  < $3
+         AND checkout_date > $2
+       FOR UPDATE`,
+      [room_code.toLowerCase(), checkin_date, checkout_date]
+    );
+
+    if (conflicts.length > 0) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({
+        success: false,
+        message: `Room ${room_code.toUpperCase()} is already booked for those dates. Please choose different dates or another room.`,
+      });
+    }
+
+    // Collision-safe reference
+    let ref;
+    for (let i = 0; i < 10; i++) {
+      ref = generateRef();
+      const { rows } = await client.query('SELECT id FROM bookings WHERE ref = $1', [ref]);
+      if (rows.length === 0) break;
+      if (i === 9) {
+        await client.query('ROLLBACK');
+        return res.status(500).json({ success: false, message: 'Could not generate unique reference. Try again.' });
+      }
+    }
+
+    const sql = `
+      INSERT INTO bookings (
+        ref,
+        guest_first_name, guest_last_name, guest_email, guest_phone, guest_country,
+        room_code, room_name, room_floor, room_bed, price_per_night,
+        checkin_date, checkout_date, nights,
+        adults, children,
+        total_amount, payment_method, special_requests, status
+      ) VALUES (
+        $1, $2, $3, $4, $5, $6,
+        $7, $8, $9, $10, $11,
+        $12, $13, $14,
+        $15, $16,
+        $17, $18, $19, 'pending'
+      ) RETURNING id, ref, created_at
+    `;
+
+    const values = [
+      ref,
+      guest_first_name.trim(), guest_last_name.trim(),
+      guest_email.trim(), guest_phone.trim(), guest_country.trim(),
+      room_code.toLowerCase(), room.name, room.floor, room.bed, room.price,
+      checkin_date, checkout_date, nights,
+      Number(adults), Number(children),
+      total, payment_method, special_requests || null,
+    ];
+
+    const { rows } = await client.query(sql, values);
     const saved = rows[0];
+
+    await client.query('COMMIT');
 
     return res.status(201).json({
       success: true,
@@ -82,8 +113,39 @@ async function createBooking(req, res) {
       },
     });
   } catch (err) {
+    await client.query('ROLLBACK');
     console.error('[createBooking]', err.message);
     return res.status(500).json({ success: false, message: 'Failed to save booking. Please try again.' });
+  } finally {
+    client.release();
+  }
+}
+
+// GET /api/bookings/availability?room_code=c3&checkin_date=2026-07-01&checkout_date=2026-07-05
+async function checkAvailability(req, res) {
+  const { room_code, checkin_date, checkout_date } = req.query;
+
+  if (!room_code || !checkin_date || !checkout_date) {
+    return res.status(400).json({ success: false, message: 'room_code, checkin_date, and checkout_date are required.' });
+  }
+  if (!VALID_ROOMS[room_code.toLowerCase()]) {
+    return res.status(400).json({ success: false, message: 'Invalid room code.' });
+  }
+
+  try {
+    const { rows } = await pool.query(
+      `SELECT id FROM bookings
+       WHERE room_code     = $1
+         AND status       != 'cancelled'
+         AND checkin_date  < $3
+         AND checkout_date > $2`,
+      [room_code.toLowerCase(), checkin_date, checkout_date]
+    );
+
+    return res.json({ success: true, available: rows.length === 0 });
+  } catch (err) {
+    console.error('[checkAvailability]', err.message);
+    return res.status(500).json({ success: false, message: 'Server error.' });
   }
 }
 
@@ -151,4 +213,4 @@ async function listBookings(req, res) {
   }
 }
 
-module.exports = { createBooking, getBookingByRef, listBookings };
+module.exports = { createBooking, checkAvailability, getBookingByRef, listBookings };

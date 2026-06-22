@@ -285,15 +285,42 @@ document.getElementById('toStep2').addEventListener('click', () => {
 });
 
 // ---------- Step 2 → Step 3 ----------
-document.getElementById('toStep3').addEventListener('click', () => {
-  const sel = document.querySelector('input[name="roomChoice"]:checked');
+document.getElementById('toStep3').addEventListener('click', async () => {
+  const sel   = document.querySelector('input[name="roomChoice"]:checked');
   const errEl = document.getElementById('roomErr');
   if (!sel) {
     if (errEl) errEl.textContent = 'Please select a room to continue.';
     return;
   }
   if (errEl) errEl.textContent = '';
-  state.roomKey = sel.value;
+
+  const btn      = document.getElementById('toStep3');
+  const origText = btn.textContent;
+  btn.textContent = 'Checking availability…';
+  btn.disabled    = true;
+
+  try {
+    const params = new URLSearchParams({
+      room_code:     sel.value,
+      checkin_date:  state.checkin,
+      checkout_date: state.checkout,
+    });
+    const res  = await fetch(API_BASE + '/api/bookings/availability?' + params);
+    const data = await res.json();
+
+    if (data.success && !data.available) {
+      if (errEl) errEl.textContent = 'This room is already booked for your selected dates. Please choose another room.';
+      btn.textContent = origText;
+      btn.disabled    = false;
+      return;
+    }
+  } catch (_) {
+    // Network error — let backend reject it on confirm if needed
+  }
+
+  btn.textContent = origText;
+  btn.disabled    = false;
+  state.roomKey   = sel.value;
   updateSummary();
   showStep(3);
 });
@@ -400,9 +427,19 @@ document.getElementById('confirmBooking').addEventListener('click', async () => 
 
     if (!response.ok) {
       const msg = data.message || 'Booking failed. Please try again.';
-      termsErr.textContent = msg;
-      btn.textContent = 'Confirm Booking';
-      btn.disabled = false;
+      if (response.status === 409) {
+        // Room was taken between availability check and confirm — send back to room selection
+        termsErr.textContent = '';
+        const roomErr = document.getElementById('roomErr');
+        if (roomErr) roomErr.textContent = msg;
+        btn.textContent = 'Confirm Booking';
+        btn.disabled = false;
+        showStep(2);
+      } else {
+        termsErr.textContent = msg;
+        btn.textContent = 'Confirm Booking';
+        btn.disabled = false;
+      }
       return;
     }
 
