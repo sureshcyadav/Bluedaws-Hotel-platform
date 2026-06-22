@@ -129,6 +129,18 @@ document.querySelectorAll('.nav-item').forEach(item => {
   item.addEventListener('click', e => { e.preventDefault(); showSection(item.dataset.section); });
 });
 
+// ── Dashboard KPI card clicks ──────────────────────────────────
+document.querySelector('.dash-kpi-strip').addEventListener('click', function(e) {
+  var card = e.target.closest('[data-goto]');
+  if (!card) return;
+  showSection(card.dataset.goto);
+  var filter = card.dataset.bkfilter;
+  if (filter) {
+    var btn = document.querySelector('#bookingFilters [data-filter="' + filter + '"]');
+    if (btn) btn.click();
+  }
+});
+
 // ── Stats ─────────────────────────────────────────────────────
 document.getElementById('refreshDash').addEventListener('click', loadStats);
 
@@ -153,7 +165,6 @@ async function loadStats() {
                 : rev >= 1000    ? '£' + (rev/1000).toFixed(rev % 1000 === 0 ? 0 : 1) + 'k'
                 :                  '£' + rev;
       document.getElementById('statRevenue').textContent = short;
-      document.getElementById('statRevenue').title = '£' + rev.toLocaleString('en-GB');
     }());
     var occPct = Math.round(td.in_house / TOTAL_ROOMS * 100);
     document.getElementById('statOccupancy').textContent    = occPct + '%';

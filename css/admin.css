@@ -1232,6 +1232,14 @@ a:hover { text-decoration: underline; }
   font-size: 22px;
   white-space: nowrap;
 }
+.dash-kpi-strip .stat-card[data-goto] {
+  cursor: pointer;
+  transition: box-shadow 0.15s, transform 0.15s;
+}
+.dash-kpi-strip .stat-card[data-goto]:hover {
+  box-shadow: 0 6px 20px rgba(0,0,0,0.10);
+  transform: translateY(-2px);
+}
 
 /* New stat icon colour variants */
 .stat-teal   { background: #e0f7f7; color: #0891b2; }
