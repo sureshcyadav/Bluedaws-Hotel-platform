@@ -348,7 +348,10 @@
             <h1>Calendar</h1>
             <p class="section-sub">Room availability &amp; bookings diary</p>
           </div>
-          <button class="btn-refresh" id="refreshCalendar">Refresh</button>
+          <div style="display:flex;gap:8px">
+            <button class="btn-refresh" id="refreshCalendar">Refresh</button>
+            <button class="btn-new-booking" onclick="openNewBookingModal()">+ New Booking</button>
+          </div>
         </div>
         <div class="cal-toolbar">
           <button class="btn-cal-nav" onclick="calNav(-1)">&#8592; Prev</button>
