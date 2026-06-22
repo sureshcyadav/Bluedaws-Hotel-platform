@@ -208,6 +208,9 @@ checkoutEl.addEventListener('change', () => {
   updateSummary();
 });
 
+// ---------- Rooms booked for the current date range (hidden from list) ----------
+let bookedRoomCodes = [];
+
 // ---------- Render room cards dynamically ----------
 function renderRooms(totalGuests) {
   const container = document.getElementById('bookingRooms');
@@ -218,7 +221,10 @@ function renderRooms(totalGuests) {
     badge.textContent = `Showing rooms for ${totalGuests} guest${totalGuests !== 1 ? 's' : ''}`;
   }
 
-  const eligible = Object.entries(ROOMS).filter(([, r]) => r.max >= totalGuests);
+  // Filter by guest capacity AND hide rooms already booked for these dates
+  const eligible = Object.entries(ROOMS).filter(([key, r]) =>
+    r.max >= totalGuests && !bookedRoomCodes.includes(key.toLowerCase())
+  );
 
   if (eligible.length === 0) {
     container.innerHTML = `<p class="summary-empty" style="padding:24px 0">No rooms available for ${totalGuests} guests. Please call us to arrange a group stay.</p>`;
@@ -273,7 +279,7 @@ function renderRooms(totalGuests) {
 }
 
 // ---------- Step 1 → Step 2 ----------
-document.getElementById('toStep2').addEventListener('click', () => {
+document.getElementById('toStep2').addEventListener('click', async () => {
   let ok = true;
   const ciErr = document.getElementById('checkinErr');
   const coErr = document.getElementById('checkoutErr');
@@ -297,6 +303,22 @@ document.getElementById('toStep2').addEventListener('click', () => {
   state.nights   = calcNights();
   state.adults   = +document.getElementById('adults').value;
   state.children = +document.getElementById('children').value;
+
+  // Fetch which rooms are already booked for these dates (single DB query)
+  const btn = document.getElementById('toStep2');
+  const origText = btn.textContent;
+  btn.textContent = 'Checking availability…';
+  btn.disabled = true;
+  try {
+    const params = new URLSearchParams({ checkin_date: state.checkin, checkout_date: state.checkout });
+    const res  = await fetch(API_BASE + '/api/bookings/availability/batch?' + params);
+    const data = await res.json();
+    bookedRoomCodes = (data.success && Array.isArray(data.booked)) ? data.booked : [];
+  } catch (_) {
+    bookedRoomCodes = []; // network error — show all rooms, backend will guard on confirm
+  }
+  btn.textContent = origText;
+  btn.disabled = false;
 
   renderRooms(state.adults + state.children);
   updateSummary();

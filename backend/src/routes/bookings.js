@@ -1,6 +1,9 @@
 const router = require('express').Router();
 const { bookingRules, handleValidationErrors } = require('../middleware/validate');
-const { createBooking, checkAvailability, getBookingByRef, listBookings } = require('../controllers/bookingController');
+const { createBooking, checkAvailability, checkAvailabilityBatch, getBookingByRef, listBookings } = require('../controllers/bookingController');
+
+// GET /api/bookings/availability/batch — must be before /availability and /:ref
+router.get('/availability/batch', checkAvailabilityBatch);
 
 // GET /api/bookings/availability — must be before /:ref to avoid matching "availability" as a ref
 router.get('/availability', checkAvailability);

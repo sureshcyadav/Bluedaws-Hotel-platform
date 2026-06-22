@@ -227,4 +227,26 @@ async function listBookings(req, res) {
   }
 }
 
-module.exports = { createBooking, checkAvailability, getBookingByRef, listBookings };
+// GET /api/bookings/availability/batch?checkin_date=2026-07-01&checkout_date=2026-07-05
+// Returns all room codes that have an overlapping confirmed booking — one DB query.
+async function checkAvailabilityBatch(req, res) {
+  const { checkin_date, checkout_date } = req.query;
+  if (!checkin_date || !checkout_date) {
+    return res.status(400).json({ success: false, message: 'checkin_date and checkout_date are required.' });
+  }
+  try {
+    const { rows } = await pool.query(
+      `SELECT DISTINCT room_code FROM bookings
+       WHERE status        != 'cancelled'
+         AND checkin_date   < $2
+         AND checkout_date  > $1`,
+      [checkin_date, checkout_date]
+    );
+    return res.json({ success: true, booked: rows.map(r => r.room_code) });
+  } catch (err) {
+    console.error('[checkAvailabilityBatch]', err.message);
+    return res.status(500).json({ success: false, message: 'Server error.' });
+  }
+}
+
+module.exports = { createBooking, checkAvailability, checkAvailabilityBatch, getBookingByRef, listBookings };
