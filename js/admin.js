@@ -134,22 +134,168 @@ async function loadStats() {
     const { ok, data } = await apiFetch('GET', '/api/admin/stats');
     if (!ok) return;
     const b = data.bookings, c = data.contacts;
-    document.getElementById('statTotal').textContent     = b.total;
-    document.getElementById('statPending').textContent   = b.pending;
-    document.getElementById('statConfirmed').textContent = b.confirmed;
-    document.getElementById('statCancelled').textContent = b.cancelled;
-    document.getElementById('statRevenue').textContent   = '£' + Number(b.revenue).toLocaleString('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-    document.getElementById('statUnread').textContent    = c.unread;
+    const td = data.today || { arrivals: [], departures: [], in_house: 0 };
+    const TOTAL_ROOMS = 22;
 
-    const pb = document.getElementById('pendingBadge');
-    const ub = document.getElementById('unreadBadge');
-    pb.textContent = +b.pending > 0 ? b.pending : '';
-    ub.textContent = +c.unread  > 0 ? c.unread  : '';
+    // ── KPI cards ─────────────────────────────────────────────
+    document.getElementById('statTotal').textContent        = b.total;
+    document.getElementById('statPending').textContent      = b.pending;
+    document.getElementById('statConfirmed').textContent    = b.confirmed;
+    document.getElementById('statInHouse').textContent      = td.in_house;
+    document.getElementById('statArrivingToday').textContent = td.arrivals.length;
+    document.getElementById('statDepartingToday').textContent = td.departures.length;
+    document.getElementById('statRevenue').textContent      = '£' + Number(b.revenue).toLocaleString('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    var occPct = Math.round(td.in_house / TOTAL_ROOMS * 100);
+    document.getElementById('statOccupancy').textContent    = occPct + '%';
+    document.getElementById('statUnread').textContent       = c.unread;
+
+    // Nav badges
+    document.getElementById('pendingBadge').textContent = +b.pending > 0 ? b.pending : '';
+    document.getElementById('unreadBadge').textContent  = +c.unread  > 0 ? c.unread  : '';
 
     document.getElementById('dashDate').textContent = new Date().toLocaleDateString('en-GB', {
       weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
     });
-  } catch {}
+
+    // ── Occupancy bar ──────────────────────────────────────────
+    document.getElementById('dashOccFill').style.width = occPct + '%';
+    document.getElementById('dashOccPct').textContent  = occPct + '%';
+    document.getElementById('dashOccLabel').textContent = td.in_house + ' / ' + TOTAL_ROOMS + ' rooms';
+
+    // ── Arrivals list ──────────────────────────────────────────
+    document.getElementById('dashArrCount').textContent = td.arrivals.length;
+    if (td.arrivals.length === 0) {
+      document.getElementById('dashArrList').innerHTML = '<div class="dash-empty">No arrivals today</div>';
+    } else {
+      document.getElementById('dashArrList').innerHTML = td.arrivals.map(function(g) {
+        var done = g.checked_in_at;
+        return '<div class="dash-guest-item' + (done ? ' dash-guest-done' : '') + '" onclick="openCalBooking(' + g.id + ')">'
+          + '<div class="dash-guest-avatar">' + esc(g.guest_first_name.charAt(0)) + '</div>'
+          + '<div class="dash-guest-info">'
+          + '<div class="dash-guest-name">' + esc(g.guest_first_name) + ' ' + esc(g.guest_last_name) + '</div>'
+          + '<div class="dash-guest-sub">' + g.room_code.toUpperCase() + ' &middot; ' + esc(g.room_name || '') + '</div>'
+          + '</div>'
+          + '<div class="dash-guest-status">' + (done ? '<span class="dash-pill-in">Checked In</span>' : '<span class="dash-pill-arr">Due</span>') + '</div>'
+          + '</div>';
+      }).join('');
+    }
+
+    // ── Departures list ────────────────────────────────────────
+    document.getElementById('dashDepCount').textContent = td.departures.length;
+    if (td.departures.length === 0) {
+      document.getElementById('dashDepList').innerHTML = '<div class="dash-empty">No departures today</div>';
+    } else {
+      document.getElementById('dashDepList').innerHTML = td.departures.map(function(g) {
+        return '<div class="dash-guest-item" onclick="openCalBooking(' + g.id + ')">'
+          + '<div class="dash-guest-avatar dash-avatar-dep">' + esc(g.guest_first_name.charAt(0)) + '</div>'
+          + '<div class="dash-guest-info">'
+          + '<div class="dash-guest-name">' + esc(g.guest_first_name) + ' ' + esc(g.guest_last_name) + '</div>'
+          + '<div class="dash-guest-sub">' + g.room_code.toUpperCase() + ' &middot; ' + esc(g.room_name || '') + '</div>'
+          + '</div>'
+          + '<div class="dash-guest-status"><span class="dash-pill-dep">Departing</span></div>'
+          + '</div>';
+      }).join('');
+    }
+
+    // ── Upcoming 7 days ────────────────────────────────────────
+    var upcoming = data.upcoming || [];
+    if (upcoming.length === 0) {
+      document.getElementById('dashUpcoming').innerHTML = '<div class="dash-empty">Nothing in the next 7 days</div>';
+    } else {
+      document.getElementById('dashUpcoming').innerHTML = upcoming.map(function(g) {
+        var cin = fmtDate(g.checkin_date);
+        var cout = fmtDate(g.checkout_date);
+        var nights = Math.round((new Date(g.checkout_date) - new Date(g.checkin_date)) / 86400000);
+        return '<div class="dash-upcoming-item" onclick="openCalBooking(' + g.id + ')">'
+          + '<div class="dash-upc-date">' + cin + '</div>'
+          + '<div class="dash-upc-info">'
+          + '<div class="dash-upc-name">' + esc(g.guest_first_name) + ' ' + esc(g.guest_last_name) + '</div>'
+          + '<div class="dash-upc-sub">' + g.room_code.toUpperCase() + ' &middot; ' + nights + 'n &middot; ' + g.adults + ' guest' + (g.adults !== 1 ? 's' : '') + '</div>'
+          + '</div>'
+          + '</div>';
+      }).join('');
+    }
+
+    // ── Load today's todo ──────────────────────────────────────
+    dashLoadTodo();
+
+  } catch(e) { console.error('loadStats', e); }
+}
+
+// ── Daily To-Do (localStorage) ────────────────────────────────
+var _dashTodoKey = 'bdw_todo_' + new Date().toISOString().slice(0, 10);
+
+function dashGetData() {
+  try { return JSON.parse(localStorage.getItem(_dashTodoKey)) || { tasks: [], note: '' }; }
+  catch { return { tasks: [], note: '' }; }
+}
+function dashSetData(d) { localStorage.setItem(_dashTodoKey, JSON.stringify(d)); }
+
+function dashLoadTodo() {
+  var today = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+  var el = document.getElementById('dashTodoDate');
+  if (el) el.textContent = today;
+  var d = dashGetData();
+  document.getElementById('dashTodoNote').value = d.note || '';
+  dashRenderTasks(d.tasks);
+}
+
+function dashRenderTasks(tasks) {
+  var el = document.getElementById('dashTodoList');
+  if (!tasks || tasks.length === 0) {
+    el.innerHTML = '<div class="dash-empty">No tasks yet — add one above</div>';
+    return;
+  }
+  el.innerHTML = tasks.map(function(t, i) {
+    return '<div class="dash-todo-item' + (t.done ? ' dash-todo-done' : '') + '">'
+      + '<label class="dash-todo-check-wrap">'
+      + '<input type="checkbox" class="dash-todo-check"' + (t.done ? ' checked' : '') + ' onchange="dashToggleTask(' + i + ')">'
+      + '<span class="dash-todo-text">' + esc(t.text) + '</span>'
+      + '</label>'
+      + '<button class="dash-todo-del" onclick="dashDeleteTask(' + i + ')" title="Remove">&#x2715;</button>'
+      + '</div>';
+  }).join('');
+}
+
+function dashAddTask() {
+  var inp = document.getElementById('dashTodoInput');
+  var text = (inp.value || '').trim();
+  if (!text) return;
+  var d = dashGetData();
+  d.tasks.push({ text: text, done: false });
+  dashSetData(d);
+  inp.value = '';
+  dashRenderTasks(d.tasks);
+  inp.focus();
+}
+
+function dashToggleTask(i) {
+  var d = dashGetData();
+  if (d.tasks[i]) d.tasks[i].done = !d.tasks[i].done;
+  dashSetData(d);
+  dashRenderTasks(d.tasks);
+}
+
+function dashDeleteTask(i) {
+  var d = dashGetData();
+  d.tasks.splice(i, 1);
+  dashSetData(d);
+  dashRenderTasks(d.tasks);
+}
+
+var _dashNoteSaveTimer = null;
+function dashSaveNote() {
+  clearTimeout(_dashNoteSaveTimer);
+  _dashNoteSaveTimer = setTimeout(function() {
+    var d = dashGetData();
+    d.note = document.getElementById('dashTodoNote').value;
+    dashSetData(d);
+    var saved = document.getElementById('dashNoteSaved');
+    if (saved) {
+      saved.classList.remove('hidden');
+      setTimeout(function() { saved.classList.add('hidden'); }, 2000);
+    }
+  }, 600);
 }
 
 // ── Front Desk ────────────────────────────────────────────────

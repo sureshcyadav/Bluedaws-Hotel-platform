@@ -1156,3 +1156,337 @@ a:hover { text-decoration: underline; }
   opacity: 0.55;
   cursor: not-allowed;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   DASHBOARD — KPI STRIP + MAIN GRID
+   ═══════════════════════════════════════════════════════════════ */
+
+/* 9-card KPI strip — scrollable row on small screens */
+.dash-kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.dash-kpi-strip .stat-card {
+  min-width: 120px;
+}
+
+/* New stat icon colour variants */
+.stat-teal   { background: #e0f7f7; color: #0891b2; }
+.stat-sky    { background: #e0f2fe; color: #0284c7; }
+.stat-orange { background: #fff3e0; color: #d97706; }
+.stat-indigo { background: #ede9fe; color: #6366f1; }
+
+/* 3-column main grid */
+.dash-main-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+/* Widget card */
+.dash-widget {
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 20px;
+  min-height: 200px;
+}
+
+/* Widget header */
+.dash-widget-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.dash-widget-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.1px;
+}
+
+/* Count badge */
+.dash-count-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 20px;
+  min-width: 22px;
+  text-align: center;
+}
+.dash-badge-green  { background: #dcfce7; color: #16a34a; }
+.dash-badge-orange { background: #fff3e0; color: #d97706; }
+
+/* Divider */
+.dash-divider {
+  height: 1px;
+  background: #f1f5f9;
+  margin: 16px 0;
+}
+
+/* Empty state */
+.dash-empty {
+  font-size: 12.5px;
+  color: #94a3b8;
+  text-align: center;
+  padding: 14px 0;
+  font-style: italic;
+}
+
+/* ── Guest list (arrivals / departures) ────────────────────── */
+.dash-guest-list { display: flex; flex-direction: column; gap: 6px; }
+
+.dash-guest-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background 0.12s;
+  border: 1px solid #f1f5f9;
+}
+.dash-guest-item:hover { background: #f8fafc; }
+.dash-guest-item.dash-guest-done { opacity: 0.6; }
+
+.dash-guest-avatar {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: #0f172a;
+  color: #c9a96e;
+  font-size: 14px;
+  font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+.dash-avatar-dep { background: #f59e0b; color: #fff; }
+
+.dash-guest-info { flex: 1; min-width: 0; }
+.dash-guest-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dash-guest-sub  { font-size: 11.5px; color: #64748b; margin-top: 1px; }
+
+/* Status pills */
+.dash-pill-arr {
+  font-size: 10.5px; font-weight: 700; padding: 2px 8px;
+  border-radius: 20px; background: #dcfce7; color: #16a34a;
+  white-space: nowrap;
+}
+.dash-pill-in {
+  font-size: 10.5px; font-weight: 700; padding: 2px 8px;
+  border-radius: 20px; background: #e0f7f7; color: #0891b2;
+  white-space: nowrap;
+}
+.dash-pill-dep {
+  font-size: 10.5px; font-weight: 700; padding: 2px 8px;
+  border-radius: 20px; background: #fff3e0; color: #d97706;
+  white-space: nowrap;
+}
+
+/* ── Occupancy bar ─────────────────────────────────────────── */
+.dash-occ-rooms { font-size: 12px; color: #64748b; font-weight: 600; }
+
+.dash-occ-track {
+  height: 12px;
+  background: #f1f5f9;
+  border-radius: 99px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+.dash-occ-fill {
+  height: 100%;
+  background: linear-gradient(to right, #22c55e, #0891b2);
+  border-radius: 99px;
+  transition: width 0.6s ease;
+}
+.dash-occ-pct {
+  font-size: 28px;
+  font-weight: 900;
+  color: #0f172a;
+  margin-bottom: 2px;
+  letter-spacing: -1px;
+}
+
+/* ── Upcoming list ─────────────────────────────────────────── */
+.dash-upcoming-list { display: flex; flex-direction: column; gap: 4px; }
+
+.dash-upcoming-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.dash-upcoming-item:hover { background: #f8fafc; }
+
+.dash-upc-date {
+  font-size: 11px;
+  font-weight: 700;
+  color: #6366f1;
+  white-space: nowrap;
+  min-width: 70px;
+}
+.dash-upc-info { flex: 1; min-width: 0; }
+.dash-upc-name {
+  font-size: 12.5px; font-weight: 700; color: #0f172a;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.dash-upc-sub  { font-size: 11px; color: #64748b; margin-top: 1px; }
+
+/* ── Daily To-Do widget ────────────────────────────────────── */
+.dash-todo-widget { display: flex; flex-direction: column; }
+
+.dash-todo-date-badge {
+  font-size: 11px;
+  font-weight: 700;
+  background: #f1f5f9;
+  color: #475569;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+
+/* Add task input row */
+.dash-todo-input-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.dash-todo-input {
+  flex: 1;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-family: inherit;
+  color: #0f172a;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.dash-todo-input:focus { border-color: #c9a96e; }
+.dash-todo-add-btn {
+  background: #0f172a;
+  color: #c9a96e;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+}
+.dash-todo-add-btn:hover { opacity: 0.85; }
+
+/* Task list */
+.dash-todo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 220px;
+  overflow-y: auto;
+  margin-bottom: 4px;
+}
+
+.dash-todo-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  transition: background 0.12s;
+}
+.dash-todo-item.dash-todo-done {
+  opacity: 0.55;
+  background: #f1f5f9;
+}
+.dash-todo-check-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  cursor: pointer;
+  min-width: 0;
+}
+.dash-todo-check {
+  width: 16px; height: 16px;
+  accent-color: #0891b2;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.dash-todo-text {
+  font-size: 13px;
+  color: #334155;
+  word-break: break-word;
+}
+.dash-todo-done .dash-todo-text {
+  text-decoration: line-through;
+  color: #94a3b8;
+}
+.dash-todo-del {
+  background: none;
+  border: none;
+  color: #cbd5e1;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  transition: color 0.1s;
+}
+.dash-todo-del:hover { color: #ef4444; }
+
+/* Notes textarea */
+.dash-todo-textarea {
+  width: 100%;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-family: inherit;
+  color: #334155;
+  resize: vertical;
+  outline: none;
+  line-height: 1.6;
+  transition: border-color 0.15s;
+}
+.dash-todo-textarea:focus { border-color: #c9a96e; }
+
+/* "Saved" indicator */
+.dash-note-saved {
+  font-size: 11px;
+  font-weight: 700;
+  color: #16a34a;
+  background: #dcfce7;
+  padding: 2px 10px;
+  border-radius: 20px;
+  animation: dash-fade-in 0.2s ease;
+}
+@keyframes dash-fade-in { from { opacity: 0 } to { opacity: 1 } }
+
+/* Responsive — collapse to 1 column on narrow screens */
+@media (max-width: 1100px) {
+  .dash-main-grid { grid-template-columns: 1fr 1fr; }
+  .dash-kpi-strip { grid-template-columns: repeat(5, 1fr); }
+}
+@media (max-width: 720px) {
+  .dash-main-grid { grid-template-columns: 1fr; }
+  .dash-kpi-strip { grid-template-columns: repeat(3, 1fr); }
+}

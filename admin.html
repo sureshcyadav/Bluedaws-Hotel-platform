@@ -92,44 +92,115 @@
           </div>
           <button class="btn-refresh" id="refreshDash">Refresh</button>
         </div>
-        <div class="stats-grid">
+
+        <!-- KPI Strip (9 cards) -->
+        <div class="dash-kpi-strip">
           <div class="stat-card">
-            <div class="stat-icon stat-blue">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            </div>
+            <div class="stat-icon stat-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
             <div><p class="stat-label">Total Bookings</p><p class="stat-value" id="statTotal">—</p></div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon stat-amber">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            </div>
+            <div class="stat-icon stat-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
             <div><p class="stat-label">Pending</p><p class="stat-value" id="statPending">—</p></div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon stat-green">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><polyline points="20 6 9 17 4 12"/></svg>
-            </div>
+            <div class="stat-icon stat-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><polyline points="20 6 9 17 4 12"/></svg></div>
             <div><p class="stat-label">Confirmed</p><p class="stat-value" id="statConfirmed">—</p></div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon stat-red">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </div>
-            <div><p class="stat-label">Cancelled</p><p class="stat-value" id="statCancelled">—</p></div>
+            <div class="stat-icon stat-teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+            <div><p class="stat-label">In House</p><p class="stat-value" id="statInHouse">—</p></div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon stat-gold">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-            </div>
+            <div class="stat-icon stat-sky"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><path d="M5 12H19"/><path d="M12 5l7 7-7 7"/></svg></div>
+            <div><p class="stat-label">Arriving Today</p><p class="stat-value" id="statArrivingToday">—</p></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon stat-orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></div>
+            <div><p class="stat-label">Departing Today</p><p class="stat-value" id="statDepartingToday">—</p></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon stat-gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
             <div><p class="stat-label">Total Revenue</p><p class="stat-value" id="statRevenue">—</p></div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon stat-purple">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            </div>
+            <div class="stat-icon stat-indigo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+            <div><p class="stat-label">Occupancy</p><p class="stat-value" id="statOccupancy">—</p></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon stat-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
             <div><p class="stat-label">Unread Messages</p><p class="stat-value" id="statUnread">—</p></div>
           </div>
         </div>
+
+        <!-- Main 3-column grid -->
+        <div class="dash-main-grid">
+
+          <!-- Col 1: Today's Activity -->
+          <div class="dash-widget">
+            <div class="dash-widget-hdr">
+              <span class="dash-widget-title">Arriving Today</span>
+              <span class="dash-count-badge dash-badge-green" id="dashArrCount">0</span>
+            </div>
+            <div id="dashArrList" class="dash-guest-list">
+              <div class="dash-empty">No arrivals today</div>
+            </div>
+            <div class="dash-widget-hdr" style="margin-top:20px">
+              <span class="dash-widget-title">Departing Today</span>
+              <span class="dash-count-badge dash-badge-orange" id="dashDepCount">0</span>
+            </div>
+            <div id="dashDepList" class="dash-guest-list">
+              <div class="dash-empty">No departures today</div>
+            </div>
+          </div>
+
+          <!-- Col 2: Occupancy + Upcoming -->
+          <div class="dash-widget">
+            <div class="dash-widget-hdr">
+              <span class="dash-widget-title">Live Occupancy</span>
+              <span class="dash-occ-rooms" id="dashOccLabel">0 / 22 rooms</span>
+            </div>
+            <div class="dash-occ-track">
+              <div class="dash-occ-fill" id="dashOccFill" style="width:0%"></div>
+            </div>
+            <div class="dash-occ-pct" id="dashOccPct">0%</div>
+
+            <div class="dash-divider"></div>
+            <div class="dash-widget-hdr">
+              <span class="dash-widget-title">Upcoming — Next 7 Days</span>
+            </div>
+            <div id="dashUpcoming" class="dash-upcoming-list">
+              <div class="dash-empty">No upcoming bookings</div>
+            </div>
+          </div>
+
+          <!-- Col 3: Daily Tasks + Notes -->
+          <div class="dash-widget dash-todo-widget">
+            <div class="dash-widget-hdr">
+              <span class="dash-widget-title">Daily Tasks</span>
+              <span class="dash-todo-date-badge" id="dashTodoDate"></span>
+            </div>
+            <div class="dash-todo-input-row">
+              <input type="text" id="dashTodoInput" class="dash-todo-input"
+                placeholder="Add a task for today…"
+                onkeydown="if(event.key==='Enter') dashAddTask()">
+              <button class="dash-todo-add-btn" onclick="dashAddTask()">+ Add</button>
+            </div>
+            <div id="dashTodoList" class="dash-todo-list">
+              <div class="dash-empty">No tasks yet — add one above</div>
+            </div>
+
+            <div class="dash-divider"></div>
+            <div class="dash-widget-hdr">
+              <span class="dash-widget-title">Day Notes</span>
+              <span class="dash-note-saved hidden" id="dashNoteSaved">&#10003; Saved</span>
+            </div>
+            <textarea id="dashTodoNote" class="dash-todo-textarea" rows="5"
+              placeholder="Shift handover notes, reminders, maintenance, anything important for today…"
+              oninput="dashSaveNote()"></textarea>
+          </div>
+
+        </div><!-- /dash-main-grid -->
       </section>
 
       <!-- Front Desk -->

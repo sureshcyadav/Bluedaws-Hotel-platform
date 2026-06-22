@@ -71,7 +71,12 @@ router.post('/login', loginLimiter, (req, res) => {
 // GET /api/admin/stats
 router.get('/stats', adminAuth, async (req, res) => {
   try {
-    const [b, c] = await Promise.all([
+    const today      = new Date().toISOString().slice(0, 10);
+    const monthStart = today.slice(0, 7) + '-01';
+    const in7Days    = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
+
+    const [b, c, arr, dep, house, monthRev, upcoming] = await Promise.all([
+      // Summary counts + all-time revenue
       pool.query(`
         SELECT
           COUNT(*)::int                                                        AS total,
@@ -81,14 +86,61 @@ router.get('/stats', adminAuth, async (req, res) => {
           COALESCE(SUM(total_amount) FILTER (WHERE status != 'cancelled'), 0)  AS revenue
         FROM bookings
       `),
+      // Contact counts
       pool.query(`
-        SELECT
-          COUNT(*)::int                                   AS total,
-          COUNT(*) FILTER (WHERE status='unread')::int    AS unread
+        SELECT COUNT(*)::int AS total,
+               COUNT(*) FILTER (WHERE status='unread')::int AS unread
         FROM contacts
       `),
+      // Arriving today
+      pool.query(`
+        SELECT id, guest_first_name, guest_last_name, room_code, room_name, checked_in_at, status
+        FROM bookings
+        WHERE checkin_date=$1 AND status!='cancelled'
+        ORDER BY created_at DESC
+      `, [today]),
+      // Departing today (in-house, checkout today, not yet checked out)
+      pool.query(`
+        SELECT id, guest_first_name, guest_last_name, room_code, room_name, checked_in_at, checked_out_at
+        FROM bookings
+        WHERE checkout_date=$1 AND checked_in_at IS NOT NULL AND checked_out_at IS NULL AND status!='cancelled'
+        ORDER BY checked_in_at
+      `, [today]),
+      // Currently in house
+      pool.query(`
+        SELECT COUNT(*)::int AS count
+        FROM bookings
+        WHERE checked_in_at IS NOT NULL AND checked_out_at IS NULL AND status!='cancelled'
+      `),
+      // This month's revenue (bookings with checkin this month)
+      pool.query(`
+        SELECT COALESCE(SUM(total_amount), 0) AS revenue
+        FROM bookings
+        WHERE status!='cancelled' AND checkin_date >= $1 AND checkin_date <= $2
+      `, [monthStart, today]),
+      // Upcoming next 7 days (excluding today)
+      pool.query(`
+        SELECT id, guest_first_name, guest_last_name, room_code, room_name,
+               checkin_date, checkout_date, adults, children, status
+        FROM bookings
+        WHERE checkin_date > $1 AND checkin_date <= $2 AND status!='cancelled'
+        ORDER BY checkin_date, created_at
+        LIMIT 15
+      `, [today, in7Days]),
     ]);
-    res.json({ success: true, bookings: b.rows[0], contacts: c.rows[0] });
+
+    res.json({
+      success:       true,
+      bookings:      b.rows[0],
+      contacts:      c.rows[0],
+      today: {
+        arrivals:   arr.rows,
+        departures: dep.rows,
+        in_house:   Number(house.rows[0].count),
+      },
+      month_revenue: monthRev.rows[0].revenue,
+      upcoming:      upcoming.rows,
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
