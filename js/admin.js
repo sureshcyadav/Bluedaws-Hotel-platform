@@ -1238,14 +1238,11 @@ function _runPDF(html, filename, btnId, btnLabel, opts) {
   var pageWidth   = (opts && opts.width)       || 730;
 
   function doRender() {
-    // Fresh container appended to body — visible to html2canvas
-    var wrap = document.createElement('div');
-    // top:-99999px keeps it above the viewport (x=0) so html2canvas
-    // capture-origin aligns with the element's left edge correctly.
-    wrap.style.cssText = 'position:absolute;left:0;top:-99999px;width:' + pageWidth + 'px;background:#fff;overflow:visible;z-index:0';
-    document.body.appendChild(wrap);
-    wrap.innerHTML = html;
-
+    // Pass the HTML string directly to html2pdf().from(html).
+    // html2pdf positions its internal container at top:0;left:0 — the
+    // exact origin html2canvas needs.  Manually placing an element at
+    // top:-99999px caused html2canvas to compute a huge negative y-offset
+    // and capture the wrong slice of the page, clipping all left columns.
     html2pdf().set({
       margin:      0,
       filename:    filename,
@@ -1256,23 +1253,16 @@ function _runPDF(html, filename, btnId, btnLabel, opts) {
         logging:         false,
         backgroundColor: '#ffffff',
         windowWidth:     pageWidth,
-        // scrollX/scrollY: force zero so the capture origin is never
-        // shifted by the page's current horizontal/vertical scroll.
-        // Without this, if the admin page has horizontal overflow (e.g.
-        // charts with min-width) html2canvas starts capturing from
-        // window.scrollX px inside the element, clipping the left columns.
         scrollX:         0,
         scrollY:         0,
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: orientation }
-    }).from(wrap.firstElementChild).save()
+    }).from(html).save()
       .then(function() {
-        document.body.removeChild(wrap);
         if (btn) { btn.disabled = false; btn.innerHTML = btnLabel; }
       })
       .catch(function(err) {
         console.error('[PDF]', err);
-        document.body.removeChild(wrap);
         if (btn) { btn.disabled = false; btn.innerHTML = btnLabel; }
         alert('PDF generation failed. Please try again.');
       });
