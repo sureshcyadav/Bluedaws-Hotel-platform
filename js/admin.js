@@ -935,6 +935,184 @@ async function saveGuestProfile() {
   }
 }
 
+// ── Invoice PDF ───────────────────────────────────────────────
+function generateInvoicePDF() {
+  if (!_calCurrentBookingId) return;
+  var b = calBookings.find(function(x) { return x.id === _calCurrentBookingId; });
+  if (!b) b = allBookings.find(function(x) { return x.id === _calCurrentBookingId; });
+  if (!b) { alert('Booking data not found. Please reopen the profile.'); return; }
+
+  // ── Numbers ──────────────────────────────────────────────────
+  var totalAmt = Number(b.total_amount) || 0;
+  var vatAmt   = Math.round(totalAmt * 20 / 120 * 100) / 100;
+  var netAmt   = Math.round((totalAmt - vatAmt) * 100) / 100;
+  var paidAmt  = Number(b.amount_paid) || 0;
+  var balance  = Math.max(0, Math.round((totalAmt - paidAmt) * 100) / 100);
+  var nights   = Number(b.nights) || 1;
+  var ppnNet   = netAmt / nights;
+
+  var f2 = function(n) {
+    return Number(n).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
+  // ── Labels ───────────────────────────────────────────────────
+  var today    = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  var adults   = Number(b.adults) || 1;
+  var children = Number(b.children) || 0;
+  var gStr     = adults + ' adult' + (adults !== 1 ? 's' : '') +
+                 (children > 0 ? ', ' + children + ' child' + (children > 1 ? 'ren' : '') : '');
+
+  var psLabels  = { paid: 'Fully Paid', partial: 'Partially Paid', unpaid: 'Unpaid' };
+  var psColors  = { paid: '#059669', partial: '#d97706', unpaid: '#dc2626' };
+  var pStatus   = b.payment_status || 'unpaid';
+  var modeLabel = b.payment_mode ||
+    ({ card: 'Card', bank: 'Bank Transfer', payathotel: 'Pay at Hotel' }[b.payment_method] || '—');
+  var payNote  = b.payment_note ? esc(b.payment_note) : '—';
+  var gName    = esc(b.guest_first_name) + ' ' + esc(b.guest_last_name);
+  var roomStr  = esc(b.room_name || b.room_code.toUpperCase());
+  var cinStr   = fmtDate(b.checkin_date);
+  var coutStr  = fmtDate(b.checkout_date);
+  var balStr   = balance > 0 ? '£' + f2(balance) : '£' + '0.00 — Settled';
+  var balColor = balance > 0 ? '#dc2626' : '#059669';
+  var gPhone   = b.guest_phone   ? esc(b.guest_phone) + '<br>' : '';
+  var gCountry = b.guest_country ? esc(b.guest_country) : '';
+
+  // ── Invoice HTML (all inline styles — html2pdf renders from DOM) ─
+  var html = '<div id="bdw-invoice" style="font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;background:#fff;width:710px;margin:0;padding:0">'
+
+  /* ── Header ── */
+  + '<div style="padding:36px 44px 16px">'
+  + '<table style="width:100%;border-collapse:collapse"><tr>'
+  + '<td style="vertical-align:top">'
+  + '<div style="font-size:9px;font-weight:700;letter-spacing:2px;color:#c9a96e;margin-bottom:4px">PRIVATE HOTEL &middot; LONDON</div>'
+  + '<div style="font-size:26px;font-weight:900;color:#0f172a">BLUEDAWS</div>'
+  + '<div style="font-size:11px;color:#64748b;line-height:1.8;margin-top:7px">'
+  + '133-135 Sussex Gardens, Hyde Park<br>London, W2 2RX, United Kingdom<br>'
+  + 'Tel: 034556846892<br>bluedawsprivatehotel@gmail.com</div>'
+  + '</td>'
+  + '<td style="vertical-align:top;text-align:right">'
+  + '<div style="font-size:34px;font-weight:900;color:#0f172a;letter-spacing:-1px">INVOICE</div>'
+  + '<div style="font-size:11.5px;color:#94a3b8;margin-top:8px;line-height:1.9">'
+  + 'Invoice No: <strong style="color:#334155">' + esc(b.ref) + '</strong><br>'
+  + 'Date: <strong style="color:#334155">' + today + '</strong><br>'
+  + 'VAT Reg: <strong style="color:#334155">730 124 6692</strong></div>'
+  + '</td></tr></table></div>'
+
+  /* ── Gold bar ── */
+  + '<div style="height:4px;background:#c9a96e;margin:0 44px"></div>'
+
+  /* ── Bill To / Stay ── */
+  + '<div style="padding:0 44px"><table style="width:100%;border-collapse:collapse"><tr>'
+  + '<td style="vertical-align:top;padding:20px 20px 16px 0;width:50%">'
+  + '<div style="font-size:9px;font-weight:700;letter-spacing:1.5px;color:#c9a96e;margin-bottom:8px">BILL TO</div>'
+  + '<div style="font-size:17px;font-weight:800;color:#0f172a;margin-bottom:4px">' + gName + '</div>'
+  + '<div style="font-size:12px;color:#475569;line-height:1.7">' + esc(b.guest_email) + '<br>' + gPhone + gCountry + '</div>'
+  + '<div style="margin-top:7px;font-size:11px;font-family:monospace;background:#f1f5f9;color:#334155;padding:3px 10px;border-radius:4px">' + esc(b.ref) + '</div>'
+  + '</td>'
+  + '<td style="vertical-align:top;padding:20px 0 16px 20px;width:50%">'
+  + '<div style="font-size:9px;font-weight:700;letter-spacing:1.5px;color:#c9a96e;margin-bottom:8px">STAY DETAILS</div>'
+  + '<div style="font-size:13px;color:#334155;line-height:1.8">'
+  + '<strong>' + roomStr + '</strong><br>'
+  + 'Check-in: ' + cinStr + '<br>Check-out: ' + coutStr + '<br>'
+  + nights + ' night' + (nights !== 1 ? 's' : '') + ' &middot; ' + gStr + '</div>'
+  + '</td></tr></table></div>'
+
+  /* ── Thin divider ── */
+  + '<div style="height:1px;background:#e2e8f0;margin:0 44px"></div>'
+
+  /* ── Line items ── */
+  + '<div style="padding:16px 44px 0"><table style="width:100%;border-collapse:collapse">'
+  + '<thead><tr style="background:#0f172a">'
+  + '<th style="color:#fff;padding:10px 14px;font-size:10px;text-align:left;font-weight:600;letter-spacing:0.5px">DESCRIPTION</th>'
+  + '<th style="color:#fff;padding:10px 14px;font-size:10px;text-align:center;font-weight:600;width:70px">NIGHTS</th>'
+  + '<th style="color:#fff;padding:10px 14px;font-size:10px;text-align:right;font-weight:600;width:110px">RATE/NIGHT</th>'
+  + '<th style="color:#fff;padding:10px 14px;font-size:10px;text-align:right;font-weight:600;width:110px">AMOUNT</th>'
+  + '</tr></thead>'
+  + '<tbody><tr>'
+  + '<td style="padding:13px 14px;border-bottom:1px solid #f1f5f9;vertical-align:top">'
+  + '<div style="font-weight:700;color:#0f172a;font-size:13px">' + roomStr + '</div>'
+  + '<div style="font-size:11px;color:#94a3b8;margin-top:2px">' + cinStr + ' to ' + coutStr + '</div>'
+  + '</td>'
+  + '<td style="padding:13px 14px;border-bottom:1px solid #f1f5f9;text-align:center;font-weight:600;color:#0f172a">' + nights + '</td>'
+  + '<td style="padding:13px 14px;border-bottom:1px solid #f1f5f9;text-align:right;font-weight:600;color:#0f172a">&pound;' + f2(ppnNet) + '</td>'
+  + '<td style="padding:13px 14px;border-bottom:1px solid #f1f5f9;text-align:right;font-weight:600;color:#0f172a">&pound;' + f2(netAmt) + '</td>'
+  + '</tr></tbody></table></div>'
+
+  /* ── Totals ── */
+  + '<div style="padding:0 44px"><table style="margin-left:auto;border-collapse:collapse;width:280px">'
+  + '<tr><td style="padding:7px 14px;font-size:13px;color:#475569">Subtotal (exc. VAT)</td>'
+  + '<td style="padding:7px 14px;font-size:13px;text-align:right;font-weight:600;color:#0f172a">&pound;' + f2(netAmt) + '</td></tr>'
+  + '<tr><td style="padding:7px 14px;font-size:13px;color:#475569">VAT @ 20%</td>'
+  + '<td style="padding:7px 14px;font-size:13px;text-align:right;font-weight:600;color:#0f172a">&pound;' + f2(vatAmt) + '</td></tr>'
+  + '<tr style="border-top:2px solid #0f172a">'
+  + '<td style="padding:10px 14px;font-size:16px;font-weight:800;color:#0f172a">Total</td>'
+  + '<td style="padding:10px 14px;font-size:16px;font-weight:800;text-align:right;color:#0f172a">&pound;' + f2(totalAmt) + '</td>'
+  + '</tr></table>'
+  + '<div style="text-align:right;font-size:10px;color:#94a3b8;margin:6px 0 20px">Prices include VAT at 20% &middot; VAT Registration No: 730 124 6692</div></div>'
+
+  /* ── Payment box ── */
+  + '<div style="margin:0 44px 28px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:8px;padding:18px 20px">'
+  + '<div style="font-size:9px;font-weight:700;letter-spacing:1.5px;color:#c9a96e;margin-bottom:14px">PAYMENT DETAILS</div>'
+  + '<table style="width:100%;border-collapse:collapse"><tr>'
+  + '<td style="width:25%;vertical-align:top;padding-right:10px">'
+  + '<div style="font-size:9px;color:#94a3b8;font-weight:700;letter-spacing:0.5px;margin-bottom:4px">STATUS</div>'
+  + '<div style="font-size:13px;font-weight:700;color:' + (psColors[pStatus] || '#dc2626') + '">' + (psLabels[pStatus] || 'Unpaid') + '</div>'
+  + '</td>'
+  + '<td style="width:25%;vertical-align:top;padding-right:10px">'
+  + '<div style="font-size:9px;color:#94a3b8;font-weight:700;letter-spacing:0.5px;margin-bottom:4px">RECEIVED</div>'
+  + '<div style="font-size:13px;font-weight:700;color:#0f172a">&pound;' + f2(paidAmt) + '</div>'
+  + '</td>'
+  + '<td style="width:25%;vertical-align:top;padding-right:10px">'
+  + '<div style="font-size:9px;color:#94a3b8;font-weight:700;letter-spacing:0.5px;margin-bottom:4px">METHOD</div>'
+  + '<div style="font-size:13px;font-weight:700;color:#0f172a">' + esc(modeLabel) + '</div>'
+  + '</td>'
+  + '<td style="width:25%;vertical-align:top">'
+  + '<div style="font-size:9px;color:#94a3b8;font-weight:700;letter-spacing:0.5px;margin-bottom:4px">NOTE</div>'
+  + '<div style="font-size:12px;font-weight:500;color:#0f172a">' + payNote + '</div>'
+  + '</td></tr></table>'
+  + '<div style="margin-top:14px;padding-top:14px;border-top:1px solid #e2e8f0">'
+  + '<table style="width:100%;border-collapse:collapse"><tr>'
+  + '<td style="font-size:13px;color:#475569;font-weight:600">Balance Due</td>'
+  + '<td style="text-align:right;font-size:18px;font-weight:900;color:' + balColor + '">' + balStr + '</td>'
+  + '</tr></table></div></div>'
+
+  /* ── Footer ── */
+  + '<div style="background:#0f172a;padding:22px 44px;text-align:center">'
+  + '<div style="font-size:13px;font-weight:700;color:#c9a96e;margin-bottom:6px">Thank you for staying at Bluedaws Private Hotel</div>'
+  + '<div style="font-size:11px;color:#94a3b8;line-height:1.7">'
+  + '133-135 Sussex Gardens, Hyde Park, London, W2 2RX<br>'
+  + 'Tel: 034556846892 &middot; bluedawsprivatehotel@gmail.com &middot; VAT Reg: 730 124 6692'
+  + '</div></div>'
+  + '</div>';
+
+  // Inject into off-screen holder, render, download, clean up
+  var holder = document.getElementById('invoiceHolder');
+  holder.innerHTML = html;
+
+  var el  = holder.querySelector('#bdw-invoice');
+  var opt = {
+    margin:      0,
+    filename:    'Invoice-' + b.ref + '.pdf',
+    image:       { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' },
+    jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+
+  var btn = document.getElementById('bpInvoiceBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Generating…'; }
+
+  html2pdf().set(opt).from(el).save()
+    .then(function() {
+      holder.innerHTML = '';
+      if (btn) { btn.disabled = false; btn.innerHTML = '&#x2B07; Download Invoice PDF'; }
+    })
+    .catch(function() {
+      holder.innerHTML = '';
+      if (btn) { btn.disabled = false; btn.innerHTML = '&#x2B07; Download Invoice PDF'; }
+      alert('PDF generation failed — please try again.');
+    });
+}
+
 // ── Message Modal ─────────────────────────────────────────────
 function openModal(id) {
   const c = allContacts.find(x => x.id === id);
