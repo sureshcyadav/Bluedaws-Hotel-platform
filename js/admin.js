@@ -1081,6 +1081,56 @@ async function saveGuestProfile() {
   }
 }
 
+// ── Shared PDF renderer ───────────────────────────────────────
+// Creates a fresh off-screen container (no z-index tricks that block
+// html2canvas), loads html2pdf on-demand if not yet available, then
+// downloads the result and cleans up.
+function _runPDF(html, filename, btnId, btnLabel) {
+  var btn = document.getElementById(btnId);
+  if (btn) { btn.disabled = true; btn.textContent = 'Generating…'; }
+
+  function doRender() {
+    // Fresh container appended to body — visible to html2canvas
+    var wrap = document.createElement('div');
+    wrap.style.cssText = 'position:absolute;left:-99999px;top:0;width:730px;background:#fff;overflow:visible;z-index:0';
+    document.body.appendChild(wrap);
+    wrap.innerHTML = html;
+
+    html2pdf().set({
+      margin:      0,
+      filename:    filename,
+      image:       { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, logging: false,
+                     backgroundColor: '#ffffff', windowWidth: 730 },
+      jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    }).from(wrap.firstElementChild).save()
+      .then(function() {
+        document.body.removeChild(wrap);
+        if (btn) { btn.disabled = false; btn.innerHTML = btnLabel; }
+      })
+      .catch(function(err) {
+        console.error('[PDF]', err);
+        document.body.removeChild(wrap);
+        if (btn) { btn.disabled = false; btn.innerHTML = btnLabel; }
+        alert('PDF generation failed. Please try again.');
+      });
+  }
+
+  if (typeof html2pdf !== 'undefined') {
+    doRender();
+  } else {
+    // Library not loaded yet — load it now, then render
+    var s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+    s.onload  = doRender;
+    s.onerror = function() {
+      if (btn) { btn.disabled = false; btn.innerHTML = btnLabel; }
+      alert('Could not load PDF library. Please check your internet connection and try again.');
+    };
+    document.head.appendChild(s);
+  }
+}
+
 // ── Invoice PDF ───────────────────────────────────────────────
 function generateInvoicePDF() {
   if (!_calCurrentBookingId) return;
@@ -1231,32 +1281,7 @@ function generateInvoicePDF() {
   + '</div></div>'
   + '</div>';
 
-  // Inject into off-screen holder, render, download, clean up
-  var holder = document.getElementById('invoiceHolder');
-  holder.innerHTML = html;
-
-  var el  = holder.querySelector('#bdw-invoice');
-  var opt = {
-    margin:      0,
-    filename:    'Invoice-' + b.ref + '.pdf',
-    image:       { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' },
-    jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' }
-  };
-
-  var btn = document.getElementById('bpInvoiceBtn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Generating…'; }
-
-  html2pdf().set(opt).from(el).save()
-    .then(function() {
-      holder.innerHTML = '';
-      if (btn) { btn.disabled = false; btn.innerHTML = '&#x2B07; Download Invoice PDF'; }
-    })
-    .catch(function() {
-      holder.innerHTML = '';
-      if (btn) { btn.disabled = false; btn.innerHTML = '&#x2B07; Download Invoice PDF'; }
-      alert('PDF generation failed — please try again.');
-    });
+  _runPDF(html, 'Invoice-' + b.ref + '.pdf', 'bpInvoiceBtn', '&#x2B07; Download Invoice PDF');
 }
 
 // ── Registration Card PDF ─────────────────────────────────────
@@ -1424,29 +1449,7 @@ function generateRegCard() {
     + '</div>'
     + '</div>'; /* end bdw-regcard */
 
-  var holder = document.getElementById('invoiceHolder');
-  holder.innerHTML = html;
-  var el  = holder.querySelector('#bdw-regcard');
-  var opt = {
-    margin:      0,
-    filename:    'RegCard-' + b.ref + '.pdf',
-    image:       { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' },
-    jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' }
-  };
-
-  var btn = document.getElementById('bpRegCardBtn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Generating…'; }
-  html2pdf().set(opt).from(el).save()
-    .then(function()  {
-      holder.innerHTML = '';
-      if (btn) { btn.disabled = false; btn.innerHTML = '&#x1F4CB; Registration Card PDF'; }
-    })
-    .catch(function() {
-      holder.innerHTML = '';
-      if (btn) { btn.disabled = false; btn.innerHTML = '&#x1F4CB; Registration Card PDF'; }
-      alert('PDF generation failed — please try again.');
-    });
+  _runPDF(html, 'RegCard-' + b.ref + '.pdf', 'bpRegCardBtn', '&#x1F4CB; Registration Card PDF');
 }
 
 // ── Message Modal ─────────────────────────────────────────────
