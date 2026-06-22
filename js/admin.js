@@ -1250,9 +1250,21 @@ function _runPDF(html, filename, btnId, btnLabel, opts) {
       margin:      0,
       filename:    filename,
       image:       { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, logging: false,
-                     backgroundColor: '#ffffff', windowWidth: pageWidth },
-      jsPDF:       { unit: 'mm', format: 'a4', orientation: orientation }
+      html2canvas: {
+        scale:           2,
+        useCORS:         true,
+        logging:         false,
+        backgroundColor: '#ffffff',
+        windowWidth:     pageWidth,
+        // scrollX/scrollY: force zero so the capture origin is never
+        // shifted by the page's current horizontal/vertical scroll.
+        // Without this, if the admin page has horizontal overflow (e.g.
+        // charts with min-width) html2canvas starts capturing from
+        // window.scrollX px inside the element, clipping the left columns.
+        scrollX:         0,
+        scrollY:         0,
+      },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: orientation }
     }).from(wrap.firstElementChild).save()
       .then(function() {
         document.body.removeChild(wrap);
@@ -2268,7 +2280,7 @@ function downloadEodPDF() {
       + secHead(title, n)
       + '<table width="100%" cellspacing="0" cellpadding="0" border="0"'
       + ' style="border-collapse:collapse;table-layout:fixed;border:1px solid #e2e8f0;border-top:none">'
-      + '<colgroup><col width="17%"><col width="26%"><col width="25%"><col width="15%"><col width="17%"></colgroup>'
+      + '<colgroup><col style="width:17%"><col style="width:26%"><col style="width:25%"><col style="width:15%"><col style="width:17%"></colgroup>'
       + '<thead><tr style="background:#f8fafc">'
       + '<th style="padding:6px 10px;font-size:8.5px;font-weight:700;text-align:left;color:#64748b;border-bottom:1px solid #e2e8f0">BOOKING REF</th>'
       + '<th style="padding:6px 10px;font-size:8.5px;font-weight:700;text-align:left;color:#64748b;border-bottom:1px solid #e2e8f0">GUEST NAME</th>'
@@ -2353,7 +2365,7 @@ function downloadEodPDF() {
     + secHead('FINANCIAL SUMMARY', '')
     + '<table width="100%" cellspacing="0" cellpadding="0" border="0"'
     + ' style="border-collapse:collapse;table-layout:fixed;border:1px solid #e2e8f0;border-top:none">'
-    + '<colgroup><col width="50%"><col width="25%"><col width="25%"></colgroup>'
+    + '<colgroup><col style="width:50%"><col style="width:25%"><col style="width:25%"></colgroup>'
     + '<thead><tr style="background:#f8fafc">'
     + '<th style="padding:6px 12px;font-size:8.5px;font-weight:700;text-align:left;color:#64748b;border-bottom:1px solid #e2e8f0">ITEM</th>'
     + '<th style="padding:6px 12px;font-size:8.5px;font-weight:700;text-align:right;color:#64748b;border-bottom:1px solid #e2e8f0">AMOUNT</th>'
