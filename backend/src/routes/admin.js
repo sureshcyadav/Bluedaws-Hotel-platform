@@ -1,13 +1,24 @@
-const express   = require('express');
-const jwt       = require('jsonwebtoken');
-const { pool }  = require('../config/db');
-const adminAuth = require('../middleware/adminAuth');
+const express    = require('express');
+const jwt        = require('jsonwebtoken');
+const rateLimit  = require('express-rate-limit');
+const { pool }   = require('../config/db');
+const adminAuth  = require('../middleware/adminAuth');
 
 const router = express.Router();
 const secret = () => process.env.ADMIN_PASSWORD || 'changeme';
 
+// 5 failed attempts per IP per 15 minutes, then locked out
+const loginLimiter = rateLimit({
+  windowMs:               15 * 60 * 1000,
+  max:                    5,
+  skipSuccessfulRequests: true,   // correct logins don't burn the quota
+  standardHeaders:        'draft-7',
+  legacyHeaders:          false,
+  message: { success: false, message: 'Too many login attempts. Please wait 15 minutes and try again.' },
+});
+
 // POST /api/admin/login
-router.post('/login', (req, res) => {
+router.post('/login', loginLimiter, (req, res) => {
   const { password } = req.body || {};
   if (!process.env.ADMIN_PASSWORD) {
     return res.status(500).json({ success: false, message: 'Admin password not configured on server.' });

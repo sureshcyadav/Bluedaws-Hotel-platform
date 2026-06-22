@@ -10,6 +10,10 @@ const settingsRoutes = require('./routes/settings');
 
 const app = express();
 
+// Trust the first proxy hop (Render's load balancer) so rate limiters
+// and logs see the real client IP from X-Forwarded-For, not the proxy IP.
+app.set('trust proxy', 1);
+
 // ── Security headers ────────────────────────────────────────────────
 app.use(helmet());
 
