@@ -1233,54 +1233,74 @@ async function saveGuestProfile() {
 function _runPDF(html, filename, btnId, btnLabel, opts) {
   var btn = document.getElementById(btnId);
   if (btn) { btn.disabled = true; btn.textContent = 'Generating…'; }
-
   var orientation = (opts && opts.orientation) || 'portrait';
   var pageWidth   = (opts && opts.width)       || 730;
 
   function doRender() {
-    // Pass the HTML string directly to html2pdf().from(html).
-    // html2pdf positions its internal container at top:0;left:0 — the
-    // exact origin html2canvas needs.  Manually placing an element at
-    // top:-99999px caused html2canvas to compute a huge negative y-offset
-    // and capture the wrong slice of the page, clipping all left columns.
-    html2pdf().set({
-      margin:      0,
-      filename:    filename,
-      image:       { type: 'jpeg', quality: 0.98 },
-      html2canvas: {
-        scale:           2,
-        useCORS:         true,
-        logging:         false,
-        backgroundColor: '#ffffff',
-        windowWidth:     pageWidth,
-        scrollX:         0,
-        scrollY:         0,
-      },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: orientation }
-    }).from(html).save()
-      .then(function() {
-        if (btn) { btn.disabled = false; btn.innerHTML = btnLabel; }
-      })
-      .catch(function(err) {
-        console.error('[PDF]', err);
-        if (btn) { btn.disabled = false; btn.innerHTML = btnLabel; }
-        alert('PDF generation failed. Please try again.');
-      });
+    // KEY: use position:fixed so getBoundingClientRect() always returns
+    // left:0, top:0 regardless of how far the page has been scrolled.
+    // With position:absolute the element is at document (0,0), but if the
+    // page is scrolled right by N px then BRC.left = -N. html2canvas then
+    // computes element canvas-x = BRC.left + scrollX(0) = -N and tries to
+    // extract a slice starting at x=-N, clipping the left N px of content.
+    // With position:fixed BRC.left is always 0, so canvas-x = 0+0 = 0. ✓
+    var wrap = document.createElement('div');
+    wrap.style.cssText = 'position:fixed;left:0;top:0;width:' + pageWidth + 'px;'
+      + 'background:#fff;overflow:visible;z-index:9999;pointer-events:none';
+    wrap.innerHTML = html;
+    document.body.appendChild(wrap);
+
+    window.html2canvas(wrap.firstElementChild || wrap, {
+      scale:           2,
+      useCORS:         true,
+      logging:         false,
+      backgroundColor: '#ffffff',
+      windowWidth:     pageWidth,
+      scrollX:         0,
+      scrollY:         0,
+    }).then(function(canvas) {
+      document.body.removeChild(wrap);
+      var jsPDF = window.jspdf.jsPDF;
+      var pdf   = new jsPDF({ orientation: orientation, unit: 'mm', format: 'a4' });
+      var pgW   = pdf.internal.pageSize.getWidth();
+      var pgH   = pdf.internal.pageSize.getHeight();
+      var imgW  = pgW;
+      var imgH  = (canvas.height / canvas.width) * pgW;
+      var data  = canvas.toDataURL('image/jpeg', 0.97);
+      var pages = Math.ceil(imgH / pgH);
+      for (var p = 0; p < pages; p++) {
+        if (p > 0) pdf.addPage();
+        pdf.addImage(data, 'JPEG', 0, -(p * pgH), imgW, imgH, '', 'FAST');
+      }
+      pdf.save(filename);
+      if (btn) { btn.disabled = false; btn.innerHTML = btnLabel; }
+    }).catch(function(err) {
+      console.error('[PDF]', err);
+      try { document.body.removeChild(wrap); } catch(_) {}
+      if (btn) { btn.disabled = false; btn.innerHTML = btnLabel; }
+      alert('PDF generation failed. Please try again.');
+    });
   }
 
-  if (typeof html2pdf !== 'undefined') {
-    doRender();
-  } else {
-    // Library not loaded yet — load it now, then render
+  function _loadScript(src, cb) {
     var s = document.createElement('script');
-    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-    s.onload  = doRender;
+    s.src = src; s.onload = cb;
     s.onerror = function() {
       if (btn) { btn.disabled = false; btn.innerHTML = btnLabel; }
-      alert('Could not load PDF library. Please check your internet connection and try again.');
+      alert('Could not load PDF library. Check your internet connection.');
     };
     document.head.appendChild(s);
   }
+
+  // Load html2canvas + jsPDF separately — avoids html2pdf's unreliable
+  // image-sizing math which was the other source of half-page output.
+  var needCanvas = typeof window.html2canvas === 'undefined';
+  var needJspdf  = !window.jspdf;
+  if (!needCanvas && !needJspdf) { doRender(); return; }
+  var pending = (needCanvas ? 1 : 0) + (needJspdf ? 1 : 0);
+  function dec() { if (--pending === 0) doRender(); }
+  if (needCanvas) _loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js', dec);
+  if (needJspdf)  _loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', dec);
 }
 
 // ── Invoice PDF ───────────────────────────────────────────────
