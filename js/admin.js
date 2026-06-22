@@ -62,12 +62,15 @@ function showSection(name) {
   document.querySelectorAll('.nav-item').forEach(n =>
     n.classList.toggle('active', n.dataset.section === name)
   );
-  if (name === 'dashboard')  loadStats();
-  if (name === 'frontdesk') loadFrontDesk();
-  if (name === 'bookings')  loadBookings();
-  if (name === 'calendar')  loadCalendar();
-  if (name === 'contacts')  loadContacts();
-  if (name === 'content')   loadContent();
+  if (name === 'dashboard')    loadStats();
+  if (name === 'frontdesk')   loadFrontDesk();
+  if (name === 'bookings')    loadBookings();
+  if (name === 'calendar')    loadCalendar();
+  if (name === 'availability') loadAvailability();
+  if (name === 'guests')      loadGuests();
+  if (name === 'reports')     loadReports();
+  if (name === 'contacts')    loadContacts();
+  if (name === 'content')     loadContent();
 }
 
 // ── Login ──────────────────────────────────────────────────────
@@ -221,22 +224,36 @@ function _renderFrontDesk(roomStatus, arrivals, departures) {
   }).join('');
 
   const payLabel = { card: 'Card', bank: 'Bank Transfer', payathotel: 'Pay at Hotel' };
-  const guestRow = (b, extra) => '<div class="fd-guest-row" onclick="openCalBooking(' + b.id + ')">'
+
+  const arrivalRow = b => '<div class="fd-guest-row">'
     + '<div class="fd-guest-info"><strong>' + esc(b.guest_first_name) + ' ' + esc(b.guest_last_name) + '</strong>'
-    + '<span>' + esc(b.room_name) + ' · ' + b.room_code + ' · ' + b.nights + ' night' + (b.nights > 1 ? 's' : '') + '</span></div>'
-    + '<div class="fd-guest-meta"><span class="fd-ref">' + b.ref + '</span>'
-    + '<span class="fd-meta-sub">' + extra + '</span></div>'
-    + '</div>';
+    + '<span>' + esc(b.room_name) + ' · ' + b.room_code.toUpperCase() + ' · ' + b.nights + ' night' + (b.nights > 1 ? 's' : '') + ' · ' + (payLabel[b.payment_method] || b.payment_method) + '</span></div>'
+    + '<div class="fd-guest-meta"><span class="fd-ref">' + b.ref + '</span></div>'
+    + '<div class="fd-guest-actions">'
+    + (b.checked_in_at
+        ? '<span class="fd-done-badge">✓ Checked In</span>'
+        : '<button class="btn-fd-checkin" onclick="checkInGuest(' + b.id + ')">Check In</button>')
+    + '</div></div>';
+
+  const departureRow = b => '<div class="fd-guest-row">'
+    + '<div class="fd-guest-info"><strong>' + esc(b.guest_first_name) + ' ' + esc(b.guest_last_name) + '</strong>'
+    + '<span>' + esc(b.room_name) + ' · ' + b.room_code.toUpperCase() + ' · £' + Number(b.total_amount).toLocaleString() + '</span></div>'
+    + '<div class="fd-guest-meta"><span class="fd-ref">' + b.ref + '</span></div>'
+    + '<div class="fd-guest-actions">'
+    + (b.checked_out_at
+        ? '<span class="fd-done-badge">✓ Checked Out</span>'
+        : '<button class="btn-fd-checkout" onclick="checkOutGuest(' + b.id + ')">Check Out</button>')
+    + '</div></div>';
 
   document.getElementById('fdArrivalCount').textContent   = arrivals.length;
   document.getElementById('fdDepartureCount').textContent = departures.length;
 
   document.getElementById('fdArrivalList').innerHTML = arrivals.length
-    ? arrivals.map(b => guestRow(b, payLabel[b.payment_method] || b.payment_method)).join('')
+    ? arrivals.map(arrivalRow).join('')
     : '<div class="fd-empty">No arrivals today</div>';
 
   document.getElementById('fdDepartureList').innerHTML = departures.length
-    ? departures.map(b => guestRow(b, '£' + Number(b.total_amount).toLocaleString())).join('')
+    ? departures.map(departureRow).join('')
     : '<div class="fd-empty">No departures today</div>';
 }
 
@@ -257,31 +274,56 @@ async function loadBookings() {
   }
 }
 
+let _bookingSearchTerm = '';
+
+function filterBookings() {
+  _bookingSearchTerm = (document.getElementById('bookingSearch').value || '').toLowerCase();
+  renderBookings();
+}
+
 function renderBookings() {
-  const list = bookingFilter === 'all' ? allBookings : allBookings.filter(b => b.status === bookingFilter);
+  let list = bookingFilter === 'all' ? allBookings : allBookings.filter(b => b.status === bookingFilter);
+  if (_bookingSearchTerm) {
+    list = list.filter(b =>
+      (b.guest_first_name + ' ' + b.guest_last_name).toLowerCase().includes(_bookingSearchTerm) ||
+      b.guest_email.toLowerCase().includes(_bookingSearchTerm) ||
+      b.ref.toLowerCase().includes(_bookingSearchTerm) ||
+      b.room_code.toLowerCase().includes(_bookingSearchTerm) ||
+      b.room_name.toLowerCase().includes(_bookingSearchTerm)
+    );
+  }
   const tbody = document.getElementById('bookingsBody');
   if (!list.length) {
     tbody.innerHTML = '<tr><td colspan="11" class="table-empty">No bookings found.</td></tr>';
     return;
   }
   const payLabel = { card: 'Card', bank: 'Bank Transfer', payathotel: 'Pay at Hotel' };
-  tbody.innerHTML = list.map(b => '<tr>'
-    + '<td><span class="ref-badge">' + b.ref + '</span></td>'
-    + '<td><strong>' + b.guest_first_name + ' ' + b.guest_last_name + '</strong><br><small>' + b.guest_country + '</small></td>'
-    + '<td><a href="mailto:' + b.guest_email + '">' + b.guest_email + '</a><br><small>' + b.guest_phone + '</small></td>'
-    + '<td>' + b.room_name + '<br><small>' + b.room_code + '</small></td>'
-    + '<td>' + fmtDate(b.checkin_date) + '</td>'
-    + '<td>' + fmtDate(b.checkout_date) + '</td>'
-    + '<td>' + b.nights + '</td>'
-    + '<td>£' + Number(b.total_amount).toLocaleString() + '</td>'
-    + '<td>' + (payLabel[b.payment_method] || b.payment_method) + '</td>'
-    + '<td><span class="status-badge status-' + b.status + '">' + b.status + '</span></td>'
-    + '<td class="actions-cell">'
-    + (b.status === 'pending'   ? '<button class="btn-action btn-confirm" onclick="updateBooking(' + b.id + ',\'confirmed\')">Confirm</button>' : '')
-    + (b.status !== 'cancelled' ? '<button class="btn-action btn-cancel"  onclick="updateBooking(' + b.id + ',\'cancelled\')">Cancel</button>'  : '')
-    + (b.status === 'cancelled' ? '<button class="btn-action btn-restore" onclick="updateBooking(' + b.id + ',\'pending\')">Restore</button>'   : '')
-    + '</td></tr>'
-  ).join('');
+  tbody.innerHTML = list.map(b => {
+    const checkedIn  = !!b.checked_in_at;
+    const checkedOut = !!b.checked_out_at;
+    let statusHtml = '<span class="status-badge status-' + b.status + '">' + b.status + '</span>';
+    if (checkedIn && !checkedOut) statusHtml += ' <span class="status-badge status-checkedin">Checked In</span>';
+    if (checkedOut)               statusHtml += ' <span class="status-badge status-checkedout">Checked Out</span>';
+    const hasNotes = b.admin_notes || b.special_requests;
+    return '<tr>'
+      + '<td><span class="ref-badge">' + b.ref + '</span>'
+      + (hasNotes ? ' <span class="notes-dot" title="Has notes">●</span>' : '') + '</td>'
+      + '<td><strong>' + esc(b.guest_first_name) + ' ' + esc(b.guest_last_name) + '</strong><br><small>' + esc(b.guest_country) + '</small></td>'
+      + '<td><a href="mailto:' + esc(b.guest_email) + '">' + esc(b.guest_email) + '</a><br><small>' + esc(b.guest_phone) + '</small></td>'
+      + '<td>' + esc(b.room_name) + '<br><small style="font-family:monospace">' + b.room_code.toUpperCase() + '</small></td>'
+      + '<td>' + fmtDate(b.checkin_date) + '</td>'
+      + '<td>' + fmtDate(b.checkout_date) + '</td>'
+      + '<td>' + b.nights + '</td>'
+      + '<td>£' + Number(b.total_amount).toLocaleString() + '</td>'
+      + '<td>' + (payLabel[b.payment_method] || b.payment_method) + '</td>'
+      + '<td>' + statusHtml + '</td>'
+      + '<td class="actions-cell">'
+      + (b.status === 'pending'   ? '<button class="btn-action btn-confirm" onclick="updateBooking(' + b.id + ',\'confirmed\')">Confirm</button>' : '')
+      + (b.status !== 'cancelled' ? '<button class="btn-action btn-cancel"  onclick="updateBooking(' + b.id + ',\'cancelled\')">Cancel</button>'  : '')
+      + (b.status === 'cancelled' ? '<button class="btn-action btn-restore" onclick="updateBooking(' + b.id + ',\'pending\')">Restore</button>'   : '')
+      + '<button class="btn-action btn-edit" onclick="openEditBookingModal(' + b.id + ')" title="Edit notes">✎</button>'
+      + '</td></tr>';
+  }).join('');
 }
 
 async function updateBooking(id, status) {
@@ -770,6 +812,365 @@ function fmtDateTime(s) {
 }
 function esc(str) {
   return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// ── Check In / Check Out ─────────────────────────────────────
+async function checkInGuest(id) {
+  try {
+    const { ok, data } = await apiFetch('PATCH', '/api/admin/bookings/' + id + '/checkin', {});
+    if (!ok) { alert(data.message); return; }
+    const b = allBookings.find(x => x.id === id);
+    if (b) b.checked_in_at = new Date().toISOString();
+    loadFrontDesk();
+  } catch { alert('Failed to check in.'); }
+}
+
+async function checkOutGuest(id) {
+  if (!confirm('Mark this guest as checked out?')) return;
+  try {
+    const { ok, data } = await apiFetch('PATCH', '/api/admin/bookings/' + id + '/checkout', {});
+    if (!ok) { alert(data.message); return; }
+    const b = allBookings.find(x => x.id === id);
+    if (b) b.checked_out_at = new Date().toISOString();
+    loadFrontDesk();
+  } catch { alert('Failed to check out.'); }
+}
+
+// ── New Walk-in Booking Modal ─────────────────────────────────
+document.getElementById('openNewBookingBtn').addEventListener('click', openNewBookingModal);
+document.getElementById('newBookingClose').addEventListener('click',   closeNewBookingModal);
+document.getElementById('newBookingCancelBtn').addEventListener('click', closeNewBookingModal);
+document.getElementById('newBookingModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('newBookingModal')) closeNewBookingModal();
+});
+
+function openNewBookingModal() {
+  const sel = document.getElementById('nb_room');
+  if (sel.options.length <= 1) {
+    CAL_ROOMS.forEach(r => {
+      const o = document.createElement('option');
+      o.value = r.code.toLowerCase();
+      o.textContent = r.code + ' — ' + r.name;
+      sel.appendChild(o);
+    });
+  }
+  const today = new Date().toISOString().slice(0, 10);
+  const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+  document.getElementById('nb_checkin').value  = today;
+  document.getElementById('nb_checkout').value = tomorrow;
+  document.getElementById('nbError').classList.add('hidden');
+  document.getElementById('newBookingModal').classList.remove('hidden');
+  calcNewBookingTotal();
+}
+
+function closeNewBookingModal() {
+  document.getElementById('newBookingModal').classList.add('hidden');
+  document.getElementById('newBookingSubmitBtn').disabled = false;
+  document.getElementById('newBookingSubmitBtn').textContent = 'Create Booking';
+}
+
+['nb_room', 'nb_checkin', 'nb_checkout'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('change', calcNewBookingTotal);
+});
+
+function calcNewBookingTotal() {
+  const roomCode = document.getElementById('nb_room').value;
+  const cin  = document.getElementById('nb_checkin').value;
+  const cout = document.getElementById('nb_checkout').value;
+  const box  = document.getElementById('nbTotalBox');
+  if (!roomCode || !cin || !cout) { box.classList.add('hidden'); return; }
+  const nights = Math.round((new Date(cout) - new Date(cin)) / 86400000);
+  if (nights < 1) { box.classList.add('hidden'); return; }
+  const room = CAL_ROOMS.find(r => r.code.toLowerCase() === roomCode);
+  if (!room) return;
+  box.classList.remove('hidden');
+  document.getElementById('nbNights').textContent = nights;
+  document.getElementById('nbTotal').textContent  = '—';
+  document.getElementById('nbPrice').textContent  = '—';
+}
+
+document.getElementById('newBookingSubmitBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('newBookingSubmitBtn');
+  const errEl = document.getElementById('nbError');
+  errEl.classList.add('hidden');
+  const body = {
+    guest_first_name: document.getElementById('nb_first_name').value.trim(),
+    guest_last_name:  document.getElementById('nb_last_name').value.trim(),
+    guest_email:      document.getElementById('nb_email').value.trim(),
+    guest_phone:      document.getElementById('nb_phone').value.trim(),
+    guest_country:    document.getElementById('nb_country').value.trim() || 'United Kingdom',
+    room_code:        document.getElementById('nb_room').value,
+    payment_method:   document.getElementById('nb_payment').value,
+    checkin_date:     document.getElementById('nb_checkin').value,
+    checkout_date:    document.getElementById('nb_checkout').value,
+    adults:           Number(document.getElementById('nb_adults').value) || 1,
+    children:         Number(document.getElementById('nb_children').value) || 0,
+    special_requests: document.getElementById('nb_requests').value.trim() || null,
+    admin_notes:      document.getElementById('nb_notes').value.trim() || null,
+  };
+  if (!body.guest_first_name || !body.guest_last_name || !body.guest_email || !body.guest_phone) {
+    errEl.textContent = 'Please fill in all required guest fields.'; errEl.classList.remove('hidden'); return;
+  }
+  if (!body.room_code) { errEl.textContent = 'Please select a room.'; errEl.classList.remove('hidden'); return; }
+  if (!body.checkin_date || !body.checkout_date) { errEl.textContent = 'Check-in and check-out dates are required.'; errEl.classList.remove('hidden'); return; }
+  btn.disabled = true; btn.textContent = 'Creating…';
+  try {
+    const { ok, data } = await apiFetch('POST', '/api/admin/bookings', body);
+    if (!ok) { errEl.textContent = data.message || 'Failed to create booking.'; errEl.classList.remove('hidden'); return; }
+    closeNewBookingModal();
+    loadBookings();
+    loadStats();
+    alert('Booking created! Ref: ' + data.data.ref);
+  } catch { errEl.textContent = 'Network error. Please try again.'; errEl.classList.remove('hidden'); }
+  finally { btn.disabled = false; btn.textContent = 'Create Booking'; }
+});
+
+// ── Edit Booking Notes Modal ──────────────────────────────────
+let _editBookingId = null;
+
+document.getElementById('editBookingClose').addEventListener('click',    closeEditBookingModal);
+document.getElementById('editBookingCancelBtn').addEventListener('click', closeEditBookingModal);
+document.getElementById('editBookingModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('editBookingModal')) closeEditBookingModal();
+});
+
+function openEditBookingModal(id) {
+  _editBookingId = id;
+  const b = allBookings.find(x => x.id === id);
+  if (!b) return;
+  document.getElementById('editBookingRef').textContent       = b.ref;
+  document.getElementById('edit_requests').value              = b.special_requests || '';
+  document.getElementById('edit_notes').value                 = b.admin_notes || '';
+  document.getElementById('editError').classList.add('hidden');
+  document.getElementById('editBookingModal').classList.remove('hidden');
+}
+
+function closeEditBookingModal() {
+  document.getElementById('editBookingModal').classList.add('hidden');
+  _editBookingId = null;
+}
+
+document.getElementById('editBookingSubmitBtn').addEventListener('click', async () => {
+  if (!_editBookingId) return;
+  const btn = document.getElementById('editBookingSubmitBtn');
+  const errEl = document.getElementById('editError');
+  errEl.classList.add('hidden');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    const { ok, data } = await apiFetch('PATCH', '/api/admin/bookings/' + _editBookingId + '/notes', {
+      admin_notes:      document.getElementById('edit_notes').value.trim(),
+      special_requests: document.getElementById('edit_requests').value.trim(),
+    });
+    if (!ok) { errEl.textContent = data.message || 'Failed to save.'; errEl.classList.remove('hidden'); return; }
+    const b = allBookings.find(x => x.id === _editBookingId);
+    if (b) {
+      b.admin_notes      = document.getElementById('edit_notes').value.trim();
+      b.special_requests = document.getElementById('edit_requests').value.trim();
+    }
+    closeEditBookingModal();
+    renderBookings();
+  } catch { errEl.textContent = 'Network error.'; errEl.classList.remove('hidden'); }
+  finally { btn.disabled = false; btn.textContent = 'Save Notes'; }
+});
+
+// ── Availability / Room Blocks ────────────────────────────────
+let _blocksData = [];
+
+document.getElementById('refreshBlocks').addEventListener('click', loadAvailability);
+
+function toggleBlockForm() {
+  const wrap = document.getElementById('blockFormWrap');
+  const isHidden = wrap.classList.contains('hidden');
+  wrap.classList.toggle('hidden', !isHidden);
+  if (isHidden) {
+    const sel = document.getElementById('blk_room');
+    if (sel.options.length <= 1) {
+      CAL_ROOMS.forEach(r => {
+        const o = document.createElement('option');
+        o.value = r.code.toLowerCase();
+        o.textContent = r.code.toUpperCase() + ' — ' + r.name;
+        sel.appendChild(o);
+      });
+    }
+    document.getElementById('blk_from').value   = new Date().toISOString().slice(0, 10);
+    document.getElementById('blk_to').value     = '';
+    document.getElementById('blk_reason').value = '';
+    document.getElementById('blkError').classList.add('hidden');
+  }
+}
+
+async function loadAvailability() {
+  document.getElementById('blocksList').innerHTML = '<div class="table-loading">Loading…</div>';
+  try {
+    const { ok, data } = await apiFetch('GET', '/api/admin/blocks');
+    if (!ok) return;
+    _blocksData = data.data || [];
+    renderBlocks();
+  } catch {
+    document.getElementById('blocksList').innerHTML = '<div class="table-error">Failed to load.</div>';
+  }
+}
+
+function renderBlocks() {
+  if (!_blocksData.length) {
+    document.getElementById('blocksList').innerHTML = '<div class="fd-empty">No blocks set — all rooms are available.</div>';
+    return;
+  }
+  document.getElementById('blocksList').innerHTML = _blocksData.map(bl => {
+    const room = CAL_ROOMS.find(r => r.code.toLowerCase() === bl.room_code) || { name: bl.room_code.toUpperCase() };
+    return '<div class="block-item">'
+      + '<div class="block-item-room"><span class="price-card-code" style="background:#0f172a">' + bl.room_code.toUpperCase() + '</span><span class="block-item-name">' + room.name + '</span></div>'
+      + '<div class="block-item-dates">' + fmtDate(bl.start_date) + ' → ' + fmtDate(bl.end_date) + '</div>'
+      + '<div class="block-item-reason">' + (bl.reason ? esc(bl.reason) : '<span style="color:#94a3b8">No reason given</span>') + '</div>'
+      + '<button class="btn-action btn-cancel" onclick="deleteBlock(' + bl.id + ')">Remove</button>'
+      + '</div>';
+  }).join('');
+}
+
+async function submitBlock() {
+  const errEl = document.getElementById('blkError');
+  errEl.classList.add('hidden');
+  const body = {
+    room_code:  document.getElementById('blk_room').value,
+    start_date: document.getElementById('blk_from').value,
+    end_date:   document.getElementById('blk_to').value,
+    reason:     document.getElementById('blk_reason').value.trim() || null,
+  };
+  if (!body.room_code) { errEl.textContent = 'Select a room.'; errEl.classList.remove('hidden'); return; }
+  if (!body.start_date || !body.end_date) { errEl.textContent = 'Both dates are required.'; errEl.classList.remove('hidden'); return; }
+  if (new Date(body.end_date) <= new Date(body.start_date)) { errEl.textContent = 'End date must be after start date.'; errEl.classList.remove('hidden'); return; }
+  try {
+    const { ok, data } = await apiFetch('POST', '/api/admin/blocks', body);
+    if (!ok) { errEl.textContent = data.message; errEl.classList.remove('hidden'); return; }
+    toggleBlockForm();
+    loadAvailability();
+  } catch { errEl.textContent = 'Network error.'; errEl.classList.remove('hidden'); }
+}
+
+async function deleteBlock(id) {
+  if (!confirm('Remove this room block?')) return;
+  try {
+    const { ok, data } = await apiFetch('DELETE', '/api/admin/blocks/' + id);
+    if (!ok) { alert(data.message); return; }
+    loadAvailability();
+  } catch { alert('Failed to remove block.'); }
+}
+
+// ── Guests ────────────────────────────────────────────────────
+let _allGuests = [];
+document.getElementById('refreshGuests').addEventListener('click', loadGuests);
+
+async function loadGuests() {
+  document.getElementById('guestsBody').innerHTML = '<tr><td colspan="7" class="table-loading">Loading…</td></tr>';
+  try {
+    const { ok, data } = await apiFetch('GET', '/api/admin/guests');
+    if (!ok) return;
+    _allGuests = data.data || [];
+    renderGuests(_allGuests);
+  } catch {
+    document.getElementById('guestsBody').innerHTML = '<tr><td colspan="7" class="table-error">Failed to load guests.</td></tr>';
+  }
+}
+
+function filterGuests() {
+  const term = (document.getElementById('guestSearch').value || '').toLowerCase();
+  const filtered = term
+    ? _allGuests.filter(g =>
+        (g.guest_first_name + ' ' + g.guest_last_name).toLowerCase().includes(term) ||
+        g.guest_email.toLowerCase().includes(term) ||
+        (g.guest_country || '').toLowerCase().includes(term))
+    : _allGuests;
+  renderGuests(filtered);
+}
+
+function renderGuests(list) {
+  if (!list.length) {
+    document.getElementById('guestsBody').innerHTML = '<tr><td colspan="7" class="table-empty">No guests found.</td></tr>';
+    return;
+  }
+  document.getElementById('guestsBody').innerHTML = list.map(g => '<tr>'
+    + '<td><strong>' + esc(g.guest_first_name) + ' ' + esc(g.guest_last_name) + '</strong></td>'
+    + '<td><a href="mailto:' + esc(g.guest_email) + '">' + esc(g.guest_email) + '</a><br><small>' + esc(g.guest_phone || '—') + '</small></td>'
+    + '<td>' + esc(g.guest_country || '—') + '</td>'
+    + '<td><span class="ref-badge">' + g.bookings_count + '</span></td>'
+    + '<td>£' + Number(g.total_spent).toLocaleString() + '</td>'
+    + '<td>' + fmtDate(g.last_booking) + '</td>'
+    + '<td><div class="guest-refs">' + (g.refs || []).slice(0, 3).map(r => '<span class="ref-badge ref-badge-sm">' + r + '</span>').join(' ')
+    + (g.refs && g.refs.length > 3 ? ' <span style="color:#94a3b8;font-size:11px">+' + (g.refs.length - 3) + ' more</span>' : '')
+    + '</div></td>'
+    + '</tr>'
+  ).join('');
+}
+
+// ── Reports ───────────────────────────────────────────────────
+document.getElementById('refreshReports').addEventListener('click', loadReports);
+
+async function loadReports() {
+  document.getElementById('reportsSummary').innerHTML = '<div class="table-loading">Loading…</div>';
+  document.getElementById('revChart').innerHTML       = '<div class="table-loading">Loading…</div>';
+  document.getElementById('roomsChart').innerHTML     = '<div class="table-loading">Loading…</div>';
+  document.getElementById('paymentsChart').innerHTML  = '<div class="table-loading">Loading…</div>';
+  try {
+    const { ok, data } = await apiFetch('GET', '/api/admin/analytics');
+    if (!ok) return;
+    renderReports(data.data);
+  } catch {
+    document.getElementById('reportsSummary').innerHTML = '<div class="table-error">Failed to load analytics.</div>';
+  }
+}
+
+function renderReports(d) {
+  const s = d.summary;
+  document.getElementById('reportsSummary').innerHTML = [
+    { label: 'Total Revenue',     val: '£' + Number(s.total_revenue).toLocaleString(),           cls: 'stat-gold'   },
+    { label: 'This Month',        val: '£' + Number(s.this_month_revenue).toLocaleString(),       cls: 'stat-green'  },
+    { label: 'Avg Booking Value', val: '£' + Number(s.avg_booking_value).toFixed(0),              cls: 'stat-blue'   },
+    { label: 'Avg Stay (nights)', val: Number(s.avg_nights).toFixed(1),                           cls: 'stat-purple' },
+    { label: 'Total Bookings',    val: s.total_bookings,                                          cls: 'stat-blue'   },
+    { label: 'This Month',        val: s.this_month_bookings + ' bookings',                       cls: 'stat-green'  },
+  ].map(x => '<div class="stat-card"><div class="stat-icon ' + x.cls + '"></div><div><p class="stat-label">' + x.label + '</p><p class="stat-value">' + x.val + '</p></div></div>').join('');
+
+  // Monthly revenue bar chart
+  const monthly = d.monthly || [];
+  if (!monthly.length) {
+    document.getElementById('revChart').innerHTML = '<div class="fd-empty">No data yet.</div>';
+  } else {
+    const maxRev = Math.max(...monthly.map(m => Number(m.revenue)), 1);
+    document.getElementById('revChart').innerHTML = '<div class="rev-chart">'
+      + monthly.map(m => {
+          const pct = Math.round((Number(m.revenue) / maxRev) * 100);
+          return '<div class="rev-bar-wrap">'
+            + '<div class="rev-bar-label-top">£' + Number(m.revenue).toLocaleString() + '</div>'
+            + '<div class="rev-bar-track"><div class="rev-bar-fill" style="height:' + pct + '%"></div></div>'
+            + '<div class="rev-bar-label">' + m.label + '</div>'
+            + '<div class="rev-bar-count">' + m.bookings + ' bk</div>'
+            + '</div>';
+        }).join('')
+      + '</div>';
+  }
+
+  // Top rooms
+  document.getElementById('roomsChart').innerHTML = (d.rooms || []).map((r, i) => {
+    const maxBk = d.rooms[0].bookings || 1;
+    const pct = Math.round((r.bookings / maxBk) * 100);
+    return '<div class="horiz-bar-row">'
+      + '<span class="horiz-bar-label"><span class="price-card-code" style="background:#0f172a;font-size:10px">' + r.room_code.toUpperCase() + '</span> ' + esc(r.room_name) + '</span>'
+      + '<div class="horiz-bar-track"><div class="horiz-bar-fill" style="width:' + pct + '%"></div></div>'
+      + '<span class="horiz-bar-val">' + r.bookings + '</span>'
+      + '</div>';
+  }).join('') || '<div class="fd-empty">No data yet.</div>';
+
+  // Payment methods
+  const payLabels = { card: 'Card Payment', bank: 'Bank Transfer', payathotel: 'Pay at Hotel' };
+  const payColors = { card: '#6366f1', bank: '#0891b2', payathotel: '#059669' };
+  document.getElementById('paymentsChart').innerHTML = (d.payments || []).map(p =>
+    '<div class="pay-row">'
+    + '<span class="pay-dot" style="background:' + (payColors[p.payment_method] || '#94a3b8') + '"></span>'
+    + '<span class="pay-label">' + (payLabels[p.payment_method] || p.payment_method) + '</span>'
+    + '<span class="pay-count">' + p.count + '</span>'
+    + '</div>'
+  ).join('') || '<div class="fd-empty">No data yet.</div>';
 }
 
 // ── Init ──────────────────────────────────────────────────────

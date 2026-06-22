@@ -665,3 +665,148 @@ a:hover { text-decoration: underline; }
 .modal-meta { display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px; font-size: 12.5px; color: #64748b; }
 .modal-message { color: #334155; line-height: 1.75; font-size: 13.5px; }
 .modal-actions { margin-top: 18px; padding-top: 14px; border-top: 1px solid #f1f5f9; }
+
+/* ── Booking table enhancements ──────────────────────────────── */
+.bookings-toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 0 12px; gap: 12px; flex-wrap: wrap;
+}
+.booking-search {
+  padding: 8px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px;
+  font-size: 13px; outline: none; font-family: inherit; color: #1e293b;
+  width: 260px; transition: border-color 0.15s;
+}
+.booking-search:focus { border-color: #c9a96e; }
+.btn-new-booking {
+  padding: 8px 16px; background: #c9a96e; color: #0f172a; border: none;
+  border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;
+  font-family: inherit; white-space: nowrap; transition: background 0.15s;
+}
+.btn-new-booking:hover { background: #b8924a; }
+.notes-dot { color: #c9a96e; font-size: 9px; vertical-align: super; }
+.btn-edit { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
+.btn-edit:hover { background: #e2e8f0; color: #0f172a; }
+.status-checkedin  { background: #d1fae5; color: #065f46; }
+.status-checkedout { background: #dbeafe; color: #1e40af; }
+
+/* ── Modal wide + form fields ────────────────────────────────── */
+.modal-wide { max-width: 660px; }
+.modal-section-title {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.6px; color: #94a3b8; margin-bottom: 12px; margin-top: 4px;
+}
+.modal-row { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+.modal-field { flex: 1; min-width: 140px; display: flex; flex-direction: column; gap: 5px; }
+.modal-field label { font-size: 11.5px; font-weight: 600; color: #475569; }
+.modal-field .cf-input { font-size: 13px; }
+.nb-total-box {
+  background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px;
+  padding: 10px 14px; font-size: 13px; color: #065f46; margin-bottom: 12px;
+}
+.modal-error {
+  background: #fef2f2; border: 1px solid #fca5a5; color: #dc2626;
+  border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-top: 8px;
+}
+.modal-footer {
+  display: flex; justify-content: flex-end; gap: 10px;
+  margin-top: 18px; padding-top: 14px; border-top: 1px solid #f1f5f9;
+}
+.btn-modal-cancel {
+  padding: 9px 18px; background: #f1f5f9; color: #475569; border: none;
+  border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit;
+}
+.btn-modal-cancel:hover { background: #e2e8f0; }
+.btn-modal-confirm {
+  padding: 9px 20px; background: #0f172a; color: white; border: none;
+  border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;
+  font-family: inherit; transition: background 0.15s;
+}
+.btn-modal-confirm:hover:not(:disabled) { background: #c9a96e; }
+.btn-modal-confirm:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Front Desk check-in/out buttons ─────────────────────────── */
+.fd-guest-row { cursor: default; }
+.fd-guest-actions { flex-shrink: 0; margin-left: 8px; }
+.btn-fd-checkin, .btn-fd-checkout {
+  padding: 6px 12px; border: none; border-radius: 6px;
+  font-size: 11.5px; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap;
+}
+.btn-fd-checkin  { background: #d1fae5; color: #065f46; }
+.btn-fd-checkin:hover { background: #a7f3d0; }
+.btn-fd-checkout { background: #dbeafe; color: #1e40af; }
+.btn-fd-checkout:hover { background: #bfdbfe; }
+.fd-done-badge { font-size: 11px; color: #059669; font-weight: 600; }
+
+/* ── Availability / Room Blocks ──────────────────────────────── */
+.avail-block-form { margin-bottom: 16px; }
+.block-form-row {
+  display: flex; gap: 12px; padding: 16px 20px; flex-wrap: wrap; align-items: flex-end;
+}
+.block-field { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 140px; }
+.block-field-wide { flex: 2; }
+.block-form-footer {
+  padding: 12px 20px; border-top: 1px solid #f1f5f9;
+  display: flex; align-items: center; justify-content: flex-end; gap: 10px;
+}
+.block-error { font-size: 12px; color: #dc2626; flex: 1; }
+.block-item {
+  display: flex; align-items: center; gap: 14px; padding: 12px 20px;
+  border-bottom: 1px solid #f1f5f9; flex-wrap: wrap;
+}
+.block-item:last-child { border-bottom: none; }
+.block-item-room { display: flex; align-items: center; gap: 8px; min-width: 180px; }
+.block-item-name { font-size: 13px; color: #334155; font-weight: 500; }
+.block-item-dates { font-size: 13px; color: #0f172a; font-weight: 600; flex: 1; }
+.block-item-reason { font-size: 12px; color: #64748b; flex: 2; }
+
+/* ── Guests ──────────────────────────────────────────────────── */
+.guests-search-wrap { position: relative; padding-bottom: 14px; }
+.guests-search {
+  width: 100%; padding: 10px 14px 10px 40px;
+  border: 1.5px solid #e2e8f0; border-radius: 8px;
+  font-size: 13px; outline: none; font-family: inherit; color: #1e293b;
+  transition: border-color 0.15s;
+}
+.guests-search:focus { border-color: #c9a96e; }
+.guest-refs { display: flex; flex-wrap: wrap; gap: 4px; }
+.ref-badge-sm { font-size: 10px; padding: 2px 6px; }
+
+/* ── Reports ─────────────────────────────────────────────────── */
+.reports-summary {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px; margin-bottom: 16px;
+}
+.reports-bottom {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px;
+}
+.rev-chart-wrap { padding: 14px 20px 4px; overflow-x: auto; }
+.rev-chart {
+  display: flex; align-items: flex-end; gap: 8px;
+  height: 160px; padding-bottom: 0; min-width: 600px;
+}
+.rev-bar-wrap {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; min-width: 44px;
+}
+.rev-bar-label-top { font-size: 9px; color: #64748b; margin-bottom: 3px; text-align: center; height: 14px; }
+.rev-bar-track {
+  width: 100%; background: #f1f5f9; border-radius: 4px 4px 0 0;
+  height: 120px; display: flex; align-items: flex-end; overflow: hidden;
+}
+.rev-bar-fill { width: 100%; background: #c9a96e; border-radius: 4px 4px 0 0; min-height: 2px; }
+.rev-bar-label { font-size: 9.5px; color: #64748b; margin-top: 5px; text-align: center; }
+.rev-bar-count { font-size: 9px; color: #94a3b8; }
+.horiz-bar-row {
+  display: flex; align-items: center; gap: 10px; padding: 8px 18px;
+  border-bottom: 1px solid #f8fafc;
+}
+.horiz-bar-row:last-child { border-bottom: none; }
+.horiz-bar-label { font-size: 12px; color: #334155; min-width: 160px; display: flex; align-items: center; gap: 6px; }
+.horiz-bar-track { flex: 1; height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden; }
+.horiz-bar-fill  { height: 100%; background: #0f172a; border-radius: 4px; transition: width 0.4s; }
+.horiz-bar-val   { font-size: 12px; font-weight: 600; color: #0f172a; min-width: 24px; text-align: right; }
+.pay-row { display: flex; align-items: center; gap: 12px; padding: 12px 18px; border-bottom: 1px solid #f8fafc; }
+.pay-row:last-child { border-bottom: none; }
+.pay-dot   { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.pay-label { font-size: 13px; color: #334155; flex: 1; }
+.pay-count { font-size: 14px; font-weight: 700; color: #0f172a; }
