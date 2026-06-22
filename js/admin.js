@@ -1259,6 +1259,196 @@ function generateInvoicePDF() {
     });
 }
 
+// ── Registration Card PDF ─────────────────────────────────────
+function generateRegCard() {
+  if (!_calCurrentBookingId) return;
+  var b = calBookings.find(function(x) { return x.id === _calCurrentBookingId; });
+  if (!b) b = allBookings.find(function(x) { return x.id === _calCurrentBookingId; });
+  if (!b) { alert('Booking data not found. Please reopen the profile.'); return; }
+
+  var f2 = function(n) {
+    return Number(n).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+  var today  = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  var nights = Number(b.nights) || 1;
+  var adults = Number(b.adults) || 1;
+  var children = Number(b.children) || 0;
+  var gStr   = adults + ' adult' + (adults !== 1 ? 's' : '') +
+               (children > 0 ? ' + ' + children + ' child' + (children > 1 ? 'ren' : '') : '');
+  var totalAmt = Number(b.total_amount) || 0;
+  var ppn      = Number(b.price_per_night) || (totalAmt / nights);
+
+  var psLabel = { paid: 'Fully Paid', partial: 'Partially Paid', unpaid: 'Unpaid' };
+  var pStatus = b.payment_status || 'unpaid';
+  var modeLabel = b.payment_mode ||
+    ({ card: 'Card', bank: 'Bank Transfer', payathotel: 'Pay at Hotel' }[b.payment_method] || '—');
+
+  var fld = function(v) { return v ? esc(String(v)) : '<span style="color:#94a3b8">—</span>'; };
+  var cinAt = b.checked_in_at
+    ? new Date(b.checked_in_at).toLocaleDateString('en-GB') + ' ' +
+      new Date(b.checked_in_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+    : '';
+
+  /* ── Section helper ── */
+  var sec = function(title, rows) {
+    var inner = rows.map(function(row) {
+      return '<tr>' + row.map(function(c) {
+        return '<td style="vertical-align:top;padding:0 20px 10px 0;width:' + Math.round(100 / row.length) + '%">'
+          + '<div style="font-size:9px;color:#94a3b8;font-weight:700;letter-spacing:0.5px;margin-bottom:2px">' + c[0] + '</div>'
+          + '<div style="font-size:13px;font-weight:700;color:#0f172a">' + c[1] + '</div>'
+          + '</td>';
+      }).join('') + '</tr>';
+    }).join('');
+    return '<div style="border:1.5px solid #e2e8f0;border-radius:8px;padding:15px 18px;margin-bottom:14px">'
+      + '<div style="font-size:8px;font-weight:700;letter-spacing:1.8px;color:#c9a96e;margin-bottom:12px">' + title + '</div>'
+      + '<table style="width:100%;border-collapse:collapse">' + inner + '</table>'
+      + '</div>';
+  };
+
+  var html =
+    '<div id="bdw-regcard" style="font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;background:#fff;width:710px;margin:0;padding:0">'
+
+    /* ── Dark header ── */
+    + '<div style="background:#0f172a;padding:22px 36px">'
+    + '<table style="width:100%;border-collapse:collapse"><tr>'
+    + '<td style="vertical-align:top">'
+    + '<div style="font-size:8px;font-weight:700;letter-spacing:2px;color:#c9a96e;margin-bottom:3px">PRIVATE HOTEL · LONDON</div>'
+    + '<div style="font-size:22px;font-weight:900;color:#fff">BLUEDAWS</div>'
+    + '<div style="font-size:10px;color:#94a3b8;line-height:1.75;margin-top:5px">'
+    + '133-135 Sussex Gardens, Hyde Park, London W2 2RX<br>'
+    + 'Tel: 034556846892 · bluedawsprivatehotel@gmail.com</div>'
+    + '</td>'
+    + '<td style="vertical-align:top;text-align:right">'
+    + '<div style="font-size:8px;font-weight:700;letter-spacing:2px;color:#c9a96e;margin-bottom:6px">HOTEL REGISTRATION CARD</div>'
+    + '<div style="font-size:11px;color:#94a3b8;line-height:1.9">'
+    + 'Ref: <strong style="color:#e2e8f0">' + esc(b.ref) + '</strong><br>'
+    + 'Printed: <strong style="color:#e2e8f0">' + today + '</strong></div>'
+    + '</td></tr></table></div>'
+
+    /* ── Gold bar ── */
+    + '<div style="height:4px;background:#c9a96e"></div>'
+
+    /* ── Body ── */
+    + '<div style="padding:22px 36px">'
+
+    /* Stay details — shaded background */
+    + '<div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:8px;padding:15px 18px;margin-bottom:14px">'
+    + '<div style="font-size:8px;font-weight:700;letter-spacing:1.8px;color:#c9a96e;margin-bottom:12px">STAY DETAILS</div>'
+    + '<table style="width:100%;border-collapse:collapse">'
+    + '<tr>'
+    + '<td style="vertical-align:top;padding:0 20px 10px 0;width:50%"><div style="font-size:9px;color:#94a3b8;font-weight:700;margin-bottom:2px">ROOM</div><div style="font-size:15px;font-weight:900;color:#0f172a">' + b.room_code.toUpperCase() + ' &ndash; ' + esc(b.room_name || '') + '</div></td>'
+    + '<td style="vertical-align:top;padding:0 0 10px 0;width:50%"><div style="font-size:9px;color:#94a3b8;font-weight:700;margin-bottom:2px">BOOKING REFERENCE</div><div style="font-size:14px;font-weight:800;color:#0f172a;font-family:monospace">' + esc(b.ref) + '</div></td>'
+    + '</tr>'
+    + '<tr>'
+    + '<td style="vertical-align:top;padding:0 20px 10px 0"><div style="font-size:9px;color:#94a3b8;font-weight:700;margin-bottom:2px">CHECK-IN DATE</div><div style="font-size:13px;font-weight:700;color:#0f172a">' + fmtDate(b.checkin_date) + '</div></td>'
+    + '<td style="vertical-align:top;padding:0 0 10px 0"><div style="font-size:9px;color:#94a3b8;font-weight:700;margin-bottom:2px">CHECK-OUT DATE</div><div style="font-size:13px;font-weight:700;color:#0f172a">' + fmtDate(b.checkout_date) + '</div></td>'
+    + '</tr>'
+    + '<tr>'
+    + '<td style="vertical-align:top;padding:0 20px 0 0"><div style="font-size:9px;color:#94a3b8;font-weight:700;margin-bottom:2px">DURATION</div><div style="font-size:13px;font-weight:700;color:#0f172a">' + nights + ' night' + (nights !== 1 ? 's' : '') + '</div></td>'
+    + '<td style="vertical-align:top;padding:0"><div style="font-size:9px;color:#94a3b8;font-weight:700;margin-bottom:2px">GUESTS</div><div style="font-size:13px;font-weight:700;color:#0f172a">' + gStr + '</div></td>'
+    + '</tr>'
+    + '</table></div>'
+
+    /* Guest details */
+    + sec('GUEST DETAILS', [
+        [ ['FULL NAME', esc(b.guest_first_name) + ' ' + esc(b.guest_last_name)],
+          ['DATE OF BIRTH', b.guest_dob ? fmtDate(b.guest_dob) : '<span style="color:#94a3b8">—</span>'] ],
+        [ ['NATIONALITY', fld(b.guest_nationality)],
+          ['COUNTRY OF RESIDENCE', fld(b.guest_country)] ],
+        [ ['EMAIL ADDRESS', fld(b.guest_email)],
+          ['PHONE NUMBER', fld(b.guest_phone)] ],
+      ])
+
+    /* Identity */
+    + sec('IDENTITY DOCUMENT', [
+        [ ['ID TYPE', fld(b.guest_id_type)],
+          ['ID / PASSPORT NUMBER', '<span style="font-family:monospace;letter-spacing:0.5px">' + fld(b.guest_id_number) + '</span>'] ],
+      ])
+
+    /* Payment */
+    + sec('PAYMENT', [
+        [ ['RATE PER NIGHT (INC. VAT)', '&pound;' + f2(ppn)],
+          ['TOTAL AMOUNT', '&pound;' + f2(totalAmt)],
+          ['PAYMENT STATUS', psLabel[pStatus] || 'Unpaid'] ],
+        [ ['PAYMENT METHOD', fld(modeLabel)],
+          ['AMOUNT RECEIVED', '&pound;' + f2(Number(b.amount_paid) || 0)],
+          ['PAYMENT NOTE', fld(b.payment_note)] ],
+      ])
+
+    /* Special requests (only if present) */
+    + (b.special_requests
+        ? '<div style="border:1.5px solid #e2e8f0;border-radius:8px;padding:14px 18px;margin-bottom:14px">'
+          + '<div style="font-size:8px;font-weight:700;letter-spacing:1.8px;color:#c9a96e;margin-bottom:8px">SPECIAL REQUESTS / NOTES</div>'
+          + '<div style="font-size:12px;color:#334155;line-height:1.6">' + esc(b.special_requests) + '</div>'
+          + '</div>'
+        : '')
+
+    /* Declaration + signature boxes */
+    + '<div style="border:1.5px solid #0f172a;border-radius:8px;padding:15px 18px;margin-bottom:0;background:#f8fafc">'
+    + '<div style="font-size:8px;font-weight:700;letter-spacing:1.8px;color:#0f172a;margin-bottom:8px">GUEST DECLARATION</div>'
+    + '<div style="font-size:10.5px;color:#475569;line-height:1.65;margin-bottom:18px">'
+    + 'I confirm that all details provided are true and correct. I agree to abide by the terms and conditions of Bluedaws Private Hotel, '
+    + 'including payment of all charges incurred during my stay. I acknowledge that the hotel may retain a copy of my identification '
+    + 'document in accordance with UK law.'
+    + '</div>'
+    + '<table style="width:100%;border-collapse:collapse">'
+    + '<tr>'
+    + '<td style="width:45%;vertical-align:bottom;padding-right:20px">'
+    + '<div style="height:38px"></div>'
+    + '<div style="border-bottom:1.5px solid #0f172a;margin-bottom:4px"></div>'
+    + '<div style="font-size:9px;color:#64748b;font-weight:700">GUEST SIGNATURE</div>'
+    + '</td>'
+    + '<td style="width:25%;vertical-align:bottom;padding-right:20px">'
+    + '<div style="height:38px"></div>'
+    + '<div style="border-bottom:1.5px solid #0f172a;margin-bottom:4px"></div>'
+    + '<div style="font-size:9px;color:#64748b;font-weight:700">DATE</div>'
+    + '</td>'
+    + '<td style="width:30%;vertical-align:bottom">'
+    + '<div style="height:38px;display:flex;align-items:flex-end;padding-bottom:4px">'
+    + '<span style="font-size:11.5px;font-weight:700;color:#0f172a">' + cinAt + '</span>'
+    + '</div>'
+    + '<div style="border-bottom:1.5px solid #0f172a;margin-bottom:4px"></div>'
+    + '<div style="font-size:9px;color:#64748b;font-weight:700">CHECKED IN BY (STAFF)</div>'
+    + '</td>'
+    + '</tr></table>'
+    + '</div>'
+
+    + '</div>' /* end body padding */
+
+    /* Footer */
+    + '<div style="background:#0f172a;padding:13px 36px;text-align:center;margin-top:4px">'
+    + '<div style="font-size:10.5px;color:#94a3b8">'
+    + 'Bluedaws Private Hotel &middot; 133-135 Sussex Gardens, Hyde Park, London W2 2RX'
+    + ' &middot; VAT Reg: 730 124 6692'
+    + '</div>'
+    + '</div>'
+    + '</div>'; /* end bdw-regcard */
+
+  var holder = document.getElementById('invoiceHolder');
+  holder.innerHTML = html;
+  var el  = holder.querySelector('#bdw-regcard');
+  var opt = {
+    margin:      0,
+    filename:    'RegCard-' + b.ref + '.pdf',
+    image:       { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' },
+    jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+
+  var btn = document.getElementById('bpRegCardBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Generating…'; }
+  html2pdf().set(opt).from(el).save()
+    .then(function()  {
+      holder.innerHTML = '';
+      if (btn) { btn.disabled = false; btn.innerHTML = '&#x1F4CB; Registration Card PDF'; }
+    })
+    .catch(function() {
+      holder.innerHTML = '';
+      if (btn) { btn.disabled = false; btn.innerHTML = '&#x1F4CB; Registration Card PDF'; }
+      alert('PDF generation failed — please try again.');
+    });
+}
+
 // ── Message Modal ─────────────────────────────────────────────
 function openModal(id) {
   const c = allContacts.find(x => x.id === id);

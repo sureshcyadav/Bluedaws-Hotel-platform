@@ -1490,3 +1490,14 @@ a:hover { text-decoration: underline; }
   .dash-main-grid { grid-template-columns: 1fr; }
   .dash-kpi-strip { grid-template-columns: repeat(3, 1fr); }
 }
+
+/* Registration Card button — same base as invoice btn, gold accent */
+.bpd-regcard-btn {
+  border-color: #c9a96e;
+  color: #c9a96e;
+}
+.bpd-regcard-btn:hover:not(:disabled) {
+  background: #fffbf2;
+  border-color: #b8894e;
+  color: #b8894e;
+}
