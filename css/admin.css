@@ -1032,11 +1032,16 @@ a:hover { text-decoration: underline; }
 
 /* Save bar */
 .bpd-save-bar {
-  display: flex; align-items: center; justify-content: flex-end;
-  gap: 12px; padding: 12px 24px;
-  background: #f8fafc; border-top: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 24px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
   flex-shrink: 0;
 }
+.bpd-save-bar > span[style*="flex:1"] { flex: 1; min-width: 16px; }
 .bpd-save-ok  { font-size: 13px; color: #059669; font-weight: 600; }
 .bpd-save-err { font-size: 13px; color: #dc2626; font-weight: 600; }
 .bpd-save-btn {
