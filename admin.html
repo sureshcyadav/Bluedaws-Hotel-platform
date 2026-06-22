@@ -460,6 +460,18 @@
           <!-- KPI strip 2 -->
           <div class="rpt-kpi2" id="reportsSummary2"></div>
 
+          <!-- Breakdown panel — revealed when a KPI card is clicked -->
+          <div id="rptBreakdown" class="rpt-bd hidden">
+            <div class="rpt-bd-header">
+              <div>
+                <div class="rpt-bd-title" id="rptBdTitle">Breakdown</div>
+                <div class="rpt-bd-sub" id="rptBdSub"></div>
+              </div>
+              <button class="rpt-bd-close" onclick="closeRptBreakdown()" title="Close">&#x2715;</button>
+            </div>
+            <div class="rpt-bd-body" id="rptBdBody"></div>
+          </div>
+
           <!-- Monthly Revenue (full width) -->
           <div class="content-block" style="margin-bottom:16px">
             <div class="content-block-header">

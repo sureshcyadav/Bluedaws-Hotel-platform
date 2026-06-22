@@ -2013,17 +2013,14 @@ var RPT_ICONS = {
   alert:    '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
 };
 
-// ── Reports KPI card click navigation ─────────────────────────
+// ── Reports KPI card — show inline breakdown ───────────────────
+var _rptData = null;
+
 ['reportsSummary', 'reportsSummary2'].forEach(function(id) {
   document.getElementById(id).addEventListener('click', function(e) {
-    var card = e.target.closest('[data-goto]');
+    var card = e.target.closest('[data-breakdown]');
     if (!card) return;
-    showSection(card.dataset.goto);
-    var f = card.dataset.bkfilter;
-    if (f) {
-      var btn = document.querySelector('#bookingFilters [data-filter="' + f + '"]');
-      if (btn) btn.click();
-    }
+    showRptBreakdown(card.dataset.breakdown);
   });
 });
 
@@ -2044,22 +2041,23 @@ async function loadReports() {
 }
 
 function renderReports(d) {
+  _rptData = d;
   const s  = d.summary;
   const sb = d.status_break || {};
   const totalActive = Number(s.total_bookings) || 1;
   const cancelRate  = totalActive ? ((Number(s.cancelled || 0) / totalActive) * 100).toFixed(1) : '0.0';
   const occupancy   = ((Number(s.in_house_now || 0) / 22) * 100).toFixed(0);
 
-  // KPI strip 1
+  // KPI strip 1 — data-breakdown drives the inline breakdown panel
   document.getElementById('reportsSummary').innerHTML = [
-    { label: 'Total Revenue',      val: '£' + Number(s.total_revenue).toLocaleString(),      cls: 'stat-gold',   icon: RPT_ICONS.pound,    goto: 'bookings', bkf: 'all',        tip: 'View all bookings breakdown' },
-    { label: 'This Month Revenue', val: '£' + Number(s.this_month_revenue).toLocaleString(), cls: 'stat-green',  icon: RPT_ICONS.calendar, goto: 'bookings', bkf: 'all',        tip: 'View bookings this month' },
-    { label: 'Avg Booking Value',  val: '£' + Number(s.avg_booking_value).toFixed(0),        cls: 'stat-blue',   icon: RPT_ICONS.tag,      goto: 'bookings', bkf: 'confirmed',  tip: 'View confirmed bookings' },
-    { label: 'Avg Stay (nights)',  val: Number(s.avg_nights).toFixed(1),                     cls: 'stat-purple', icon: RPT_ICONS.moon,     goto: 'bookings', bkf: 'all',        tip: 'View all bookings' },
-    { label: 'Total Bookings',     val: s.total_bookings,                                    cls: 'stat-blue',   icon: RPT_ICONS.clipboard,goto: 'bookings', bkf: 'all',        tip: 'View all bookings' },
-    { label: 'This Month',         val: s.this_month_bookings + ' bookings',                 cls: 'stat-green',  icon: RPT_ICONS.trending, goto: 'bookings', bkf: 'all',        tip: 'View this month\'s bookings' },
+    { label: 'Total Revenue',      val: '£' + Number(s.total_revenue).toLocaleString(),      cls: 'stat-gold',   icon: RPT_ICONS.pound,    bd: 'revenue',       tip: 'Click for revenue breakdown' },
+    { label: 'This Month Revenue', val: '£' + Number(s.this_month_revenue).toLocaleString(), cls: 'stat-green',  icon: RPT_ICONS.calendar, bd: 'month-revenue', tip: 'Click for monthly trend' },
+    { label: 'Avg Booking Value',  val: '£' + Number(s.avg_booking_value).toFixed(0),        cls: 'stat-blue',   icon: RPT_ICONS.tag,      bd: 'avg-value',     tip: 'Click for value distribution' },
+    { label: 'Avg Stay (nights)',  val: Number(s.avg_nights).toFixed(1),                     cls: 'stat-purple', icon: RPT_ICONS.moon,     bd: 'avg-nights',    tip: 'Click for stay length breakdown' },
+    { label: 'Total Bookings',     val: s.total_bookings,                                    cls: 'stat-blue',   icon: RPT_ICONS.clipboard,bd: 'total-bookings',tip: 'Click for status breakdown' },
+    { label: 'This Month',         val: s.this_month_bookings + ' bookings',                 cls: 'stat-green',  icon: RPT_ICONS.trending, bd: 'month-bookings',tip: 'Click for this month\'s breakdown' },
   ].map(function(x) {
-    return '<div class="stat-card stat-card-hover rpt-clickable" data-goto="' + x.goto + '" data-bkfilter="' + x.bkf + '" title="' + x.tip + '">'
+    return '<div class="stat-card stat-card-hover rpt-clickable" data-breakdown="' + x.bd + '" title="' + x.tip + '">'
       + '<div class="stat-icon ' + x.cls + '">' + x.icon + '</div>'
       + '<div><p class="stat-label">' + x.label + '</p>'
       + '<p class="stat-value">' + x.val + '</p></div></div>';
@@ -2067,14 +2065,12 @@ function renderReports(d) {
 
   // KPI strip 2 — operational metrics
   document.getElementById('reportsSummary2').innerHTML = [
-    { label: 'Occupancy Now',     val: occupancy + '%',                                  cls: 'stat-teal',   icon: RPT_ICONS.hotel,   note: s.in_house_now + ' / 22 rooms', goto: 'frontdesk',  bkf: '',            tip: 'Open Front Desk — live room status' },
-    { label: 'Cancellation Rate', val: cancelRate + '%',                                 cls: 'stat-orange', icon: RPT_ICONS.xCircle, note: s.cancelled + ' cancelled',      goto: 'bookings',   bkf: 'cancelled',   tip: 'View cancelled bookings' },
-    { label: 'Total Collected',   val: '£' + Number(s.total_collected).toLocaleString(), cls: 'stat-green',  icon: RPT_ICONS.checkOk, note: 'Payments received',             goto: 'bookings',   bkf: 'checkedout',  tip: 'View checked-out (paid) bookings' },
-    { label: 'Outstanding',       val: '£' + Number(s.outstanding).toLocaleString(),     cls: 'stat-indigo', icon: RPT_ICONS.alert,   note: 'Confirmed unpaid',              goto: 'bookings',   bkf: 'confirmed',   tip: 'View confirmed bookings with balance due' },
+    { label: 'Occupancy Now',     val: occupancy + '%',                                  cls: 'stat-teal',   icon: RPT_ICONS.hotel,   note: s.in_house_now + ' / 22 rooms', bd: 'occupancy',    tip: 'Click for room occupancy breakdown' },
+    { label: 'Cancellation Rate', val: cancelRate + '%',                                 cls: 'stat-orange', icon: RPT_ICONS.xCircle, note: s.cancelled + ' cancelled',      bd: 'cancellation', tip: 'Click for cancellation breakdown' },
+    { label: 'Total Collected',   val: '£' + Number(s.total_collected).toLocaleString(), cls: 'stat-green',  icon: RPT_ICONS.checkOk, note: 'Payments received',             bd: 'collected',    tip: 'Click for payment collection breakdown' },
+    { label: 'Outstanding',       val: '£' + Number(s.outstanding).toLocaleString(),     cls: 'stat-indigo', icon: RPT_ICONS.alert,   note: 'Confirmed unpaid',              bd: 'outstanding',  tip: 'Click for outstanding balance breakdown' },
   ].map(function(x) {
-    return '<div class="stat-card stat-card-hover rpt-kpi2-card rpt-clickable" data-goto="' + x.goto + '"'
-      + (x.bkf ? ' data-bkfilter="' + x.bkf + '"' : '')
-      + ' title="' + x.tip + '">'
+    return '<div class="stat-card stat-card-hover rpt-kpi2-card rpt-clickable" data-breakdown="' + x.bd + '" title="' + x.tip + '">'
       + '<div class="stat-icon ' + x.cls + '">' + x.icon + '</div>'
       + '<div><p class="stat-label">' + x.label + '</p>'
       + '<p class="stat-value">' + x.val + '</p>'
@@ -2198,6 +2194,236 @@ function renderReports(d) {
       + '<span class="horiz-bar-val">' + x.val + '</span>'
       + '</div>';
   }).join('');
+}
+
+// ── Overview breakdown panel ───────────────────────────────────
+function closeRptBreakdown() {
+  document.getElementById('rptBreakdown').classList.add('hidden');
+}
+
+function showRptBreakdown(key) {
+  if (!_rptData) return;
+  var s   = _rptData.summary || {};
+  var sb  = _rptData.status_break || {};
+  var bks = allBookings || [];
+  var now = new Date();
+  var thisMon = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+
+  function fm(v)   { return '£' + Number(v||0).toLocaleString('en-GB', {maximumFractionDigits:0}); }
+  function pBar(p, col) {
+    return '<div class="rpt-bd-bar"><div class="rpt-bd-bar-fill" style="width:' + Math.min(p,100) + '%'
+      + (col ? ';background:' + col : '') + '"></div></div>';
+  }
+  function bItem(label, value, note, pct, col) {
+    return '<div class="rpt-bd-item">'
+      + '<div class="rpt-bd-item-lbl">' + label + '</div>'
+      + '<div class="rpt-bd-item-val"' + (col ? ' style="color:' + col + '"' : '') + '>' + value + '</div>'
+      + '<div class="rpt-bd-item-note">' + (note||'') + '</div>'
+      + (pct != null ? pBar(pct, col) : '')
+      + '</div>';
+  }
+
+  var title, sub, body;
+  var total = Number(s.total_bookings) || 1;
+
+  switch (key) {
+
+    case 'revenue': {
+      var byStatus = { pending:0, confirmed:0, checkedin:0, checkedout:0 };
+      bks.filter(function(b) { return b.status !== 'cancelled'; }).forEach(function(b) {
+        var v = Number(b.total_amount||0);
+        if (b.checked_out_at)          byStatus.checkedout += v;
+        else if (b.checked_in_at)      byStatus.checkedin  += v;
+        else if (b.status==='confirmed') byStatus.confirmed += v;
+        else                           byStatus.pending    += v;
+      });
+      var tot = Number(s.total_revenue) || 1;
+      title = 'Total Revenue Breakdown';
+      sub   = 'By booking stage — ' + fm(tot) + ' all time';
+      body  = '<div class="rpt-bd-grid">'
+        + bItem('Checked Out',  fm(byStatus.checkedout), 'Completed stays',    Math.round(byStatus.checkedout/tot*100), '#059669')
+        + bItem('In House',     fm(byStatus.checkedin),  'Currently staying',  Math.round(byStatus.checkedin/tot*100),  '#0891b2')
+        + bItem('Confirmed',    fm(byStatus.confirmed),  'Upcoming',           Math.round(byStatus.confirmed/tot*100),  '#3b82f6')
+        + bItem('Pending',      fm(byStatus.pending),    'Awaiting confirm',   Math.round(byStatus.pending/tot*100),    '#f59e0b')
+        + '</div>';
+      break;
+    }
+
+    case 'month-revenue': {
+      var monthly = _rptData.monthly || [];
+      var maxR = Math.max.apply(null, monthly.map(function(m){return Number(m.revenue);})) || 1;
+      title = 'Monthly Revenue Trend';
+      sub   = 'Last ' + monthly.length + ' months with data';
+      body  = monthly.length
+        ? '<div class="rpt-bd-grid">'
+          + monthly.slice(-6).map(function(m) {
+              return bItem(m.label, fm(m.revenue), m.bookings + ' booking' + (m.bookings!==1?'s':''), Math.round(Number(m.revenue)/maxR*100), '#c9a96e');
+            }).join('') + '</div>'
+        : '<p class="fd-empty">No monthly data yet.</p>';
+      break;
+    }
+
+    case 'avg-value': {
+      var ranges = [
+        {l:'Under £100',  min:0,   max:100},
+        {l:'£100 – £299', min:100, max:300},
+        {l:'£300 – £499', min:300, max:500},
+        {l:'£500+',       min:500, max:Infinity},
+      ];
+      var activeBks = bks.filter(function(b){return b.status!=='cancelled';});
+      var totalA = activeBks.length || 1;
+      ranges.forEach(function(r){ r.count=0; });
+      activeBks.forEach(function(b){
+        var v = Number(b.total_amount||0);
+        var r = ranges.find(function(r){return v>=r.min && v<r.max;});
+        if(r) r.count++;
+      });
+      title = 'Booking Value Distribution';
+      sub   = 'Average value: ' + fm(s.avg_booking_value) + ' per booking';
+      body  = '<div class="rpt-bd-grid">'
+        + ranges.map(function(r){
+            var p = Math.round(r.count/totalA*100);
+            return bItem(r.l, r.count + ' booking' + (r.count!==1?'s':''), p+'% of bookings', p, '#6366f1');
+          }).join('') + '</div>';
+      break;
+    }
+
+    case 'avg-nights': {
+      var buckets = [{l:'1 night',mn:1,mx:2},{l:'2 nights',mn:2,mx:3},{l:'3 nights',mn:3,mx:4},{l:'4–6 nights',mn:4,mx:7},{l:'7+ nights',mn:7,mx:Infinity}];
+      var activeBks2 = bks.filter(function(b){return b.status!=='cancelled';});
+      var total2 = activeBks2.length || 1;
+      buckets.forEach(function(r){r.c=0;});
+      activeBks2.forEach(function(b){
+        var n = Number(b.nights) || Math.max(1, Math.round((new Date(b.checkout_date)-new Date(b.checkin_date))/86400000));
+        var bk = buckets.find(function(r){return n>=r.mn && n<r.mx;});
+        if(bk) bk.c++;
+      });
+      title = 'Stay Length Distribution';
+      sub   = 'Average stay: ' + Number(s.avg_nights||0).toFixed(1) + ' nights';
+      body  = '<div class="rpt-bd-grid">'
+        + buckets.map(function(r){
+            var p = Math.round(r.c/total2*100);
+            return bItem(r.l, r.c + ' booking' + (r.c!==1?'s':''), p+'% of stays', p, '#8b5cf6');
+          }).join('') + '</div>';
+      break;
+    }
+
+    case 'total-bookings': {
+      var items = [
+        {l:'Confirmed / Upcoming', v:Number(sb.confirmed_pending_checkin||0), col:'#3b82f6'},
+        {l:'Awaiting Confirmation', v:Number(sb.awaiting_confirmation||0),    col:'#f59e0b'},
+        {l:'In House',             v:Number(sb.in_house||0),                  col:'#0891b2'},
+        {l:'Checked Out',          v:Number(sb.checked_out||0),               col:'#64748b'},
+        {l:'Cancelled',            v:Number(sb.cancelled||0),                 col:'#ef4444'},
+      ];
+      var grand = items.reduce(function(a,x){return a+x.v;},0)||1;
+      title = 'All Bookings by Status';
+      sub   = grand + ' total bookings';
+      body  = '<div class="rpt-bd-grid">'
+        + items.map(function(x){return bItem(x.l, x.v, Math.round(x.v/grand*100)+'% of total', Math.round(x.v/grand*100), x.col);}).join('')
+        + '</div>';
+      break;
+    }
+
+    case 'month-bookings': {
+      var mBks = bks.filter(function(b){ return (b.checkin_date||'').slice(0,7)===thisMon || (b.created_at||'').slice(0,7)===thisMon; });
+      var mTot = mBks.length || 1;
+      var mMap = {};
+      mBks.forEach(function(b){ mMap[b.status]=(mMap[b.status]||0)+1; });
+      var mItems = [
+        {l:'Confirmed',    st:'confirmed',                   col:'#3b82f6'},
+        {l:'Pending',      st:'pending',                     col:'#f59e0b'},
+        {l:'In House',     st:'in_house',                    col:'#0891b2'},
+        {l:'Checked Out',  st:'checked_out',                 col:'#64748b'},
+        {l:'Cancelled',    st:'cancelled',                   col:'#ef4444'},
+      ];
+      title = 'This Month Bookings';
+      sub   = mBks.length + ' bookings in ' + now.toLocaleString('default',{month:'long'}) + ' ' + now.getFullYear();
+      body  = '<div class="rpt-bd-grid">'
+        + mItems.map(function(x){
+            var c = mMap[x.st]||0;
+            var p = Math.round(c/mTot*100);
+            return bItem(x.l, c, p+'% this month', p, x.col);
+          }).join('')
+        + '</div>';
+      break;
+    }
+
+    case 'occupancy': {
+      var inH = bks.filter(function(b){return b.checked_in_at && !b.checked_out_at;});
+      var avail = 22 - inH.length;
+      title = 'Live Occupancy';
+      sub   = inH.length + ' of 22 rooms occupied (' + Math.round(inH.length/22*100) + '%)';
+      body  = '<div class="rpt-bd-grid">'
+        + bItem('Occupied',  inH.length,  'rooms in use',  Math.round(inH.length/22*100), '#0891b2')
+        + bItem('Available', avail,        'rooms free',    Math.round(avail/22*100),       '#059669')
+        + bItem('Capacity',  22,           'total rooms',   100,                            '#94a3b8')
+        + '</div>'
+        + (inH.length ? '<div class="rpt-bd-list-wrap"><div class="rpt-bd-list-title">Currently In House</div>'
+          + inH.map(function(b){
+              return '<div class="rpt-bd-row"><span class="rpt-bd-guest">' + esc(b.guest_name||'Guest')
+                + '</span><span class="rpt-bd-detail">' + esc(b.room_code||'') + ' · ' + esc(b.room_name||'') + '</span></div>';
+            }).join('') + '</div>' : '');
+      break;
+    }
+
+    case 'cancellation': {
+      var totalBks = bks.length || 1;
+      var canc = bks.filter(function(b){return b.status==='cancelled';}).length;
+      var active = totalBks - canc;
+      title = 'Cancellation Breakdown';
+      sub   = canc + ' cancelled out of ' + totalBks + ' total bookings';
+      body  = '<div class="rpt-bd-grid">'
+        + bItem('Total Bookings', totalBks,    'all time',               100, '#94a3b8')
+        + bItem('Active',         active,       Math.round(active/totalBks*100)+'% active',     Math.round(active/totalBks*100),     '#059669')
+        + bItem('Cancelled',      canc,         Math.round(canc/totalBks*100)+'% cancel rate',  Math.round(canc/totalBks*100),       '#ef4444')
+        + '</div>';
+      break;
+    }
+
+    case 'collected': {
+      var totRev  = Number(s.total_revenue)   || 1;
+      var coll    = Number(s.total_collected) || 0;
+      var outst   = Number(s.outstanding)     || 0;
+      var collPct = Math.round(coll/totRev*100);
+      title = 'Payment Collection Breakdown';
+      sub   = 'Total booking value: ' + fm(totRev);
+      body  = '<div class="rpt-bd-grid">'
+        + bItem('Total Value',   fm(totRev), '100% of bookings', 100,     '#94a3b8')
+        + bItem('Collected',     fm(coll),   collPct+'% received', collPct,'#059669')
+        + bItem('Outstanding',   fm(outst),  (100-collPct)+'% pending', 100-collPct, '#6366f1')
+        + '</div>';
+      break;
+    }
+
+    case 'outstanding': {
+      var confBks = bks.filter(function(b){return b.status==='confirmed';});
+      var outTotal = Number(s.outstanding)||0;
+      title = 'Outstanding Balance Breakdown';
+      sub   = fm(outTotal) + ' due from ' + confBks.length + ' confirmed booking' + (confBks.length!==1?'s':'');
+      body  = '<div class="rpt-bd-grid" style="margin-bottom:14px">'
+        + bItem('Confirmed Bookings', confBks.length, 'with balance due', 100, '#6366f1')
+        + bItem('Outstanding Total',  fm(outTotal),   'amount due',       100, '#6366f1')
+        + bItem('Avg Per Booking',    confBks.length ? fm(Math.round(outTotal/confBks.length)) : '£0', 'per booking', null)
+        + '</div>'
+        + (confBks.length ? '<div class="rpt-bd-list-wrap"><div class="rpt-bd-list-title">Confirmed Bookings</div>'
+          + confBks.slice(0,10).map(function(b){
+              return '<div class="rpt-bd-row"><span class="rpt-bd-guest">' + esc(b.guest_name||'Guest')
+                + ' <small style="color:#94a3b8;font-weight:400">' + esc(b.ref||'') + '</small>'
+                + '</span><span class="rpt-bd-detail" style="color:#6366f1;font-weight:700">' + fm(b.total_amount||0) + '</span></div>';
+            }).join('') + '</div>' : '');
+      break;
+    }
+
+    default: return;
+  }
+
+  document.getElementById('rptBdTitle').textContent = title;
+  document.getElementById('rptBdSub').textContent   = sub;
+  document.getElementById('rptBdBody').innerHTML    = body;
+  var panel = document.getElementById('rptBreakdown');
+  panel.classList.remove('hidden');
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 // ── End of Day ────────────────────────────────────────────────

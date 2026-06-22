@@ -1709,6 +1709,48 @@ a:hover { text-decoration: underline; }
 }
 .rpt-kpi2-card { position: relative; }
 .rpt-clickable { cursor: pointer; }
+
+/* ── Inline Breakdown Panel ─────────────────────────────────── */
+.rpt-bd {
+  background: #fff; border-radius: 14px; border: 1px solid #e2e8f0;
+  margin-bottom: 20px; overflow: hidden;
+  animation: rptBdSlide 0.2s ease;
+}
+@keyframes rptBdSlide {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.rpt-bd-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px; background: #f8fafc; border-bottom: 1px solid #f1f5f9;
+}
+.rpt-bd-title { font-size: 14px; font-weight: 700; color: #0f172a; }
+.rpt-bd-sub   { font-size: 12px; color: #64748b; margin-top: 2px; }
+.rpt-bd-close {
+  background: none; border: none; font-size: 16px; color: #94a3b8;
+  cursor: pointer; padding: 4px 8px; border-radius: 6px; line-height: 1;
+}
+.rpt-bd-close:hover { background: #e2e8f0; color: #0f172a; }
+.rpt-bd-body  { padding: 16px 20px; }
+.rpt-bd-grid  { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.rpt-bd-item  {
+  background: #f8fafc; border-radius: 10px; padding: 12px 14px;
+  border: 1px solid #f1f5f9;
+}
+.rpt-bd-item-lbl  { font-size: 11px; color: #64748b; font-weight: 600; margin-bottom: 4px; }
+.rpt-bd-item-val  { font-size: 22px; font-weight: 800; color: #0f172a; line-height: 1.1; }
+.rpt-bd-item-note { font-size: 11px; color: #94a3b8; margin-top: 3px; }
+.rpt-bd-bar { height: 4px; background: #e2e8f0; border-radius: 2px; margin-top: 10px; }
+.rpt-bd-bar-fill { height: 100%; border-radius: 2px; background: #c9a96e; transition: width 0.4s ease; }
+.rpt-bd-list-wrap { margin-top: 14px; border-top: 1px solid #f1f5f9; padding-top: 12px; }
+.rpt-bd-list-title { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+.rpt-bd-row {
+  display: flex; justify-content: space-between; align-items: center;
+  background: #f8fafc; border-radius: 8px; padding: 8px 12px;
+  margin-bottom: 6px; font-size: 12px;
+}
+.rpt-bd-guest  { font-weight: 700; color: #0f172a; }
+.rpt-bd-detail { color: #64748b; font-size: 12px; }
 .stat-note {
   font-size: 11px;
   color: #94a3b8;
