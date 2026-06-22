@@ -30,6 +30,25 @@ const ROOMS = {
   c2:  { name: 'Large Group Room',  code: 'C2', floor: 'Second Floor',  bed: '3 Bunk + 1 Single (7 Beds)',    max: 7, price: 275, img: 'twin-room',   tags: ['7 Guests',  'Largest Room'] },
 };
 
+// ---------- Load live prices from admin settings ----------
+// Runs silently on page load; falls back to hardcoded prices if fetch fails.
+(function loadLivePrices() {
+  fetch(API_BASE + '/api/settings')
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+      if (!res || !res.data) return;
+      var d = res.data;
+      Object.keys(ROOMS).forEach(function(key) {
+        var val = d['price_' + key];
+        if (val !== undefined) {
+          var p = parseInt(val, 10);
+          if (!isNaN(p) && p > 0) ROOMS[key].price = p;
+        }
+      });
+    })
+    .catch(function() { /* silently use hardcoded fallbacks */ });
+})();
+
 // ---------- State ----------
 const state = {
   checkin: '', checkout: '', nights: 0,

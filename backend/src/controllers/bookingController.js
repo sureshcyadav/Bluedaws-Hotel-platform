@@ -21,7 +21,21 @@ async function createBooking(req, res) {
 
   const room   = VALID_ROOMS[room_code.toLowerCase()];
   const nights = Math.round((new Date(checkout_date) - new Date(checkin_date)) / 86400000);
-  const total  = nights * room.price;
+
+  // Fetch the current price from admin settings; fall back to hardcoded if missing
+  let pricePerNight = room.price;
+  try {
+    const { rows: priceRow } = await pool.query(
+      'SELECT value FROM settings WHERE key = $1',
+      ['price_' + room_code.toLowerCase()]
+    );
+    if (priceRow.length > 0) {
+      const dbPrice = parseFloat(priceRow[0].value);
+      if (!isNaN(dbPrice) && dbPrice > 0) pricePerNight = dbPrice;
+    }
+  } catch (_) { /* use hardcoded fallback */ }
+
+  const total = nights * pricePerNight;
 
   // Use a transaction + FOR UPDATE lock so two simultaneous requests
   // for the same room cannot both pass the availability check.
@@ -83,7 +97,7 @@ async function createBooking(req, res) {
       ref,
       guest_first_name.trim(), guest_last_name.trim(),
       guest_email.trim(), guest_phone.trim(), guest_country.trim(),
-      room_code.toLowerCase(), room.name, room.floor, room.bed, room.price,
+      room_code.toLowerCase(), room.name, room.floor, room.bed, pricePerNight,
       checkin_date, checkout_date, nights,
       Number(adults), Number(children),
       total, payment_method, special_requests || null,
