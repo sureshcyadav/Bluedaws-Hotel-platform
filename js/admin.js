@@ -2024,6 +2024,138 @@ var _rptData = null;
   });
 });
 
+// ── Monthly Revenue Chart (shared bar / line renderer) ────────
+var _revGrid = null, _revGridTop = 100, _revChartMode = 'bar';
+
+function _fmtRevK(v) {
+  if (v === 0) return '£0';
+  return v >= 1000 ? '£' + (v % 1000 === 0 ? v/1000 : (v/1000).toFixed(1)) + 'k' : '£' + v;
+}
+
+function _setRevChart(mode) {
+  _revChartMode = mode;
+  _drawRevChart();
+}
+
+function _drawRevChart() {
+  if (!_revGrid) return;
+  var grid = _revGrid, gridTop = _revGridTop, fmtK = _fmtRevK;
+
+  var yHtml = '<div class="rvc-yaxis">'
+    + [4,3,2,1,0].map(function(i) { return '<span>' + fmtK(Math.round(gridTop * i / 4)) + '</span>'; }).join('')
+    + '</div>';
+
+  var glHtml = '<div class="rvc-grids">'
+    + '<div class="rvc-gl"></div><div class="rvc-gl"></div><div class="rvc-gl"></div>'
+    + '<div class="rvc-gl"></div><div class="rvc-gl rvc-gl-zero"></div>'
+    + '</div>';
+
+  var switchHtml = '<div class="rvc-switch-row">'
+    + '<button class="rvc-switch' + (_revChartMode === 'bar' ? ' rvc-switch-on' : '') + '" onclick="_setRevChart(\'bar\')">'
+    + '<svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true"><rect x="0" y="4" width="3" height="8" rx="1"/><rect x="4.5" y="1" width="3" height="11" rx="1"/><rect x="9" y="6" width="3" height="6" rx="1"/></svg>'
+    + ' Bar</button>'
+    + '<button class="rvc-switch' + (_revChartMode === 'line' ? ' rvc-switch-on' : '') + '" onclick="_setRevChart(\'line\')">'
+    + '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><polyline points="0,10 3,5 7,7 11,1"/><circle cx="3" cy="5" r="1.5" fill="currentColor" stroke="none"/><circle cx="7" cy="7" r="1.5" fill="currentColor" stroke="none"/><circle cx="11" cy="1" r="1.5" fill="currentColor" stroke="none"/></svg>'
+    + ' Line</button>'
+    + '</div>';
+
+  var bodyHtml;
+
+  if (_revChartMode === 'line') {
+    var colsHtml = grid.map(function(s) {
+      var pct  = gridTop > 0 ? (s.rev / gridTop) * 100 : 0;
+      var cls  = 'rvc-col' + (s.isCur ? ' rvc-cur' : '') + (s.rev === 0 ? ' rvc-zero' : '');
+      var tip  = s.mon + ' 20' + s.yr + ': £' + s.rev.toLocaleString()
+               + ' (' + s.bk + ' booking' + (s.bk !== 1 ? 's' : '') + ')';
+      var xLbl = s.mon + (s.isJan || s.isCur ? '<br><span class="rvc-yr">\''+s.yr+'</span>' : '');
+      return '<div class="' + cls + '" title="' + tip + '">'
+        + '<div class="rvc-amt">' + (s.rev > 0 ? fmtK(s.rev) : '') + '</div>'
+        + '<div class="rvc-track rvc-track-line"><div class="rvc-ldot' + (s.isCur ? ' rvc-ldot-cur' : '') + (s.rev === 0 ? ' rvc-ldot-zero' : '') + '" style="bottom:' + pct.toFixed(2) + '%"></div></div>'
+        + '<div class="rvc-lbl">' + xLbl + '</div>'
+        + '</div>';
+    }).join('');
+    bodyHtml = '<div class="rvc-body">'
+      + glHtml
+      + '<canvas id="rvcLineCanvas" class="rvc-canvas"></canvas>'
+      + '<div class="rvc-bars">' + colsHtml + '</div>'
+      + '</div>';
+  } else {
+    var barsHtml = grid.map(function(s) {
+      var pct = gridTop > 0 ? Math.max((s.rev / gridTop) * 100, s.rev > 0 ? 3 : 0) : 0;
+      var cls  = 'rvc-col' + (s.isCur ? ' rvc-cur' : '') + (s.rev === 0 ? ' rvc-zero' : '');
+      var tip  = s.mon + ' 20' + s.yr + ': £' + s.rev.toLocaleString()
+               + ' (' + s.bk + ' booking' + (s.bk !== 1 ? 's' : '') + ')';
+      var xLbl = s.mon + (s.isJan || s.isCur ? '<br><span class="rvc-yr">\''+s.yr+'</span>' : '');
+      return '<div class="' + cls + '" title="' + tip + '">'
+        + '<div class="rvc-amt">' + (s.rev > 0 ? fmtK(s.rev) : '') + '</div>'
+        + '<div class="rvc-track"><div class="rvc-fill" style="height:' + pct.toFixed(1) + '%"></div></div>'
+        + '<div class="rvc-lbl">' + xLbl + '</div>'
+        + '</div>';
+    }).join('');
+    bodyHtml = '<div class="rvc-body">'
+      + glHtml
+      + '<div class="rvc-bars">' + barsHtml + '</div>'
+      + '</div>';
+  }
+
+  document.getElementById('revChart').innerHTML =
+    '<div class="rvc-wrap">' + yHtml + bodyHtml + '</div>' + switchHtml;
+
+  // Draw canvas line after layout is complete
+  if (_revChartMode === 'line') {
+    requestAnimationFrame(function() {
+      var canvas = document.getElementById('rvcLineCanvas');
+      if (!canvas) return;
+      var body = canvas.parentElement;
+      // Canvas covers rvc-track area: top=14px (after amt row), bottom=30px (above label row)
+      canvas.width  = body.clientWidth;
+      canvas.height = Math.max(body.clientHeight - 44, 1); // 14 (amt) + 30 (lbl)
+      var W = canvas.width, H = canvas.height, n = grid.length;
+      var ctx = canvas.getContext('2d');
+
+      var pts = grid.map(function(g, i) {
+        return {
+          x: (i + 0.5) / n * W,
+          y: H * (1 - (gridTop > 0 ? g.rev / gridTop : 0)),
+        };
+      });
+
+      function buildPath() {
+        ctx.moveTo(pts[0].x, pts[0].y);
+        for (var i = 1; i < pts.length; i++) {
+          var p = pts[i-1], c = pts[i];
+          var cp1x = p.x + (c.x - p.x) * 0.45;
+          var cp2x = c.x - (c.x - p.x) * 0.45;
+          ctx.bezierCurveTo(cp1x, p.y, cp2x, c.y, c.x, c.y);
+        }
+      }
+
+      // Gradient area fill
+      var grad = ctx.createLinearGradient(0, 0, 0, H);
+      grad.addColorStop(0, 'rgba(201,169,110,0.20)');
+      grad.addColorStop(1, 'rgba(201,169,110,0.02)');
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x, H);
+      ctx.lineTo(pts[0].x, pts[0].y);
+      buildPath();
+      ctx.lineTo(pts[n-1].x, H);
+      ctx.closePath();
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // Line
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x, pts[0].y);
+      buildPath();
+      ctx.strokeStyle = '#c9a96e';
+      ctx.lineWidth   = 2.5;
+      ctx.lineJoin    = 'round';
+      ctx.lineCap     = 'round';
+      ctx.stroke();
+    });
+  }
+}
+
 // ── Overview Analytics ────────────────────────────────────────
 async function loadReports() {
   ['reportsSummary','reportsSummary2','revChart','roomsChart','paymentsChart','nationsChart','statusChart']
@@ -2077,13 +2209,11 @@ function renderReports(d) {
       + '<p class="stat-note">' + x.note + '</p></div></div>';
   }).join('');
 
-  // Monthly revenue bar chart — always render all 12 months
+  // Monthly revenue chart — build grid then hand off to _drawRevChart
   (function() {
     var monthly = d.monthly || [];
     var now = new Date();
     var MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-
-    // Build full 12-month grid (oldest first)
     var grid = [];
     for (var mi = 11; mi >= 0; mi--) {
       var dt = new Date(now.getFullYear(), now.getMonth() - mi, 1);
@@ -2100,46 +2230,13 @@ function renderReports(d) {
       var s = grid.find(function(g) { return g.key === m.month; });
       if (s) { s.rev = Number(m.revenue); s.bk = Number(m.bookings); }
     });
-
     var maxRev = Math.max.apply(null, grid.map(function(g) { return g.rev; }).concat([100]));
-    // Round ceiling up to a nice number
     var mag = Math.pow(10, Math.floor(Math.log10(maxRev)));
     var gridTop = Math.ceil(maxRev / mag) * mag;
     if (gridTop < maxRev * 1.1) gridTop += mag / 2;
-
-    function fmtK(v) {
-      if (v === 0) return '£0';
-      return v >= 1000 ? '£' + (v % 1000 === 0 ? v/1000 : (v/1000).toFixed(1)) + 'k' : '£' + v;
-    }
-
-    // Y-axis: 5 levels top → 0
-    var yHtml = '<div class="rvc-yaxis">'
-      + [4,3,2,1,0].map(function(i) { return '<span>' + fmtK(Math.round(gridTop * i / 4)) + '</span>'; }).join('')
-      + '</div>';
-
-    // 5 horizontal gridlines
-    var glHtml = '<div class="rvc-grids">'
-      + '<div class="rvc-gl"></div><div class="rvc-gl"></div><div class="rvc-gl"></div>'
-      + '<div class="rvc-gl"></div><div class="rvc-gl rvc-gl-zero"></div>'
-      + '</div>';
-
-    var barsHtml = grid.map(function(s) {
-      var pct = gridTop > 0 ? Math.max((s.rev / gridTop) * 100, s.rev > 0 ? 3 : 0) : 0;
-      var cls  = 'rvc-col' + (s.isCur ? ' rvc-cur' : '') + (s.rev === 0 ? ' rvc-zero' : '');
-      var tip  = s.mon + ' 20' + s.yr + ': £' + s.rev.toLocaleString()
-               + ' (' + s.bk + ' booking' + (s.bk !== 1 ? 's' : '') + ')';
-      var xLbl = s.mon + (s.isJan || s.isCur ? '<br><span class="rvc-yr">\''+s.yr+'</span>' : '');
-      return '<div class="' + cls + '" title="' + tip + '">'
-        + '<div class="rvc-amt">' + (s.rev > 0 ? fmtK(s.rev) : '') + '</div>'
-        + '<div class="rvc-track"><div class="rvc-fill" style="height:' + pct.toFixed(1) + '%"></div></div>'
-        + '<div class="rvc-lbl">' + xLbl + '</div>'
-        + '</div>';
-    }).join('');
-
-    document.getElementById('revChart').innerHTML =
-      '<div class="rvc-wrap">' + yHtml
-      + '<div class="rvc-body">' + glHtml
-      + '<div class="rvc-bars">' + barsHtml + '</div></div></div>';
+    _revGrid    = grid;
+    _revGridTop = gridTop;
+    _drawRevChart();
   }());
 
   // Top rooms
