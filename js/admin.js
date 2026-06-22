@@ -1240,7 +1240,9 @@ function _runPDF(html, filename, btnId, btnLabel, opts) {
   function doRender() {
     // Fresh container appended to body — visible to html2canvas
     var wrap = document.createElement('div');
-    wrap.style.cssText = 'position:absolute;left:-99999px;top:0;width:' + pageWidth + 'px;background:#fff;overflow:visible;z-index:0';
+    // top:-99999px keeps it above the viewport (x=0) so html2canvas
+    // capture-origin aligns with the element's left edge correctly.
+    wrap.style.cssText = 'position:absolute;left:0;top:-99999px;width:' + pageWidth + 'px;background:#fff;overflow:visible;z-index:0';
     document.body.appendChild(wrap);
     wrap.innerHTML = html;
 
@@ -2217,109 +2219,205 @@ function renderEod(d) {
 // ── EOD PDF download ──────────────────────────────────────────
 function downloadEodPDF() {
   var d = _eodData;
-  if (!d) { alert('EOD data not yet loaded. Please wait for the report to load.'); return; }
+  if (!d) { alert('Please wait for the End of Day report to finish loading.'); return; }
 
   var s       = d.summary;
   var today   = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   var genTime = new Date(d.generated_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  var totalRev = Number(s.new_revenue_today) + Number(s.payments_today);
 
-  // ── helpers ──────────────────────────────────────────────────
-  // table-layout:fixed + explicit colgroup = consistent widths in html2canvas
-  var COLS = '<colgroup><col style="width:17%"><col style="width:26%"><col style="width:23%"><col style="width:16%"><col style="width:18%"></colgroup>';
-  var TH   = function(t, align) {
-    return '<th style="padding:6px 8px;font-size:9px;font-weight:700;text-align:' + (align||'left') + ';color:#475569;border-bottom:1.5px solid #e2e8f0">' + t + '</th>';
-  };
-  var THEAD = '<thead><tr style="background:#f8fafc">' + TH('REF') + TH('GUEST') + TH('ROOM') + TH('TOTAL','right') + TH('PAYMENT') + '</tr></thead>';
+  // ─────────────────────────────────────────────────────────────
+  // Helpers — NO flexbox/gap (html2canvas 1.x doesn't support gap)
+  // Use tables + inline elements only
+  // ─────────────────────────────────────────────────────────────
 
+  // Section header block
+  function secHead(title, count) {
+    return '<table width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;margin-bottom:0">'
+      + '<tr><td style="background:#0f172a;padding:8px 12px;border-radius:4px 4px 0 0">'
+      + '<span style="font-size:10px;font-weight:800;color:#c9a96e;letter-spacing:0.8px;text-transform:uppercase">' + title + '</span>'
+      + '&nbsp;&nbsp;<span style="font-size:9.5px;color:#94a3b8">' + count + ' record' + (count !== 1 ? 's' : '') + '</span>'
+      + '</td></tr></table>';
+  }
+
+  // Guest data rows — 5 fixed-width columns, NO flex
   function guestRows(arr) {
     if (!arr || !arr.length) {
-      return '<tr><td colspan="5" style="padding:12px;color:#94a3b8;text-align:center;font-size:10.5px;font-style:italic">None</td></tr>';
+      return '<tr><td colspan="5" style="padding:11px 12px;color:#94a3b8;text-align:center;font-size:10px;font-style:italic">None today</td></tr>';
     }
-    return arr.map(function(b) {
+    return arr.map(function(b, i) {
       var paid   = b.payment_status === 'paid';
       var bal    = Number(b.total_amount || 0) - Number(b.amount_paid || 0);
-      var pColor = paid ? '#16a34a' : '#ef4444';
-      var pLabel = paid ? '&#10003; Paid' : '£' + bal.toLocaleString() + ' due';
-      return '<tr style="border-bottom:1px solid #f4f6f8">'
-        + '<td style="padding:7px 8px;font-size:9.5px;font-family:monospace;font-weight:700;overflow:hidden">' + esc(b.ref) + '</td>'
-        + '<td style="padding:7px 8px;font-size:10.5px;font-weight:600;overflow:hidden">' + esc(b.guest_first_name) + ' ' + esc(b.guest_last_name) + '</td>'
-        + '<td style="padding:7px 8px;font-size:10px;overflow:hidden">' + b.room_code.toUpperCase() + ' ' + esc(b.room_name) + '</td>'
-        + '<td style="padding:7px 8px;font-size:10.5px;font-weight:700;text-align:right">£' + Number(b.total_amount).toLocaleString() + '</td>'
-        + '<td style="padding:7px 8px;font-size:10px;font-weight:700;color:' + pColor + '">' + pLabel + '</td>'
+      var pCol   = paid ? '#16a34a' : '#ef4444';
+      var pTxt   = paid ? 'PAID' : 'DUE £' + bal.toLocaleString();
+      var bg     = i % 2 === 0 ? '#fff' : '#fafbfc';
+      return '<tr style="background:' + bg + '">'
+        + '<td style="padding:7px 10px;font-size:9px;font-family:monospace;font-weight:700;color:#0f172a;border-bottom:1px solid #f1f5f9">' + esc(b.ref) + '</td>'
+        + '<td style="padding:7px 10px;font-size:10.5px;font-weight:700;color:#0f172a;border-bottom:1px solid #f1f5f9">' + esc(b.guest_first_name) + ' ' + esc(b.guest_last_name) + '</td>'
+        + '<td style="padding:7px 10px;font-size:10px;color:#334155;border-bottom:1px solid #f1f5f9">' + b.room_code.toUpperCase() + ' &bull; ' + esc(b.room_name) + '</td>'
+        + '<td style="padding:7px 10px;font-size:10.5px;font-weight:700;text-align:right;color:#0f172a;border-bottom:1px solid #f1f5f9">£' + Number(b.total_amount).toLocaleString() + '</td>'
+        + '<td style="padding:7px 10px;font-size:9.5px;font-weight:800;color:' + pCol + ';border-bottom:1px solid #f1f5f9">' + pTxt + '</td>'
         + '</tr>';
     }).join('');
   }
 
+  // Full section block (header + fixed-layout table + rows)
   function section(title, arr) {
-    return '<div style="margin-bottom:20px">'
-      + '<div style="background:#0f172a;padding:8px 14px;border-radius:5px 5px 0 0;display:flex;align-items:center;gap:10px">'
-      + '<span style="font-size:10.5px;font-weight:800;color:#c9a96e;letter-spacing:0.5px;text-transform:uppercase">' + title + '</span>'
-      + '<span style="font-size:10px;color:#94a3b8;background:rgba(255,255,255,0.1);padding:1px 7px;border-radius:10px">' + (arr ? arr.length : 0) + '</span>'
-      + '</div>'
-      + '<table style="width:100%;border-collapse:collapse;table-layout:fixed;border:1px solid #e2e8f0;border-top:none">'
-      + COLS + THEAD
+    var n = arr ? arr.length : 0;
+    return '<div style="margin-bottom:18px">'
+      + secHead(title, n)
+      + '<table width="100%" cellspacing="0" cellpadding="0" border="0"'
+      + ' style="border-collapse:collapse;table-layout:fixed;border:1px solid #e2e8f0;border-top:none">'
+      + '<colgroup><col width="17%"><col width="26%"><col width="25%"><col width="15%"><col width="17%"></colgroup>'
+      + '<thead><tr style="background:#f8fafc">'
+      + '<th style="padding:6px 10px;font-size:8.5px;font-weight:700;text-align:left;color:#64748b;border-bottom:1px solid #e2e8f0">BOOKING REF</th>'
+      + '<th style="padding:6px 10px;font-size:8.5px;font-weight:700;text-align:left;color:#64748b;border-bottom:1px solid #e2e8f0">GUEST NAME</th>'
+      + '<th style="padding:6px 10px;font-size:8.5px;font-weight:700;text-align:left;color:#64748b;border-bottom:1px solid #e2e8f0">ROOM</th>'
+      + '<th style="padding:6px 10px;font-size:8.5px;font-weight:700;text-align:right;color:#64748b;border-bottom:1px solid #e2e8f0">TOTAL</th>'
+      + '<th style="padding:6px 10px;font-size:8.5px;font-weight:700;text-align:left;color:#64748b;border-bottom:1px solid #e2e8f0">STATUS</th>'
+      + '</tr></thead>'
       + '<tbody>' + guestRows(arr) + '</tbody>'
       + '</table></div>';
   }
 
-  // ── KPI row cells ─────────────────────────────────────────────
-  var kpiItems = [
-    { l: 'Arrivals',          v: s.arrivals_today,                                       c: '#0891b2' },
-    { l: 'Departures',        v: s.departures_today,                                     c: '#7c3aed' },
-    { l: 'In House',          v: s.in_house_count,                                       c: '#059669' },
-    { l: 'New Bookings',      v: s.new_bookings_today,                                   c: '#0f172a' },
-    { l: 'Revenue Today',     v: '£' + Number(s.new_revenue_today).toLocaleString(),     c: '#c9a96e' },
-    { l: 'Payments Received', v: '£' + Number(s.payments_today).toLocaleString(),        c: '#16a34a' },
-    { l: 'Outstanding',       v: '£' + Number(s.outstanding).toLocaleString(),           c: '#ef4444' },
-  ];
+  // Small blank checklist line (for night auditor notes)
+  function checkLine(label) {
+    return '<tr><td style="padding:6px 10px;font-size:10px;color:#334155;border-bottom:1px solid #f1f5f9">'
+      + '<span style="display:inline-block;width:14px;height:14px;border:1.5px solid #cbd5e1;border-radius:3px;margin-right:8px;vertical-align:middle"></span>'
+      + label + '</td></tr>';
+  }
 
+  // ─── Build HTML ───────────────────────────────────────────────
   var html =
-    // ── outer wrapper — width matches _runPDF default (730px) ───
-    '<div style="font-family:Arial,Helvetica,sans-serif;background:#fff;padding:0">'
+    '<div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#0f172a;background:#fff;width:730px;padding:0">'
 
-    // hotel header
-    + '<div style="background:#0f172a;padding:20px 28px">'
-    + '<table style="width:100%;border-collapse:collapse;table-layout:fixed"><tr>'
-    + '<td style="width:55%;vertical-align:top">'
-    + '<div style="font-size:8px;font-weight:700;letter-spacing:2px;color:#c9a96e;margin-bottom:3px">PRIVATE HOTEL &middot; LONDON</div>'
-    + '<div style="font-size:22px;font-weight:900;color:#fff;letter-spacing:1px">BLUEDAWS</div>'
-    + '<div style="font-size:10px;color:#64748b;margin-top:3px">133-135 Sussex Gardens, Hyde Park, London W2 2RX</div>'
-    + '</td>'
-    + '<td style="width:45%;text-align:right;vertical-align:top">'
-    + '<div style="font-size:16px;font-weight:900;color:#fff;letter-spacing:0.5px">END OF DAY REPORT</div>'
-    + '<div style="font-size:11.5px;color:#c9a96e;margin-top:5px;font-weight:700">' + today + '</div>'
-    + '<div style="font-size:10px;color:#64748b;margin-top:3px">Generated at ' + genTime + '</div>'
-    + '</td></tr></table>'
-    + '</div>'
-    + '<div style="height:3px;background:linear-gradient(90deg,#c9a96e,#e8c98a,#c9a96e)"></div>'
-
-    // KPI strip — table-layout:fixed prevents overflow
-    + '<div style="padding:16px 28px 8px;background:#f8fafc;border-bottom:1px solid #e2e8f0">'
-    + '<table style="width:100%;border-collapse:collapse;table-layout:fixed">'
+    // ── Hotel header ──────────────────────────────────────────────
+    + '<table width="730" cellspacing="0" cellpadding="0" border="0"'
+    + ' style="border-collapse:collapse;background:#0f172a">'
     + '<tr>'
-    + kpiItems.map(function(k) {
-        return '<td style="padding:10px 4px;text-align:center">'
-          + '<div style="font-size:18px;font-weight:900;color:' + k.c + ';line-height:1">' + k.v + '</div>'
-          + '<div style="font-size:8.5px;color:#64748b;margin-top:3px;text-transform:uppercase;letter-spacing:0.4px;font-weight:600">' + k.l + '</div>'
+    + '<td width="360" style="padding:20px 24px;vertical-align:top">'
+    + '<div style="font-size:7.5px;font-weight:700;letter-spacing:2px;color:#c9a96e;margin-bottom:4px">PRIVATE HOTEL &middot; LONDON</div>'
+    + '<div style="font-size:24px;font-weight:900;color:#fff;letter-spacing:1px">BLUEDAWS</div>'
+    + '<div style="font-size:9px;color:#64748b;margin-top:4px">133-135 Sussex Gardens, Hyde Park, London W2 2RX</div>'
+    + '<div style="font-size:9px;color:#64748b;margin-top:1px">Tel: 034556846892 &nbsp;&bull;&nbsp; bluedawsprivatehotel@gmail.com</div>'
+    + '</td>'
+    + '<td width="370" style="padding:20px 24px;vertical-align:top;text-align:right">'
+    + '<div style="font-size:17px;font-weight:900;color:#fff;letter-spacing:0.5px">END OF DAY REPORT</div>'
+    + '<div style="font-size:12px;color:#c9a96e;margin-top:6px;font-weight:700">' + today + '</div>'
+    + '<div style="font-size:9.5px;color:#64748b;margin-top:4px">Generated at ' + genTime + ' &nbsp;&bull;&nbsp; Night Audit Copy</div>'
+    + '</td>'
+    + '</tr>'
+    + '<tr><td colspan="2" style="height:3px;background:linear-gradient(90deg,#c9a96e,#e8c98a,#c9a96e)"></td></tr>'
+    + '</table>'
+
+    // ── KPI summary strip ─────────────────────────────────────────
+    + '<table width="730" cellspacing="0" cellpadding="0" border="0"'
+    + ' style="border-collapse:collapse;table-layout:fixed;background:#f8fafc;border-bottom:2px solid #e2e8f0">'
+    + '<tr>'
+    + [
+        { l:'ARRIVALS',          v: s.arrivals_today,                                       c:'#0891b2' },
+        { l:'DEPARTURES',        v: s.departures_today,                                     c:'#7c3aed' },
+        { l:'IN HOUSE',          v: s.in_house_count,                                       c:'#059669' },
+        { l:'NEW BOOKINGS',      v: s.new_bookings_today,                                   c:'#334155' },
+        { l:'REVENUE TODAY',     v:'£'+Number(s.new_revenue_today).toLocaleString(),        c:'#c9a96e' },
+        { l:'PAYMENTS RECV.',    v:'£'+Number(s.payments_today).toLocaleString(),           c:'#16a34a' },
+        { l:'OUTSTANDING',       v:'£'+Number(s.outstanding).toLocaleString(),              c:'#ef4444' },
+      ].map(function(k) {
+        return '<td style="padding:13px 4px;text-align:center;border-right:1px solid #e2e8f0">'
+          + '<div style="font-size:19px;font-weight:900;color:' + k.c + ';line-height:1">' + k.v + '</div>'
+          + '<div style="font-size:7.5px;color:#64748b;margin-top:4px;font-weight:700;letter-spacing:0.5px">' + k.l + '</div>'
           + '</td>';
       }).join('')
     + '</tr></table>'
-    + '</div>'
 
-    // sections
-    + '<div style="padding:16px 28px 24px">'
-    + section('Arrivals Today',       d.arrivals)
-    + section('Departures Today',     d.departures)
-    + section('Currently In House',   d.in_house)
-    + section('New Bookings Today',   d.new_bookings)
-    + (d.cancellations && d.cancellations.length ? section('Cancellations Today', d.cancellations) : '')
+    // ── Main content ──────────────────────────────────────────────
+    + '<div style="padding:16px 24px 0">'
 
-    // footer
-    + '<div style="margin-top:20px;padding-top:10px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center">'
-    + '<div style="font-size:9px;color:#94a3b8;font-weight:500">Bluedaws Private Hotel &mdash; Confidential</div>'
-    + '<div style="font-size:9px;color:#94a3b8;font-weight:500">End of Day Report &mdash; ' + today + '</div>'
-    + '</div>'
-    + '</div></div>';
+    // Arrivals
+    + section('ARRIVALS TODAY — Guests Checking In', d.arrivals)
+
+    // Departures
+    + section('DEPARTURES TODAY — Guests Checking Out', d.departures)
+
+    // In House
+    + section('CURRENTLY IN HOUSE — All Staying Guests', d.in_house)
+
+    // New Bookings
+    + section('NEW BOOKINGS MADE TODAY', d.new_bookings)
+
+    // Cancellations (only if any)
+    + (d.cancellations && d.cancellations.length ? section('CANCELLATIONS TODAY', d.cancellations) : '')
+
+    // ── Financial summary ─────────────────────────────────────────
+    + '<div style="margin-bottom:18px">'
+    + secHead('FINANCIAL SUMMARY', '')
+    + '<table width="100%" cellspacing="0" cellpadding="0" border="0"'
+    + ' style="border-collapse:collapse;table-layout:fixed;border:1px solid #e2e8f0;border-top:none">'
+    + '<colgroup><col width="50%"><col width="25%"><col width="25%"></colgroup>'
+    + '<thead><tr style="background:#f8fafc">'
+    + '<th style="padding:6px 12px;font-size:8.5px;font-weight:700;text-align:left;color:#64748b;border-bottom:1px solid #e2e8f0">ITEM</th>'
+    + '<th style="padding:6px 12px;font-size:8.5px;font-weight:700;text-align:right;color:#64748b;border-bottom:1px solid #e2e8f0">AMOUNT</th>'
+    + '<th style="padding:6px 12px;font-size:8.5px;font-weight:700;text-align:left;color:#64748b;border-bottom:1px solid #e2e8f0">NOTE</th>'
+    + '</tr></thead><tbody>'
+    + '<tr style="background:#fff"><td style="padding:7px 12px;font-size:10px;color:#334155;border-bottom:1px solid #f1f5f9">Revenue from New Bookings Today</td><td style="padding:7px 12px;font-size:10.5px;font-weight:700;text-align:right;color:#0f172a;border-bottom:1px solid #f1f5f9">£' + Number(s.new_revenue_today).toLocaleString() + '</td><td style="padding:7px 12px;font-size:9.5px;color:#64748b;border-bottom:1px solid #f1f5f9">' + s.new_bookings_today + ' booking' + (s.new_bookings_today!=='1'?'s':'') + '</td></tr>'
+    + '<tr style="background:#fafbfc"><td style="padding:7px 12px;font-size:10px;color:#334155;border-bottom:1px solid #f1f5f9">Payments Received Today</td><td style="padding:7px 12px;font-size:10.5px;font-weight:700;text-align:right;color:#16a34a;border-bottom:1px solid #f1f5f9">£' + Number(s.payments_today).toLocaleString() + '</td><td style="padding:7px 12px;font-size:9.5px;color:#64748b;border-bottom:1px solid #f1f5f9">Cash, card &amp; bank</td></tr>'
+    + '<tr style="background:#fff"><td style="padding:7px 12px;font-size:10px;color:#334155;border-bottom:1px solid #f1f5f9">Total Outstanding Balance</td><td style="padding:7px 12px;font-size:10.5px;font-weight:700;text-align:right;color:#ef4444;border-bottom:1px solid #f1f5f9">£' + Number(s.outstanding).toLocaleString() + '</td><td style="padding:7px 12px;font-size:9.5px;color:#64748b;border-bottom:1px solid #f1f5f9">Confirmed, unpaid</td></tr>'
+    + '<tr style="background:#0f172a"><td colspan="3" style="padding:8px 12px"><span style="font-size:9.5px;font-weight:700;color:#94a3b8">TOTAL GUESTS IN HOUSE: </span><span style="font-size:11px;font-weight:900;color:#c9a96e">' + s.in_house_count + '</span>&nbsp;&nbsp;&nbsp;<span style="font-size:9.5px;font-weight:700;color:#94a3b8">OCCUPANCY: </span><span style="font-size:11px;font-weight:900;color:#c9a96e">' + Math.round(s.in_house_count/22*100) + '%</span>&nbsp;&nbsp;&nbsp;<span style="font-size:9.5px;font-weight:700;color:#94a3b8">ROOMS AVAILABLE: </span><span style="font-size:11px;font-weight:900;color:#c9a96e">' + (22-Number(s.in_house_count)) + '</span></td></tr>'
+    + '</tbody></table></div>'
+
+    // ── Night Auditor Checklist ───────────────────────────────────
+    + '<div style="margin-bottom:18px">'
+    + secHead('NIGHT AUDITOR CHECKLIST', '')
+    + '<table width="100%" cellspacing="0" cellpadding="0" border="0"'
+    + ' style="border-collapse:collapse;table-layout:fixed;border:1px solid #e2e8f0;border-top:none">'
+    + '<tbody>'
+    + checkLine('All arrivals checked in and rooms allocated')
+    + checkLine('All departures processed and rooms cleared')
+    + checkLine('Outstanding balances chased and noted')
+    + checkLine('Room status updated in system (clean / dirty / maintenance)')
+    + checkLine('Next day arrivals briefed to morning team')
+    + checkLine('Cash float counted and reconciled')
+    + checkLine('Maintenance issues logged')
+    + checkLine('Security walk completed')
+    + '</tbody></table></div>'
+
+    // ── Auditor notes ─────────────────────────────────────────────
+    + '<div style="margin-bottom:18px">'
+    + secHead('AUDITOR NOTES / INCIDENTS', '')
+    + '<table width="100%" cellspacing="0" cellpadding="0" border="0"'
+    + ' style="border-collapse:collapse;table-layout:fixed;border:1px solid #e2e8f0;border-top:none">'
+    + '<tbody>'
+    + '<tr><td style="padding:50px 12px;font-size:10px;color:#cbd5e1;font-style:italic;text-align:center">Write notes here</td></tr>'
+    + '</tbody></table></div>'
+
+    // ── Signature block ───────────────────────────────────────────
+    + '<table width="100%" cellspacing="0" cellpadding="0" border="0"'
+    + ' style="border-collapse:collapse;table-layout:fixed;margin-bottom:16px">'
+    + '<tr>'
+    + '<td width="33%" style="padding:6px 8px">'
+    + '<div style="font-size:9px;color:#64748b;margin-bottom:20px">Night Auditor Name:</div>'
+    + '<div style="border-top:1px solid #0f172a;padding-top:4px;font-size:9px;color:#94a3b8">Signature / Name</div>'
+    + '</td>'
+    + '<td width="33%" style="padding:6px 8px">'
+    + '<div style="font-size:9px;color:#64748b;margin-bottom:20px">Reviewed By:</div>'
+    + '<div style="border-top:1px solid #0f172a;padding-top:4px;font-size:9px;color:#94a3b8">Duty Manager</div>'
+    + '</td>'
+    + '<td width="34%" style="padding:6px 8px">'
+    + '<div style="font-size:9px;color:#64748b;margin-bottom:20px">Report Time:</div>'
+    + '<div style="border-top:1px solid #0f172a;padding-top:4px;font-size:9px;color:#94a3b8">' + genTime + ' &nbsp;on&nbsp; ' + today + '</div>'
+    + '</td>'
+    + '</tr></table>'
+
+    // ── Footer ────────────────────────────────────────────────────
+    + '<table width="100%" cellspacing="0" cellpadding="0" border="0"'
+    + ' style="border-collapse:collapse;table-layout:fixed;background:#0f172a">'
+    + '<tr>'
+    + '<td style="padding:8px 24px;font-size:8.5px;color:#64748b">Bluedaws Private Hotel &mdash; Confidential Staff Document</td>'
+    + '<td style="padding:8px 24px;font-size:8.5px;color:#64748b;text-align:right">End of Day Report &mdash; ' + today + '</td>'
+    + '</tr></table>'
+
+    + '</div>' // main content
+    + '</div>'; // outer
 
   var filename = 'EOD-Report-' + new Date().toISOString().slice(0, 10) + '.pdf';
   _runPDF(html, filename, 'eodPdfBtn', '&#x2B07; Download EOD PDF', { width: 730 });
