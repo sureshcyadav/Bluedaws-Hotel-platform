@@ -11,9 +11,13 @@ const secret = () => process.env.ADMIN_PASSWORD || 'changeme';
 // ── Startup: add new columns & tables if missing ───────────────────────────
 ;(async () => {
   try {
-    await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS admin_notes TEXT`);
-    await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS checked_in_at  TIMESTAMPTZ`);
-    await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS checked_out_at TIMESTAMPTZ`);
+    await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS admin_notes      TEXT`);
+    await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS checked_in_at   TIMESTAMPTZ`);
+    await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS checked_out_at  TIMESTAMPTZ`);
+    await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS guest_id_type    VARCHAR(50)`);
+    await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS guest_id_number  VARCHAR(100)`);
+    await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS guest_dob        DATE`);
+    await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS guest_nationality VARCHAR(100)`);
     await pool.query(`
       CREATE TABLE IF NOT EXISTS room_blocks (
         id         SERIAL PRIMARY KEY,
@@ -204,6 +208,36 @@ router.patch('/bookings/:id/checkout', adminAuth, async (req, res) => {
     const { rowCount } = await pool.query(
       `UPDATE bookings SET checked_out_at=NOW() WHERE id=$1`, [req.params.id]
     );
+    if (!rowCount) return res.status(404).json({ success: false, message: 'Booking not found.' });
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+});
+
+// PATCH /api/admin/bookings/:id/guest — save guest identity info + notes
+router.patch('/bookings/:id/guest', adminAuth, async (req, res) => {
+  const {
+    guest_id_type, guest_id_number, guest_dob,
+    guest_nationality, admin_notes, special_requests,
+  } = req.body || {};
+  try {
+    const { rowCount } = await pool.query(`
+      UPDATE bookings SET
+        guest_id_type     = $1,
+        guest_id_number   = $2,
+        guest_dob         = $3,
+        guest_nationality = $4,
+        admin_notes       = $5,
+        special_requests  = $6
+      WHERE id = $7
+    `, [
+      guest_id_type     || null,
+      guest_id_number   || null,
+      guest_dob         || null,
+      guest_nationality || null,
+      admin_notes       || null,
+      special_requests  || null,
+      req.params.id,
+    ]);
     if (!rowCount) return res.status(404).json({ success: false, message: 'Booking not found.' });
     res.json({ success: true });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }

@@ -7,8 +7,10 @@ let bookingFilter = 'all';
 let contactFilter = 'all';
 
 // ── Calendar state ────────────────────────────────────────────
-let calBookings  = [];
-let calWeekStart = calGetMonday(new Date());
+let calBookings          = [];
+let calBlocks            = [];
+let _calCurrentBookingId = null;
+let calWeekStart         = calGetMonday(new Date());
 
 const CAL_ROOMS = [
   { code:'D6', name:'Single Room'     }, { code:'C3', name:'Twin Room'       },
@@ -646,12 +648,16 @@ function calGoToday() {
 async function loadCalendar() {
   document.getElementById('calGrid').innerHTML = '<div class="table-loading">Loading…</div>';
   try {
-    const { ok, data } = await apiFetch('GET', '/api/admin/bookings');
-    if (!ok) return;
-    calBookings = data.data;
+    const [bRes, blRes] = await Promise.all([
+      apiFetch('GET', '/api/admin/bookings'),
+      apiFetch('GET', '/api/admin/blocks'),
+    ]);
+    if (!bRes.ok) return;
+    calBookings = bRes.data.data;
+    calBlocks   = blRes.ok ? blRes.data.data : [];
     renderCalendar();
   } catch {
-    document.getElementById('calGrid').innerHTML = '<div class="table-error">Failed to load bookings.</div>';
+    document.getElementById('calGrid').innerHTML = '<div class="table-error">Failed to load calendar.</div>';
   }
 }
 
@@ -665,13 +671,11 @@ function renderCalendar() {
     days.push(d);
   }
 
-  // Range label
   var fmt = function(d, o) { return d.toLocaleDateString('en-GB', o); };
   document.getElementById('calRangeLabel').textContent =
     fmt(days[0], { day:'numeric', month:'short' }) + ' – ' +
     fmt(days[6], { day:'numeric', month:'short', year:'numeric' });
 
-  // Header
   var html = '<div class="cal-head-row">';
   html += '<div class="cal-room-col-hdr">Room</div>';
   html += '<div class="cal-days-hdr">';
@@ -684,7 +688,6 @@ function renderCalendar() {
   });
   html += '</div></div>';
 
-  // Rows — one per room, wrapped in .cal-body for flex auto-sizing
   html += '<div class="cal-body">';
   CAL_ROOMS.forEach(function(room) {
     var bookings = calBookings.filter(function(b) {
@@ -693,23 +696,42 @@ function renderCalendar() {
       return new Date(b.checkout_date) > calWeekStart && new Date(b.checkin_date) < weekEnd;
     });
 
-    html += '<div class="cal-row">';
+    var blocks = (calBlocks || []).filter(function(bl) {
+      if (bl.room_code.toUpperCase() !== room.code) return false;
+      var bs = new Date(bl.start_date); bs.setHours(0,0,0,0);
+      var be = new Date(bl.end_date);   be.setHours(0,0,0,0);
+      return be > calWeekStart && bs < weekEnd;
+    });
 
-    // Room label (sticky left)
+    html += '<div class="cal-row">';
     html += '<div class="cal-room-label">'
       + '<strong class="cal-rcode">' + room.code + '</strong>'
-      + '<span class="cal-rname">'  + room.name  + '</span>'
+      + '<span class="cal-rname">'   + room.name + '</span>'
       + '</div>';
-
-    // Cells wrapper
     html += '<div class="cal-cells">';
 
-    // Background day cells
     days.forEach(function(d) {
       html += '<div class="cal-cell' + (d.getTime() === today.getTime() ? ' cal-cell-today' : '') + '"></div>';
     });
 
-    // Booking blocks (absolutely positioned)
+    // Room blocks — hatched grey bars (behind bookings)
+    blocks.forEach(function(bl) {
+      var bs = new Date(bl.start_date); bs.setHours(0,0,0,0);
+      var be = new Date(bl.end_date);   be.setHours(0,0,0,0);
+      var startDay = Math.max(0, Math.round((bs - calWeekStart) / 86400000));
+      var endDay   = Math.min(7, Math.round((be - calWeekStart) / 86400000));
+      var spanDays = endDay - startDay;
+      if (spanDays <= 0) return;
+      var left  = (startDay / 7 * 100).toFixed(3);
+      var width = (spanDays / 7 * 100).toFixed(3);
+      html += '<div class="cal-block cal-bk-blocked"'
+        + ' style="left:' + left + '%;width:' + width + '%;z-index:1"'
+        + ' title="' + esc(bl.reason ? 'Blocked: ' + bl.reason : 'Blocked') + '">'
+        + '<span class="cal-bk-name">&#9888; ' + esc(bl.reason || 'Blocked') + '</span>'
+        + '</div>';
+    });
+
+    // Booking blocks — clickable coloured bars (on top)
     bookings.forEach(function(b) {
       var ci = new Date(b.checkin_date);
       var co = new Date(b.checkout_date);
@@ -721,56 +743,162 @@ function renderCalendar() {
 
       var left  = (startDay / 7 * 100).toFixed(3);
       var width = (spanDays / 7 * 100).toFixed(3);
-      var guestName = b.guest_first_name + ' ' + b.guest_last_name;
+      var guestName  = b.guest_first_name + ' ' + b.guest_last_name;
+      var extraClass = b.checked_in_at ? ' cal-bk-checkedin' : '';
 
-      html += '<div class="cal-block cal-bk-' + b.status + '"'
-        + ' style="left:' + left + '%;width:' + width + '%"'
+      html += '<div class="cal-block cal-bk-' + b.status + extraClass + '"'
+        + ' style="left:' + left + '%;width:' + width + '%;z-index:2"'
         + ' onclick="openCalBooking(' + b.id + ')"'
-        + ' title="' + esc(guestName) + ' · ' + b.ref + '">'
+        + ' title="' + esc(guestName) + ' · ' + b.ref + (b.checked_in_at ? ' · Checked In' : '') + '">'
         + '<span class="cal-bk-name">' + esc(guestName) + '</span>'
-        + '<span class="cal-bk-ref">' + b.ref + '</span>'
+        + '<span class="cal-bk-ref">'  + b.ref + '</span>'
         + '</div>';
     });
 
-    html += '</div></div>'; // end cal-cells, cal-row
+    html += '</div></div>';
   });
-  html += '</div>'; // end cal-body
+  html += '</div>';
 
   document.getElementById('calGrid').innerHTML = html;
 }
 
 function openCalBooking(id) {
   var b = calBookings.find(function(x) { return x.id === id; });
+  if (!b) b = allBookings.find(function(x) { return x.id === id; });
   if (!b) return;
-  var pay = { card:'Card', bank:'Bank Transfer', payathotel:'Pay at Hotel' };
-  document.getElementById('modalTitle').textContent =
-    b.guest_first_name + ' ' + b.guest_last_name + '  ·  Room ' + b.room_code.toUpperCase();
-  document.getElementById('modalBody').innerHTML =
-    '<div class="modal-meta">'
-    + '<span><strong>Ref:</strong> ' + b.ref + '</span>'
-    + '<span><strong>Room:</strong> ' + b.room_name + ' (' + b.room_code.toUpperCase() + ')</span>'
-    + '<span><strong>Check-in:</strong> ' + fmtDate(b.checkin_date) + '</span>'
-    + '<span><strong>Check-out:</strong> ' + fmtDate(b.checkout_date) + '</span>'
-    + '<span><strong>Nights:</strong> ' + b.nights + '</span>'
-    + '<span><strong>Guests:</strong> ' + b.adults + ' adult' + (b.adults !== 1 ? 's' : '')
-      + (b.children > 0 ? ', ' + b.children + ' child' + (b.children !== 1 ? 'ren' : '') : '') + '</span>'
-    + '<span><strong>Total:</strong> £' + Number(b.total_amount).toLocaleString() + '</span>'
-    + '<span><strong>Payment:</strong> ' + (pay[b.payment_method] || b.payment_method) + '</span>'
-    + '<span><strong>Status:</strong> <span class="status-badge status-' + b.status + '">' + b.status + '</span></span>'
-    + (b.special_requests ? '<span><strong>Requests:</strong> ' + esc(b.special_requests) + '</span>' : '')
-    + '</div>'
-    + (b.status === 'pending'
-        ? '<div class="modal-actions">'
-          + '<button class="btn-action btn-confirm" onclick="updateBooking(' + b.id + ',\'confirmed\');document.getElementById(\'messageModal\').classList.add(\'hidden\');loadCalendar()">Confirm Booking</button>'
-          + '<button class="btn-action btn-cancel"  onclick="updateBooking(' + b.id + ',\'cancelled\');document.getElementById(\'messageModal\').classList.add(\'hidden\');loadCalendar()">Cancel</button>'
-          + '</div>'
-        : '')
-    + (b.status === 'confirmed'
-        ? '<div class="modal-actions">'
-          + '<button class="btn-action btn-cancel" onclick="updateBooking(' + b.id + ',\'cancelled\');document.getElementById(\'messageModal\').classList.add(\'hidden\');loadCalendar()">Cancel Booking</button>'
-          + '</div>'
-        : '');
-  document.getElementById('messageModal').classList.remove('hidden');
+  _calCurrentBookingId = id;
+
+  var pay = { card: 'Card', bank: 'Bank Transfer', payathotel: 'Pay at Hotel' };
+
+  // Header
+  document.getElementById('bpTitle').textContent = 'Booking — ' + b.ref;
+  var st = document.getElementById('bpStatus');
+  st.textContent = b.status; st.className = 'status-badge status-' + b.status;
+  document.getElementById('bpCheckinBadge').classList.toggle('hidden', !b.checked_in_at);
+  document.getElementById('bpCheckoutBadge').classList.toggle('hidden', !b.checked_out_at);
+
+  // Stay details
+  document.getElementById('bpRef').textContent      = b.ref;
+  document.getElementById('bpRoom').textContent     = (b.room_name || b.room_code.toUpperCase()) + ' (' + b.room_code.toUpperCase() + ')';
+  document.getElementById('bpCheckin').textContent  = fmtDate(b.checkin_date);
+  document.getElementById('bpCheckout').textContent = fmtDate(b.checkout_date);
+  document.getElementById('bpNights').textContent   = b.nights + (b.nights === 1 ? ' night' : ' nights');
+  document.getElementById('bpGuests').textContent   = b.adults + ' adult' + (b.adults !== 1 ? 's' : '')
+    + (b.children > 0 ? ' · ' + b.children + ' child' + (b.children > 1 ? 'ren' : '') : '');
+  document.getElementById('bpTotal').textContent    = '£' + Number(b.total_amount).toLocaleString();
+  document.getElementById('bpPayment').textContent  = pay[b.payment_method] || b.payment_method;
+
+  // Guest details
+  document.getElementById('bpGuestName').textContent    = b.guest_first_name + ' ' + b.guest_last_name;
+  var em = document.getElementById('bpGuestEmail');
+  em.textContent = b.guest_email; em.href = 'mailto:' + b.guest_email;
+  document.getElementById('bpGuestPhone').textContent   = b.guest_phone   || '—';
+  document.getElementById('bpGuestCountry').textContent = b.guest_country  || '—';
+  document.getElementById('bpBookedOn').textContent     = fmtDate(b.created_at);
+
+  // Identity fields
+  document.getElementById('bp_id_type').value    = b.guest_id_type     || '';
+  document.getElementById('bp_id_number').value  = b.guest_id_number   || '';
+  document.getElementById('bp_dob').value         = b.guest_dob ? b.guest_dob.slice(0, 10) : '';
+  document.getElementById('bp_nationality').value = b.guest_nationality || '';
+
+  // Notes
+  document.getElementById('bp_requests').value = b.special_requests || '';
+  document.getElementById('bp_notes').value    = b.admin_notes      || '';
+
+  // Reset feedback
+  document.getElementById('bpSaveFeedback').classList.add('hidden');
+  document.getElementById('bpSaveError').classList.add('hidden');
+
+  // Action footer buttons
+  var foot = '';
+  if (b.status === 'pending')
+    foot += '<button class="btn-action btn-confirm" onclick="bpAction(\'confirmed\')">Confirm Booking</button>';
+  if (b.status !== 'cancelled')
+    foot += '<button class="btn-action btn-cancel" onclick="bpAction(\'cancelled\')">Cancel Booking</button>';
+  if (b.status === 'cancelled')
+    foot += '<button class="btn-action" style="background:#475569;color:#fff" onclick="bpAction(\'pending\')">Restore Booking</button>';
+  foot += '<span style="flex:1"></span>';
+  if (b.status === 'confirmed' && !b.checked_in_at)
+    foot += '<button class="btn-fd-checkin" style="min-width:110px" onclick="bpCheckIn()">&#10003; Check In</button>';
+  if (b.checked_in_at && !b.checked_out_at)
+    foot += '<button class="btn-fd-checkout" style="min-width:110px" onclick="bpCheckOut()">Check Out</button>';
+  if (b.checked_in_at && b.checked_out_at)
+    foot += '<span class="fd-done-badge">&#10003; Checked Out</span>';
+  document.getElementById('bpFooter').innerHTML = foot;
+
+  document.getElementById('bookingProfileModal').classList.remove('hidden');
+}
+
+async function bpAction(newStatus) {
+  if (!_calCurrentBookingId) return;
+  if (!confirm('Change booking status to "' + newStatus + '"?')) return;
+  const { ok, data } = await apiFetch('PATCH', '/api/admin/bookings/' + _calCurrentBookingId + '/status', { status: newStatus });
+  if (!ok) { alert(data.message || 'Failed to update status.'); return; }
+  [calBookings, allBookings].forEach(arr => {
+    var b = arr.find(x => x.id === _calCurrentBookingId);
+    if (b) b.status = newStatus;
+  });
+  openCalBooking(_calCurrentBookingId);
+  renderCalendar();
+}
+
+async function bpCheckIn() {
+  if (!_calCurrentBookingId) return;
+  const { ok, data } = await apiFetch('PATCH', '/api/admin/bookings/' + _calCurrentBookingId + '/checkin', {});
+  if (!ok) { alert(data.message || 'Check-in failed.'); return; }
+  var ts = new Date().toISOString();
+  [calBookings, allBookings].forEach(arr => {
+    var b = arr.find(x => x.id === _calCurrentBookingId);
+    if (b) { b.checked_in_at = ts; b.status = 'confirmed'; }
+  });
+  openCalBooking(_calCurrentBookingId);
+  renderCalendar();
+}
+
+async function bpCheckOut() {
+  if (!_calCurrentBookingId || !confirm('Mark guest as checked out?')) return;
+  const { ok, data } = await apiFetch('PATCH', '/api/admin/bookings/' + _calCurrentBookingId + '/checkout', {});
+  if (!ok) { alert(data.message || 'Check-out failed.'); return; }
+  var ts = new Date().toISOString();
+  [calBookings, allBookings].forEach(arr => {
+    var b = arr.find(x => x.id === _calCurrentBookingId);
+    if (b) b.checked_out_at = ts;
+  });
+  openCalBooking(_calCurrentBookingId);
+  renderCalendar();
+}
+
+async function saveGuestProfile() {
+  if (!_calCurrentBookingId) return;
+  const btn = document.getElementById('bpSaveBtn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  document.getElementById('bpSaveFeedback').classList.add('hidden');
+  document.getElementById('bpSaveError').classList.add('hidden');
+  try {
+    const payload = {
+      guest_id_type:     document.getElementById('bp_id_type').value    || null,
+      guest_id_number:   document.getElementById('bp_id_number').value  || null,
+      guest_dob:         document.getElementById('bp_dob').value         || null,
+      guest_nationality: document.getElementById('bp_nationality').value || null,
+      admin_notes:       document.getElementById('bp_notes').value       || null,
+      special_requests:  document.getElementById('bp_requests').value    || null,
+    };
+    const { ok, data } = await apiFetch('PATCH', '/api/admin/bookings/' + _calCurrentBookingId + '/guest', payload);
+    if (!ok) {
+      document.getElementById('bpSaveError').textContent = data.message || 'Save failed.';
+      document.getElementById('bpSaveError').classList.remove('hidden');
+      return;
+    }
+    [calBookings, allBookings].forEach(arr => {
+      var b = arr.find(x => x.id === _calCurrentBookingId);
+      if (b) Object.assign(b, payload);
+    });
+    document.getElementById('bpSaveFeedback').classList.remove('hidden');
+    setTimeout(() => document.getElementById('bpSaveFeedback').classList.add('hidden'), 3000);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save Guest Info';
+  }
 }
 
 // ── Message Modal ─────────────────────────────────────────────
@@ -799,6 +927,14 @@ document.getElementById('modalClose').addEventListener('click', () =>
 document.getElementById('messageModal').addEventListener('click', e => {
   if (e.target === document.getElementById('messageModal'))
     document.getElementById('messageModal').classList.add('hidden');
+});
+
+document.getElementById('bookingProfileClose').addEventListener('click', () =>
+  document.getElementById('bookingProfileModal').classList.add('hidden')
+);
+document.getElementById('bookingProfileModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('bookingProfileModal'))
+    document.getElementById('bookingProfileModal').classList.add('hidden');
 });
 
 // ── Helpers ───────────────────────────────────────────────────

@@ -268,6 +268,8 @@
         <div class="cal-legend">
           <span class="cal-leg confirmed">Confirmed</span>
           <span class="cal-leg pending">Pending</span>
+          <span class="cal-leg checked-in">Checked In</span>
+          <span class="cal-leg blocked">Blocked</span>
         </div>
         <div class="cal-scroll-wrap">
           <div class="cal-grid" id="calGrid">
@@ -462,6 +464,104 @@
           <button class="btn-modal-confirm" id="editBookingSubmitBtn">Save Notes</button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Booking Profile Modal (eviivo-style) -->
+  <div class="modal-overlay hidden" id="bookingProfileModal">
+    <div class="modal-card modal-xl">
+      <div class="modal-header">
+        <div class="bp-header-inner">
+          <h3 id="bpTitle">Booking Profile</h3>
+          <div id="bpBadges">
+            <span id="bpStatus" class="status-badge"></span>
+            <span id="bpCheckinBadge" class="status-badge status-checkedin hidden">Checked In</span>
+            <span id="bpCheckoutBadge" class="status-badge status-checkedout hidden">Checked Out</span>
+          </div>
+        </div>
+        <button class="modal-close" id="bookingProfileClose">&times;</button>
+      </div>
+      <!-- Two-column: Stay + Guest -->
+      <div class="bp-top-row">
+        <div class="bp-panel">
+          <div class="bp-panel-title">Stay Details</div>
+          <div class="bp-info-list">
+            <div class="bp-row"><span class="bp-lbl">Reference</span><span id="bpRef" class="bp-val"></span></div>
+            <div class="bp-row"><span class="bp-lbl">Room</span><span id="bpRoom" class="bp-val"></span></div>
+            <div class="bp-row"><span class="bp-lbl">Check-in</span><span id="bpCheckin" class="bp-val"></span></div>
+            <div class="bp-row"><span class="bp-lbl">Check-out</span><span id="bpCheckout" class="bp-val"></span></div>
+            <div class="bp-row"><span class="bp-lbl">Duration</span><span id="bpNights" class="bp-val"></span></div>
+            <div class="bp-row"><span class="bp-lbl">Guests</span><span id="bpGuests" class="bp-val"></span></div>
+            <div class="bp-row"><span class="bp-lbl">Total</span><span id="bpTotal" class="bp-val bp-total-amt"></span></div>
+            <div class="bp-row"><span class="bp-lbl">Payment</span><span id="bpPayment" class="bp-val"></span></div>
+          </div>
+        </div>
+        <div class="bp-panel bp-panel-right">
+          <div class="bp-panel-title">Guest Details</div>
+          <div class="bp-info-list">
+            <div class="bp-row"><span class="bp-lbl">Name</span><span id="bpGuestName" class="bp-val bp-guest-name"></span></div>
+            <div class="bp-row"><span class="bp-lbl">Email</span><a id="bpGuestEmail" class="bp-val" href="#"></a></div>
+            <div class="bp-row"><span class="bp-lbl">Phone</span><span id="bpGuestPhone" class="bp-val"></span></div>
+            <div class="bp-row"><span class="bp-lbl">Country</span><span id="bpGuestCountry" class="bp-val"></span></div>
+            <div class="bp-row"><span class="bp-lbl">Booked on</span><span id="bpBookedOn" class="bp-val"></span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Guest Identity -->
+      <div class="bp-section">
+        <div class="bp-section-title">Guest Identity <span class="bp-section-note">stored securely for hotel records</span></div>
+        <div class="bp-form-grid">
+          <div class="bp-field">
+            <label>ID Type</label>
+            <select id="bp_id_type" class="cf-input">
+              <option value="">— Not recorded —</option>
+              <option value="Passport">Passport</option>
+              <option value="National ID Card">National ID Card</option>
+              <option value="Driver's License">Driver's License</option>
+              <option value="Residence Permit">Residence Permit</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="bp-field">
+            <label>ID / Passport Number</label>
+            <input type="text" id="bp_id_number" class="cf-input" placeholder="Document number">
+          </div>
+          <div class="bp-field">
+            <label>Date of Birth</label>
+            <input type="date" id="bp_dob" class="cf-input">
+          </div>
+          <div class="bp-field">
+            <label>Nationality</label>
+            <input type="text" id="bp_nationality" class="cf-input" placeholder="e.g. British">
+          </div>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="bp-section">
+        <div class="bp-section-title">Notes</div>
+        <div class="bp-form-grid bp-form-2col">
+          <div class="bp-field">
+            <label>Special Requests <span class="bp-section-note">(from guest)</span></label>
+            <textarea id="bp_requests" class="cf-input" rows="3" placeholder="Dietary needs, accessibility, early arrival…"></textarea>
+          </div>
+          <div class="bp-field">
+            <label>Admin Notes <span class="bp-section-note">(internal only)</span></label>
+            <textarea id="bp_notes" class="cf-input" rows="3" placeholder="VIP, repeat guest, early check-in arranged…"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Save row -->
+      <div class="bp-save-row">
+        <span id="bpSaveFeedback" class="bp-save-ok hidden">&#10003; Saved successfully</span>
+        <span id="bpSaveError"    class="bp-save-err hidden"></span>
+        <button class="btn-modal-confirm bp-save-btn" id="bpSaveBtn" onclick="saveGuestProfile()">Save Guest Info</button>
+      </div>
+
+      <!-- Action footer -->
+      <div class="bp-footer" id="bpFooter"></div>
     </div>
   </div>
 
