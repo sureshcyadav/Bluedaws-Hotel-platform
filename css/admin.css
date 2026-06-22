@@ -1215,14 +1215,24 @@ a:hover { text-decoration: underline; }
 /* 9-card KPI strip — scrollable row on small screens */
 .dash-kpi-strip {
   display: grid;
-  grid-template-columns: repeat(9, 1fr);
+  /* minmax(0,1fr) lets columns shrink below content size so wide
+     values like £3,045 don't push past the card boundary */
+  grid-template-columns: repeat(9, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 20px;
   overflow-x: auto;
   padding-bottom: 4px;
 }
 .dash-kpi-strip .stat-card {
-  min-width: 120px;
+  min-width: 115px;
+  overflow: hidden;   /* contain any value that still runs long */
+}
+/* Slightly smaller value text so £X,XXX fits the narrow 1/9 columns */
+.dash-kpi-strip .stat-value {
+  font-size: 21px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* New stat icon colour variants */
