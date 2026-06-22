@@ -2027,24 +2027,70 @@ function renderReports(d) {
       + '<p class="stat-note">' + x.note + '</p></div></div>';
   }).join('');
 
-  // Monthly revenue bar chart
-  const monthly = d.monthly || [];
-  if (!monthly.length) {
-    document.getElementById('revChart').innerHTML = '<div class="fd-empty">No data yet.</div>';
-  } else {
-    const maxRev = Math.max.apply(null, monthly.map(function(m) { return Number(m.revenue); }).concat([1]));
-    document.getElementById('revChart').innerHTML = '<div class="rev-chart">'
-      + monthly.map(function(m) {
-          const pct = Math.round((Number(m.revenue) / maxRev) * 100);
-          return '<div class="rev-bar-wrap">'
-            + '<div class="rev-bar-label-top">£' + Number(m.revenue).toLocaleString() + '</div>'
-            + '<div class="rev-bar-track"><div class="rev-bar-fill" style="height:' + pct + '%"></div></div>'
-            + '<div class="rev-bar-label">' + m.label + '</div>'
-            + '<div class="rev-bar-count">' + m.bookings + ' bk</div>'
-            + '</div>';
-        }).join('')
+  // Monthly revenue bar chart — always render all 12 months
+  (function() {
+    var monthly = d.monthly || [];
+    var now = new Date();
+    var MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+    // Build full 12-month grid (oldest first)
+    var grid = [];
+    for (var mi = 11; mi >= 0; mi--) {
+      var dt = new Date(now.getFullYear(), now.getMonth() - mi, 1);
+      grid.push({
+        key:   dt.getFullYear() + '-' + String(dt.getMonth()+1).padStart(2,'0'),
+        mon:   MON[dt.getMonth()],
+        yr:    String(dt.getFullYear()).slice(2),
+        isJan: dt.getMonth() === 0,
+        isCur: mi === 0,
+        rev:   0, bk: 0,
+      });
+    }
+    monthly.forEach(function(m) {
+      var s = grid.find(function(g) { return g.key === m.month; });
+      if (s) { s.rev = Number(m.revenue); s.bk = Number(m.bookings); }
+    });
+
+    var maxRev = Math.max.apply(null, grid.map(function(g) { return g.rev; }).concat([100]));
+    // Round ceiling up to a nice number
+    var mag = Math.pow(10, Math.floor(Math.log10(maxRev)));
+    var gridTop = Math.ceil(maxRev / mag) * mag;
+    if (gridTop < maxRev * 1.1) gridTop += mag / 2;
+
+    function fmtK(v) {
+      if (v === 0) return '£0';
+      return v >= 1000 ? '£' + (v % 1000 === 0 ? v/1000 : (v/1000).toFixed(1)) + 'k' : '£' + v;
+    }
+
+    // Y-axis: 5 levels top → 0
+    var yHtml = '<div class="rvc-yaxis">'
+      + [4,3,2,1,0].map(function(i) { return '<span>' + fmtK(Math.round(gridTop * i / 4)) + '</span>'; }).join('')
       + '</div>';
-  }
+
+    // 5 horizontal gridlines
+    var glHtml = '<div class="rvc-grids">'
+      + '<div class="rvc-gl"></div><div class="rvc-gl"></div><div class="rvc-gl"></div>'
+      + '<div class="rvc-gl"></div><div class="rvc-gl rvc-gl-zero"></div>'
+      + '</div>';
+
+    var barsHtml = grid.map(function(s) {
+      var pct = gridTop > 0 ? Math.max((s.rev / gridTop) * 100, s.rev > 0 ? 3 : 0) : 0;
+      var cls  = 'rvc-col' + (s.isCur ? ' rvc-cur' : '') + (s.rev === 0 ? ' rvc-zero' : '');
+      var tip  = s.mon + ' 20' + s.yr + ': £' + s.rev.toLocaleString()
+               + ' (' + s.bk + ' booking' + (s.bk !== 1 ? 's' : '') + ')';
+      var xLbl = s.mon + (s.isJan || s.isCur ? '<br><span class="rvc-yr">\''+s.yr+'</span>' : '');
+      return '<div class="' + cls + '" title="' + tip + '">'
+        + '<div class="rvc-amt">' + (s.rev > 0 ? fmtK(s.rev) : '') + '</div>'
+        + '<div class="rvc-track"><div class="rvc-fill" style="height:' + pct.toFixed(1) + '%"></div></div>'
+        + '<div class="rvc-lbl">' + xLbl + '</div>'
+        + '</div>';
+    }).join('');
+
+    document.getElementById('revChart').innerHTML =
+      '<div class="rvc-wrap">' + yHtml
+      + '<div class="rvc-body">' + glHtml
+      + '<div class="rvc-bars">' + barsHtml + '</div></div></div>';
+  }());
 
   // Top rooms
   document.getElementById('roomsChart').innerHTML = (d.rooms || []).map(function(r) {
