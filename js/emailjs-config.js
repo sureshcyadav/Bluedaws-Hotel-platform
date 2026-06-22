@@ -59,6 +59,6 @@ const EMAILJS = {
   serviceId:                   'service_b6frwcw',
   bookingNotificationTemplate: 'template_txhhhmk',  // Hotel receives new booking
   bookingConfirmTemplate:      'template_b01onib',  // Guest receives confirmation
-  contactTemplate:             'template_txhhhmk',  // Contact form (reuses hotel template — add 3rd template later)
+  contactTemplate:             'template_bnew4gk',  // Contact form enquiry
   hotelEmail:                  'bluedawsprivatehotel@gmail.com',
 };
