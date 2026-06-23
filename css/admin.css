@@ -3033,6 +3033,7 @@ a:hover { text-decoration: underline; }
 .nb-email-status.sent     { background: #dcfce7; color: #16a34a; }
 .nb-email-status.failed   { background: #fee2e2; color: #dc2626; }
 .nb-email-status.skipped  { background: #f1f5f9; color: #94a3b8; }
+.nb-email-toggle-sub { display: none !important; }
 
 /* ══════════════════════════════════════════════════════════════
    NEW WALK-IN BOOKING MODAL — PREMIUM REDESIGN
