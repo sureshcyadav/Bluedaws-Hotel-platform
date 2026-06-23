@@ -1955,29 +1955,52 @@ document.getElementById('newBookingSubmitBtn').addEventListener('click', async (
     const { ok, data } = await apiFetch('POST', '/api/admin/bookings', body);
     if (!ok) { errEl.textContent = data.message || 'Failed to create booking.'; errEl.classList.remove('hidden'); return; }
 
-    const booking = data.data;
+    const created = data.data; // API only returns {id, ref, created_at}
+
+    // Build full email data from form body (not sparse API response)
+    const roomInfo  = CAL_ROOMS.find(r => r.code === body.room_code) || {};
+    const nights    = Math.round((new Date(body.checkout_date) - new Date(body.checkin_date)) / 86400000);
+    const totalDisp = document.getElementById('nbTotal');
+    const emailBooking = {
+      ref:              created.ref,
+      guest_first_name: body.guest_first_name,
+      guest_last_name:  body.guest_last_name,
+      guest_email:      body.guest_email,
+      room_name:        roomInfo.name || body.room_code.toUpperCase(),
+      room_code:        body.room_code,
+      checkin_date:     body.checkin_date,
+      checkout_date:    body.checkout_date,
+      nights:           nights,
+      adults:           body.adults,
+      children:         body.children || 0,
+      total_amount:     totalDisp && totalDisp.textContent !== '—' ? totalDisp.textContent : '',
+      payment_method:   body.payment_method,
+      special_requests: body.special_requests || null,
+    };
 
     // Send confirmation email if checkbox ticked
+    let emailSent = false;
     if (sendEmail) {
       emailStatusEl.textContent = 'Sending…';
       emailStatusEl.className = 'nb-email-status sending';
       try {
-        await sendBookingConfirmationEmail(booking);
+        await sendBookingConfirmationEmail(emailBooking);
+        emailSent = true;
         emailStatusEl.textContent = '✓ Email sent';
         emailStatusEl.className = 'nb-email-status sent';
         await new Promise(r => setTimeout(r, 1200));
       } catch (emailErr) {
         emailStatusEl.textContent = '✗ Email failed';
         emailStatusEl.className = 'nb-email-status failed';
-        console.warn('EmailJS error:', emailErr.message);
-        await new Promise(r => setTimeout(r, 1400));
+        console.warn('EmailJS error:', emailErr.text || emailErr.message || emailErr);
+        await new Promise(r => setTimeout(r, 1600));
       }
     }
 
     closeNewBookingModal();
     loadBookings();
     loadStats();
-    alert('Booking created! Ref: ' + booking.ref + (sendEmail ? '\nConfirmation email sent to guest.' : ''));
+    alert('Booking created! Ref: ' + created.ref + (emailSent ? '\nConfirmation email sent to ' + body.guest_email : ''));
   } catch { errEl.textContent = 'Network error. Please try again.'; errEl.classList.remove('hidden'); }
   finally { btn.disabled = false; btn.textContent = 'Create Booking'; }
 });
