@@ -3,9 +3,9 @@ const API = 'https://bluedaws-hotel-platform.onrender.com';
 
 // ── EmailJS config — fill in your own IDs after setting up EmailJS ──
 const EMAILJS_CONFIG = {
-  publicKey:   'YOUR_PUBLIC_KEY',      // From EmailJS → Account → API Keys
-  serviceId:   'YOUR_SERVICE_ID',      // From EmailJS → Email Services
-  templateId:  'YOUR_TEMPLATE_ID',     // From EmailJS → Email Templates
+  publicKey:   'Tajjc_ip_Es4kTp0Z',
+  serviceId:   'service_b6frwcw',
+  templateId:  'template_ch8va6n',
 };
 // Initialise EmailJS (runs once on page load)
 if (typeof emailjs !== 'undefined') {
