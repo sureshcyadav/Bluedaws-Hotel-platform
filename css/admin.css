@@ -736,7 +736,11 @@ a:hover { text-decoration: underline; }
 
 /* ── Front Desk check-in/out buttons ─────────────────────────── */
 .fd-guest-row { cursor: default; }
+.fd-row-click { cursor: pointer; }
+.fd-row-click:hover { background: #f0f9ff !important; }
 .fd-guest-actions { flex-shrink: 0; margin-left: 8px; }
+.bk-row-click { cursor: pointer; }
+.bk-row-click:hover td { background: #f8fafc; }
 .btn-fd-checkin, .btn-fd-checkout {
   padding: 6px 12px; border: none; border-radius: 6px;
   font-size: 11.5px; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap;

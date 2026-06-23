@@ -335,8 +335,11 @@ async function loadFrontDesk() {
     const { ok, data } = await apiFetch('GET', '/api/admin/bookings');
     if (!ok) return;
 
+    // Merge into allBookings so openCalBooking can find them from any tab
+    allBookings = data.data || [];
+
     const today    = new Date().toISOString().slice(0, 10);
-    const bookings = (data.data || []).filter(b => b.status !== 'cancelled');
+    const bookings = allBookings.filter(b => b.status !== 'cancelled');
 
     const roomStatus = {};
     const arrivals   = [];
@@ -402,24 +405,24 @@ function _renderFrontDesk(roomStatus, arrivals, departures) {
 
   const payLabel = { card: 'Card', bank: 'Bank Transfer', payathotel: 'Pay at Hotel' };
 
-  const arrivalRow = b => '<div class="fd-guest-row">'
+  const arrivalRow = b => '<div class="fd-guest-row fd-row-click" onclick="openCalBooking(' + b.id + ')">'
     + '<div class="fd-guest-info"><strong>' + esc(b.guest_first_name) + ' ' + esc(b.guest_last_name) + '</strong>'
     + '<span>' + esc(b.room_name) + ' · ' + b.room_code.toUpperCase() + ' · ' + b.nights + ' night' + (b.nights > 1 ? 's' : '') + ' · ' + (payLabel[b.payment_method] || b.payment_method) + '</span></div>'
     + '<div class="fd-guest-meta"><span class="fd-ref">' + b.ref + '</span></div>'
     + '<div class="fd-guest-actions">'
     + (b.checked_in_at
         ? '<span class="fd-done-badge">✓ Checked In</span>'
-        : '<button class="btn-fd-checkin" onclick="checkInGuest(' + b.id + ')">Check In</button>')
+        : '<button class="btn-fd-checkin" onclick="event.stopPropagation();checkInGuest(' + b.id + ')">Check In</button>')
     + '</div></div>';
 
-  const departureRow = b => '<div class="fd-guest-row">'
+  const departureRow = b => '<div class="fd-guest-row fd-row-click" onclick="openCalBooking(' + b.id + ')">'
     + '<div class="fd-guest-info"><strong>' + esc(b.guest_first_name) + ' ' + esc(b.guest_last_name) + '</strong>'
     + '<span>' + esc(b.room_name) + ' · ' + b.room_code.toUpperCase() + ' · £' + Number(b.total_amount).toLocaleString() + '</span></div>'
     + '<div class="fd-guest-meta"><span class="fd-ref">' + b.ref + '</span></div>'
     + '<div class="fd-guest-actions">'
     + (b.checked_out_at
         ? '<span class="fd-done-badge">✓ Checked Out</span>'
-        : '<button class="btn-fd-checkout" onclick="checkOutGuest(' + b.id + ')">Check Out</button>')
+        : '<button class="btn-fd-checkout" onclick="event.stopPropagation();checkOutGuest(' + b.id + ')">Check Out</button>')
     + '</div></div>';
 
   document.getElementById('fdArrivalCount').textContent   = arrivals.length;
@@ -517,7 +520,7 @@ function renderBookings() {
     if (checkedOut)               statusHtml += ' <span class="status-badge status-checkedout">Checked Out</span>';
     const hasNotes = b.admin_notes || b.special_requests;
     const hasId    = b.guest_id_number || b.guest_id_type;
-    return '<tr>'
+    return '<tr class="bk-row-click" onclick="if(!event.target.closest(\'button,a\'))openCalBooking(' + b.id + ')">'
       + '<td><span class="ref-badge">' + b.ref + '</span>'
       + (hasNotes ? ' <span class="notes-dot" title="Has notes">●</span>' : '') + '</td>'
       + '<td><strong>' + esc(b.guest_first_name) + ' ' + esc(b.guest_last_name) + '</strong>'
