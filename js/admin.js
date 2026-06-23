@@ -96,7 +96,7 @@ function showApp() {
   document.getElementById('adminApp').classList.remove('hidden');
 }
 
-function _doShowSection(name) {
+function showSection(name) {
   document.querySelectorAll('.admin-section').forEach(s => s.classList.add('hidden'));
   const cap = name.charAt(0).toUpperCase() + name.slice(1);
   document.getElementById('section' + cap).classList.remove('hidden');
@@ -112,45 +112,6 @@ function _doShowSection(name) {
   if (name === 'reports')     loadReports();
   if (name === 'contacts')    loadContacts();
   if (name === 'content')     loadContent();
-}
-
-let _ptTimer = null;
-
-function _showPageTransition(cb) {
-  const tr = document.getElementById('pageTransition');
-  if (!tr) { cb(); return; }
-
-  // Cancel any in-progress transition
-  clearTimeout(_ptTimer);
-
-  // Rebuild HTML fresh every time so CSS animations restart cleanly
-  tr.innerHTML =
-    '<div class="pt-ring pt-ring-1"></div>' +
-    '<div class="pt-ring pt-ring-2"></div>' +
-    '<div class="pt-inner">' +
-      '<div class="pt-logo">' +
-        '<span class="pt-l">B</span><span class="pt-l">L</span><span class="pt-l">U</span>' +
-        '<span class="pt-l">E</span><span class="pt-l">D</span><span class="pt-l">A</span>' +
-        '<span class="pt-l">W</span><span class="pt-l">S</span>' +
-      '</div>' +
-      '<div class="pt-sub">Admin Portal</div>' +
-      '<div class="pt-sweep-wrap"><div class="pt-sweep"></div></div>' +
-      '<div class="pt-dots"><div class="pt-dot"></div><div class="pt-dot"></div><div class="pt-dot"></div></div>' +
-    '</div>';
-
-  tr.classList.remove('hidden', 'pt-out');
-
-  // Show content and begin fade-out after letters finish
-  _ptTimer = setTimeout(() => {
-    cb();
-    tr.classList.add('pt-out');
-    _ptTimer = setTimeout(() => tr.classList.add('hidden'), 330);
-  }, 480);
-}
-
-function showSection(name, instant) {
-  if (instant) { _doShowSection(name); return; }
-  _showPageTransition(() => _doShowSection(name));
 }
 
 // ── Login ──────────────────────────────────────────────────────
@@ -182,7 +143,7 @@ async function login() {
       setToken(data.token);
       document.getElementById('adminPassword').value = '';
       showApp();
-      showSection('dashboard', true);
+      showSection('dashboard');
     }
   } catch {
     errEl.textContent = 'Connection error. Please try again.';
@@ -3301,7 +3262,7 @@ async function init() {
   if (!getToken()) { showLogin(); return; }
   try {
     const { ok } = await apiFetch('GET', '/api/admin/stats');
-    if (ok) { showApp(); showSection('dashboard', true); }
+    if (ok) { showApp(); showSection('dashboard'); }
     else    { clearToken(); showLogin(); }
   } catch { showLogin(); }
 }
