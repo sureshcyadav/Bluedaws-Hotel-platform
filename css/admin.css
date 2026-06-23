@@ -2322,3 +2322,158 @@ a:hover { text-decoration: underline; }
   color: #334155;
 }
 .eod-mini-table tr:last-child td { border-bottom: none; }
+
+/* ══════════════════════════════════════════════════════════════
+   EOD REPORT — PREMIUM REDESIGN (overrides above rules)
+   ══════════════════════════════════════════════════════════════ */
+@keyframes eodLivePulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.5); }
+  50%      { box-shadow: 0 0 0 5px rgba(34,197,94,0); }
+}
+
+/* ── Toolbar ─────────────────────────────────────────────────── */
+.eod-toolbar {
+  background: linear-gradient(135deg, #0f172a 0%, #1a2744 100%);
+  border-radius: 20px;
+  padding: 22px 26px;
+  margin-bottom: 22px;
+  box-shadow: 0 8px 32px rgba(15,23,42,0.28);
+  position: relative;
+  overflow: hidden;
+  border: none;
+}
+.eod-toolbar::before {
+  content: '';
+  position: absolute;
+  top: -40px; right: -40px;
+  width: 140px; height: 140px;
+  border-radius: 50%;
+  background: rgba(201,169,110,0.08);
+  pointer-events: none;
+}
+.eod-toolbar::after {
+  content: '';
+  position: absolute;
+  bottom: -30px; right: 160px;
+  width: 90px; height: 90px;
+  border-radius: 50%;
+  background: rgba(99,102,241,0.06);
+  pointer-events: none;
+}
+.eod-date {
+  font-size: 19px;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: -0.3px;
+}
+.eod-sub {
+  font-size: 12px;
+  color: rgba(148,163,184,0.85);
+  margin-top: 5px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.eod-live-dot {
+  display: inline-block;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #22c55e;
+  flex-shrink: 0;
+  animation: eodLivePulse 2s ease-in-out infinite;
+}
+.eod-generated {
+  font-size: 11px;
+  color: rgba(148,163,184,0.7);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 5px 12px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+.eod-pdf-btn {
+  background: linear-gradient(135deg, #c9a96e, #b8832e);
+  border: none;
+  border-radius: 11px;
+  padding: 10px 22px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #0f172a;
+  box-shadow: 0 4px 14px rgba(201,169,110,0.40);
+  transition: transform 0.18s cubic-bezier(.34,1.56,.64,1), box-shadow 0.18s ease;
+  white-space: nowrap;
+}
+.eod-pdf-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #c9a96e, #b8832e);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(201,169,110,0.50);
+}
+.eod-pdf-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+/* ── KPI strip — reuse rpt-kpi-full gradient cards ───────────── */
+.eod-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(172px, 1fr));
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+/* ── Grid gaps ───────────────────────────────────────────────── */
+.eod-grid3 { gap: 18px; margin-bottom: 18px; }
+.eod-grid2 { gap: 18px; margin-bottom: 26px; }
+
+/* ── Guest card rows ─────────────────────────────────────────── */
+.eod-guest-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 13px 18px;
+  border-bottom: 1px solid #f8fafc;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.eod-guest-card:hover  { background: #fafbfc; }
+.eod-guest-card:last-child { border-bottom: none; }
+.eod-gcavatar {
+  width: 40px; height: 40px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13.5px; font-weight: 800;
+  flex-shrink: 0;
+}
+.eod-gcavatar-arr { background: linear-gradient(135deg,#fef3c7,#fde68a); color: #92400e; }
+.eod-gcavatar-inh { background: linear-gradient(135deg,#d1fae5,#a7f3d0); color: #065f46; }
+.eod-gcavatar-dep { background: linear-gradient(135deg,#dbeafe,#bfdbfe); color: #1e40af; }
+.eod-gc-body     { flex: 1; min-width: 0; }
+.eod-gc-name     { font-size: 13.5px; font-weight: 700; color: #0f172a; }
+.eod-gc-detail   { font-size: 11.5px; color: #475569; margin-top: 2px; }
+.eod-gc-meta     { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 7px; }
+.eod-gc-note     { font-size: 11px; color: #94a3b8; margin-top: 6px; font-style: italic; }
+
+/* ── Badges ──────────────────────────────────────────────────── */
+.eod-badge {
+  font-size: 10.5px; font-weight: 700;
+  padding: 3px 10px; border-radius: 20px; letter-spacing: 0.1px;
+}
+.eod-badge-green { background: #dcfce7; color: #15803d; }
+.eod-badge-amber { background: #fef9c3; color: #a16207; }
+.eod-badge-red   { background: #fee2e2; color: #dc2626; }
+.eod-badge-blue  { background: #dbeafe; color: #1d4ed8; }
+
+/* ── Mini-tables (New Bookings / Cancellations) ──────────────── */
+.eod-mini-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.eod-mini-table th {
+  padding: 10px 14px;
+  background: #f8fafc;
+  font-size: 10px; font-weight: 800;
+  color: #64748b; text-align: left;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  border-bottom: 2px solid #f1f5f9;
+}
+.eod-mini-table td {
+  padding: 11px 14px;
+  border-bottom: 1px solid #f8fafc;
+  font-size: 12px; color: #334155;
+}
+.eod-mini-table tbody tr { transition: background 0.12s; }
+.eod-mini-table tbody tr:hover td { background: #f8fafc; }
+.eod-mini-table tr:last-child td { border-bottom: none; }

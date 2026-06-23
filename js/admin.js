@@ -2678,100 +2678,131 @@ async function loadEod() {
 }
 
 function renderEod(d) {
-  const s = d.summary;
+  var s = d.summary;
   document.getElementById('eodGenAt').textContent = 'Updated ' + new Date(d.generated_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 
-  // KPI strip
-  document.getElementById('eodKpis').innerHTML = [
-    { label: 'Arrivals Today',     val: s.arrivals_today,     color: '#0891b2' },
-    { label: 'Departures Today',   val: s.departures_today,   color: '#7c3aed' },
-    { label: 'In House',           val: s.in_house_count,     color: '#059669' },
-    { label: 'New Bookings',       val: s.new_bookings_today, color: '#0f172a' },
-    { label: 'Revenue Today',      val: '£' + Number(s.new_revenue_today).toLocaleString(), color: '#c9a96e' },
-    { label: 'Payments Received',  val: '£' + Number(s.payments_today).toLocaleString(),    color: '#16a34a' },
-    { label: 'Outstanding',        val: '£' + Number(s.outstanding).toLocaleString(),       color: '#ef4444' },
-  ].map(function(k) {
-    return '<div class="eod-kpi-card">'
-      + '<div class="eod-kpi-val" style="color:' + k.color + '">' + k.val + '</div>'
-      + '<div class="eod-kpi-label">' + k.label + '</div>'
+  // ── KPI strip — gradient full-bleed cards ─────────────────────
+  var EOD_PLANE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="22" height="22"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21 4 19.5 2.5S18 2 16.5 3.5L13 7 4.8 5.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>';
+  var EOD_DOOR  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="22" height="22"><path d="M13 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7"/><polyline points="17 8 21 12 17 16"/><line x1="21" y1="12" x2="9" y2="12"/></svg>';
+  var eodKpiCards = [
+    { label:'Arrivals Today',    val: s.arrivals_today,                                    icon: EOD_PLANE,          grad:'linear-gradient(135deg,#0891b2,#0e7490)', shadow:'rgba(8,145,178,.40)'   },
+    { label:'Departures Today',  val: s.departures_today,                                  icon: EOD_DOOR,           grad:'linear-gradient(135deg,#8b5cf6,#7c3aed)', shadow:'rgba(139,92,246,.38)'  },
+    { label:'In House',          val: s.in_house_count,                                    icon: RPT_ICONS.hotel,    grad:'linear-gradient(135deg,#059669,#047857)', shadow:'rgba(5,150,105,.38)'   },
+    { label:'New Bookings',      val: s.new_bookings_today,                                icon: RPT_ICONS.clipboard,grad:'linear-gradient(135deg,#475569,#334155)', shadow:'rgba(71,85,105,.32)'   },
+    { label:'Revenue Today',     val:'£'+Number(s.new_revenue_today).toLocaleString(),     icon: RPT_ICONS.pound,    grad:'linear-gradient(135deg,#c9a96e,#b8832e)', shadow:'rgba(201,169,110,.40)' },
+    { label:'Payments Received', val:'£'+Number(s.payments_today).toLocaleString(),        icon: RPT_ICONS.checkOk,  grad:'linear-gradient(135deg,#16a34a,#15803d)', shadow:'rgba(22,163,74,.38)'   },
+    { label:'Outstanding',       val:'£'+Number(s.outstanding).toLocaleString(),           icon: RPT_ICONS.alert,    grad:'linear-gradient(135deg,#ef4444,#dc2626)', shadow:'rgba(239,68,68,.35)'   },
+  ];
+  document.getElementById('eodKpis').innerHTML = eodKpiCards.map(function(k, i) {
+    return '<div class="stat-card rpt-kpi-full"'
+      + ' style="background:' + k.grad + ';box-shadow:0 6px 22px ' + k.shadow + ';animation-delay:' + (i*0.06) + 's">'
+      + '<div class="rpt-kpi-icon">' + k.icon + '</div>'
+      + '<div class="rpt-kpi-label">' + k.label + '</div>'
+      + '<div class="rpt-kpi-val">' + k.val + '</div>'
       + '</div>';
   }).join('');
 
-  // Arrivals
-  document.getElementById('eodArrivalsCount').textContent = (d.arrivals || []).length + ' guest' + (d.arrivals.length !== 1 ? 's' : '');
-  document.getElementById('eodArrivals').innerHTML = (d.arrivals || []).length
-    ? (d.arrivals || []).map(function(b) {
-        const paid = b.payment_status === 'paid';
-        const ci   = b.checked_in_at ? '&#x2714; Checked in' : 'Not yet checked in';
-        return '<div class="eod-guest-row">'
-          + '<div class="eod-guest-name">' + esc(b.guest_first_name) + ' ' + esc(b.guest_last_name) + '</div>'
-          + '<div class="eod-guest-detail"><span class="price-card-code" style="background:#0f172a;font-size:10px">' + b.room_code.toUpperCase() + '</span> ' + esc(b.room_name) + ' &bull; ' + b.nights + ' nts</div>'
-          + '<div class="eod-guest-meta">'
+  // ── Helper: avatar initials ────────────────────────────────────
+  function av(b) {
+    return ((b.guest_first_name||'?').charAt(0) + (b.guest_last_name||'?').charAt(0)).toUpperCase();
+  }
+
+  // ── Arrivals ──────────────────────────────────────────────────
+  var arrList = d.arrivals || [];
+  document.getElementById('eodArrivalsCount').textContent = arrList.length + ' guest' + (arrList.length !== 1 ? 's' : '');
+  document.getElementById('eodArrivals').innerHTML = arrList.length
+    ? arrList.map(function(b) {
+        var paid = b.payment_status === 'paid';
+        var ci   = b.checked_in_at ? '&#x2714; Checked In' : 'Not Arrived Yet';
+        return '<div class="eod-guest-card" onclick="openCalBooking(' + b.id + ')">'
+          + '<div class="eod-gcavatar eod-gcavatar-arr">' + av(b) + '</div>'
+          + '<div class="eod-gc-body">'
+          + '<div class="eod-gc-name">' + esc(b.guest_first_name) + ' ' + esc(b.guest_last_name) + '</div>'
+          + '<div class="eod-gc-detail"><span class="price-card-code" style="background:#0f172a;font-size:10px;padding:1px 6px;border-radius:4px">' + b.room_code.toUpperCase() + '</span> ' + esc(b.room_name) + ' &middot; ' + b.nights + ' night' + (b.nights!==1?'s':'') + '</div>'
+          + '<div class="eod-gc-meta">'
           + '<span class="eod-badge ' + (b.checked_in_at ? 'eod-badge-green' : 'eod-badge-amber') + '">' + ci + '</span>'
-          + '<span class="eod-badge ' + (paid ? 'eod-badge-green' : 'eod-badge-red') + '">' + (paid ? 'Paid' : '£' + (Number(b.total_amount) - Number(b.amount_paid)).toLocaleString() + ' due') + '</span>'
+          + '<span class="eod-badge ' + (paid ? 'eod-badge-green' : 'eod-badge-red') + '">' + (paid ? 'Paid' : '&pound;' + (Number(b.total_amount)-Number(b.amount_paid)).toLocaleString() + ' due') + '</span>'
           + '</div>'
-          + (b.special_requests ? '<div class="eod-guest-note">&#x1F4AC; ' + esc(b.special_requests) + '</div>' : '')
-          + '</div>';
+          + (b.special_requests ? '<div class="eod-gc-note">&#x1F4AC; ' + esc(b.special_requests) + '</div>' : '')
+          + '</div></div>';
       }).join('')
     : '<div class="fd-empty">No arrivals today.</div>';
 
-  // In House
-  document.getElementById('eodInHouseCount').textContent = (d.in_house || []).length + ' guest' + (d.in_house.length !== 1 ? 's' : '');
-  document.getElementById('eodInHouse').innerHTML = (d.in_house || []).length
-    ? (d.in_house || []).map(function(b) {
-        return '<div class="eod-guest-row">'
-          + '<div class="eod-guest-name">' + esc(b.guest_first_name) + ' ' + esc(b.guest_last_name) + '</div>'
-          + '<div class="eod-guest-detail"><span class="price-card-code" style="background:#0f172a;font-size:10px">' + b.room_code.toUpperCase() + '</span> ' + esc(b.room_name) + ' &bull; ' + b.nights + ' nts</div>'
-          + '<div class="eod-guest-meta"><span class="eod-badge eod-badge-blue">Out: ' + fmtDate(b.checkout_date) + '</span>'
-          + '<span class="eod-badge ' + (b.payment_status === 'paid' ? 'eod-badge-green' : 'eod-badge-red') + '">' + (b.payment_status === 'paid' ? 'Paid' : 'Balance due') + '</span></div>'
-          + '</div>';
+  // ── In House ──────────────────────────────────────────────────
+  var inhList = d.in_house || [];
+  document.getElementById('eodInHouseCount').textContent = inhList.length + ' guest' + (inhList.length !== 1 ? 's' : '');
+  document.getElementById('eodInHouse').innerHTML = inhList.length
+    ? inhList.map(function(b) {
+        var paid = b.payment_status === 'paid';
+        return '<div class="eod-guest-card" onclick="openCalBooking(' + b.id + ')">'
+          + '<div class="eod-gcavatar eod-gcavatar-inh">' + av(b) + '</div>'
+          + '<div class="eod-gc-body">'
+          + '<div class="eod-gc-name">' + esc(b.guest_first_name) + ' ' + esc(b.guest_last_name) + '</div>'
+          + '<div class="eod-gc-detail"><span class="price-card-code" style="background:#0f172a;font-size:10px;padding:1px 6px;border-radius:4px">' + b.room_code.toUpperCase() + '</span> ' + esc(b.room_name) + ' &middot; ' + b.nights + ' night' + (b.nights!==1?'s':'') + '</div>'
+          + '<div class="eod-gc-meta">'
+          + '<span class="eod-badge eod-badge-blue">Out: ' + fmtDate(b.checkout_date) + '</span>'
+          + '<span class="eod-badge ' + (paid ? 'eod-badge-green' : 'eod-badge-red') + '">' + (paid ? 'Paid' : 'Balance due') + '</span>'
+          + '</div></div></div>';
       }).join('')
     : '<div class="fd-empty">No guests currently in house.</div>';
 
-  // Departures
-  document.getElementById('eodDepsCount').textContent = (d.departures || []).length + ' guest' + (d.departures.length !== 1 ? 's' : '');
-  document.getElementById('eodDepartures').innerHTML = (d.departures || []).length
-    ? (d.departures || []).map(function(b) {
-        const co = b.checked_out_at ? '&#x2714; Checked out' : 'Not yet checked out';
-        return '<div class="eod-guest-row">'
-          + '<div class="eod-guest-name">' + esc(b.guest_first_name) + ' ' + esc(b.guest_last_name) + '</div>'
-          + '<div class="eod-guest-detail"><span class="price-card-code" style="background:#0f172a;font-size:10px">' + b.room_code.toUpperCase() + '</span> ' + esc(b.room_name) + ' &bull; ' + b.nights + ' nts</div>'
-          + '<div class="eod-guest-meta">'
+  // ── Departures ────────────────────────────────────────────────
+  var depList = d.departures || [];
+  document.getElementById('eodDepsCount').textContent = depList.length + ' guest' + (depList.length !== 1 ? 's' : '');
+  document.getElementById('eodDepartures').innerHTML = depList.length
+    ? depList.map(function(b) {
+        var paid = b.payment_status === 'paid';
+        var co   = b.checked_out_at ? '&#x2714; Checked Out' : 'Not Yet Checked Out';
+        return '<div class="eod-guest-card" onclick="openCalBooking(' + b.id + ')">'
+          + '<div class="eod-gcavatar eod-gcavatar-dep">' + av(b) + '</div>'
+          + '<div class="eod-gc-body">'
+          + '<div class="eod-gc-name">' + esc(b.guest_first_name) + ' ' + esc(b.guest_last_name) + '</div>'
+          + '<div class="eod-gc-detail"><span class="price-card-code" style="background:#0f172a;font-size:10px;padding:1px 6px;border-radius:4px">' + b.room_code.toUpperCase() + '</span> ' + esc(b.room_name) + ' &middot; ' + b.nights + ' night' + (b.nights!==1?'s':'') + '</div>'
+          + '<div class="eod-gc-meta">'
           + '<span class="eod-badge ' + (b.checked_out_at ? 'eod-badge-green' : 'eod-badge-amber') + '">' + co + '</span>'
-          + '<span class="eod-badge ' + (b.payment_status === 'paid' ? 'eod-badge-green' : 'eod-badge-red') + '">' + (b.payment_status === 'paid' ? 'Fully Paid' : '£' + (Number(b.total_amount) - Number(b.amount_paid)).toLocaleString() + ' outstanding') + '</span>'
-          + '</div>'
-          + '</div>';
+          + '<span class="eod-badge ' + (paid ? 'eod-badge-green' : 'eod-badge-red') + '">' + (paid ? 'Fully Paid' : '&pound;' + (Number(b.total_amount)-Number(b.amount_paid)).toLocaleString() + ' outstanding') + '</span>'
+          + '</div></div></div>';
       }).join('')
     : '<div class="fd-empty">No departures today.</div>';
 
-  // New bookings today
-  document.getElementById('eodNewBkCount').textContent = (d.new_bookings || []).length + ' booking' + (d.new_bookings.length !== 1 ? 's' : '');
-  document.getElementById('eodNewBookings').innerHTML = (d.new_bookings || []).length
-    ? '<table class="eod-mini-table"><thead><tr><th>Ref</th><th>Guest</th><th>Room</th><th>Check-in</th><th>Check-out</th><th>Total</th><th>Status</th></tr></thead><tbody>'
-      + (d.new_bookings || []).map(function(b) {
-          return '<tr><td><span class="ref-badge">' + b.ref + '</span></td>'
-            + '<td>' + esc(b.guest_first_name) + ' ' + esc(b.guest_last_name) + '</td>'
-            + '<td>' + b.room_code.toUpperCase() + '</td>'
+  // ── New Bookings ──────────────────────────────────────────────
+  var nbList = d.new_bookings || [];
+  document.getElementById('eodNewBkCount').textContent = nbList.length + ' booking' + (nbList.length !== 1 ? 's' : '');
+  document.getElementById('eodNewBookings').innerHTML = nbList.length
+    ? '<table class="eod-mini-table"><thead><tr>'
+      + '<th>Ref</th><th>Guest</th><th>Room</th><th>Check-in</th><th>Check-out</th><th>Total</th><th>Status</th>'
+      + '</tr></thead><tbody>'
+      + nbList.map(function(b) {
+          return '<tr onclick="openCalBooking(' + b.id + ')" style="cursor:pointer">'
+            + '<td><span class="ref-badge">' + b.ref + '</span></td>'
+            + '<td style="font-weight:600;color:#0f172a">' + esc(b.guest_first_name) + ' ' + esc(b.guest_last_name) + '</td>'
+            + '<td><span class="price-card-code" style="background:#0f172a;font-size:10px;padding:1px 5px;border-radius:4px">' + b.room_code.toUpperCase() + '</span></td>'
             + '<td>' + fmtDate(b.checkin_date) + '</td>'
             + '<td>' + fmtDate(b.checkout_date) + '</td>'
-            + '<td>£' + Number(b.total_amount).toLocaleString() + '</td>'
-            + '<td><span class="status-badge status-' + b.status + '">' + b.status + '</span></td></tr>';
+            + '<td style="font-weight:700;color:#059669">&pound;' + Number(b.total_amount).toLocaleString() + '</td>'
+            + '<td><span class="status-badge status-' + b.status + '">' + b.status + '</span></td>'
+            + '</tr>';
         }).join('')
       + '</tbody></table>'
     : '<div class="fd-empty">No new bookings made today.</div>';
 
-  // Cancellations today
-  document.getElementById('eodCancelCount').textContent = (d.cancellations || []).length + ' cancellation' + (d.cancellations.length !== 1 ? 's' : '');
-  document.getElementById('eodCancellations').innerHTML = (d.cancellations || []).length
-    ? '<table class="eod-mini-table"><thead><tr><th>Ref</th><th>Guest</th><th>Room</th><th>Total</th></tr></thead><tbody>'
-      + (d.cancellations || []).map(function(b) {
-          return '<tr><td><span class="ref-badge">' + b.ref + '</span></td>'
-            + '<td>' + esc(b.guest_first_name) + ' ' + esc(b.guest_last_name) + '</td>'
-            + '<td>' + b.room_code.toUpperCase() + '</td>'
-            + '<td>£' + Number(b.total_amount).toLocaleString() + '</td></tr>';
+  // ── Cancellations ─────────────────────────────────────────────
+  var cnList = d.cancellations || [];
+  document.getElementById('eodCancelCount').textContent = cnList.length + ' cancellation' + (cnList.length !== 1 ? 's' : '');
+  document.getElementById('eodCancellations').innerHTML = cnList.length
+    ? '<table class="eod-mini-table"><thead><tr>'
+      + '<th>Ref</th><th>Guest</th><th>Room</th><th>Total</th>'
+      + '</tr></thead><tbody>'
+      + cnList.map(function(b) {
+          return '<tr onclick="openCalBooking(' + b.id + ')" style="cursor:pointer">'
+            + '<td><span class="ref-badge">' + b.ref + '</span></td>'
+            + '<td style="font-weight:600;color:#0f172a">' + esc(b.guest_first_name) + ' ' + esc(b.guest_last_name) + '</td>'
+            + '<td><span class="price-card-code" style="background:#0f172a;font-size:10px;padding:1px 5px;border-radius:4px">' + b.room_code.toUpperCase() + '</span></td>'
+            + '<td style="font-weight:700;color:#ef4444">&pound;' + Number(b.total_amount).toLocaleString() + '</td>'
+            + '</tr>';
         }).join('')
       + '</tbody></table>'
-    : '<div class="fd-empty" style="color:#64748b">No cancellations today.</div>';
+    : '<div class="fd-empty">No cancellations today.</div>';
 }
 
 // ── EOD PDF download ──────────────────────────────────────────
