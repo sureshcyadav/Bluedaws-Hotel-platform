@@ -93,43 +93,52 @@
           <button class="btn-refresh" id="refreshDash">Refresh</button>
         </div>
 
-        <!-- KPI Strip (9 cards) — data-goto drives click navigation -->
+        <!-- KPI Strip (9 cards) — gradient full-bleed cards -->
         <div class="dash-kpi-strip">
-          <div class="stat-card" data-goto="bookings" data-bkfilter="all" title="View all bookings">
-            <div class="stat-icon stat-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
-            <div><p class="stat-label">Total Bookings</p><p class="stat-value" id="statTotal">—</p></div>
+          <div class="stat-card dash-kpi-card" data-goto="bookings" data-bkfilter="all" title="View all bookings" style="background:linear-gradient(135deg,#3b82f6,#2563eb);box-shadow:0 6px 22px rgba(59,130,246,.36);animation-delay:0s">
+            <div class="dash-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="20" height="20"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+            <div class="dash-kpi-lbl">Total Bookings</div>
+            <div class="dash-kpi-val" id="statTotal">—</div>
           </div>
-          <div class="stat-card" data-goto="bookings" data-bkfilter="pending" title="View pending bookings">
-            <div class="stat-icon stat-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
-            <div><p class="stat-label">Pending</p><p class="stat-value" id="statPending">—</p></div>
+          <div class="stat-card dash-kpi-card" data-goto="bookings" data-bkfilter="pending" title="View pending bookings" style="background:linear-gradient(135deg,#f59e0b,#d97706);box-shadow:0 6px 22px rgba(245,158,11,.38);animation-delay:0.06s">
+            <div class="dash-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="20" height="20"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+            <div class="dash-kpi-lbl">Pending</div>
+            <div class="dash-kpi-val" id="statPending">—</div>
           </div>
-          <div class="stat-card" data-goto="bookings" data-bkfilter="confirmed" title="View confirmed bookings">
-            <div class="stat-icon stat-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><polyline points="20 6 9 17 4 12"/></svg></div>
-            <div><p class="stat-label">Confirmed</p><p class="stat-value" id="statConfirmed">—</p></div>
+          <div class="stat-card dash-kpi-card" data-goto="bookings" data-bkfilter="confirmed" title="View confirmed bookings" style="background:linear-gradient(135deg,#059669,#047857);box-shadow:0 6px 22px rgba(5,150,105,.36);animation-delay:0.12s">
+            <div class="dash-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="20" height="20"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div class="dash-kpi-lbl">Confirmed</div>
+            <div class="dash-kpi-val" id="statConfirmed">—</div>
           </div>
-          <div class="stat-card" data-goto="bookings" data-bkfilter="checkedin" title="View in-house guests">
-            <div class="stat-icon stat-teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
-            <div><p class="stat-label">In House</p><p class="stat-value" id="statInHouse">—</p></div>
+          <div class="stat-card dash-kpi-card" data-goto="bookings" data-bkfilter="checkedin" title="View in-house guests" style="background:linear-gradient(135deg,#0891b2,#0e7490);box-shadow:0 6px 22px rgba(8,145,178,.38);animation-delay:0.18s">
+            <div class="dash-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="20" height="20"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+            <div class="dash-kpi-lbl">In House</div>
+            <div class="dash-kpi-val" id="statInHouse">—</div>
           </div>
-          <div class="stat-card" data-goto="frontdesk" title="Open Front Desk — today's arrivals">
-            <div class="stat-icon stat-sky"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><path d="M5 12H19"/><path d="M12 5l7 7-7 7"/></svg></div>
-            <div><p class="stat-label">Arriving Today</p><p class="stat-value" id="statArrivingToday">—</p></div>
+          <div class="stat-card dash-kpi-card" data-goto="frontdesk" title="Open Front Desk — today's arrivals" style="background:linear-gradient(135deg,#0284c7,#0369a1);box-shadow:0 6px 22px rgba(2,132,199,.36);animation-delay:0.24s">
+            <div class="dash-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="20" height="20"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21 4 19.5 2.5S18 2 16.5 3.5L13 7 4.8 5.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg></div>
+            <div class="dash-kpi-lbl">Arriving Today</div>
+            <div class="dash-kpi-val" id="statArrivingToday">—</div>
           </div>
-          <div class="stat-card" data-goto="frontdesk" title="Open Front Desk — today's departures">
-            <div class="stat-icon stat-orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></div>
-            <div><p class="stat-label">Departing Today</p><p class="stat-value" id="statDepartingToday">—</p></div>
+          <div class="stat-card dash-kpi-card" data-goto="frontdesk" title="Open Front Desk — today's departures" style="background:linear-gradient(135deg,#f97316,#ea580c);box-shadow:0 6px 22px rgba(249,115,22,.36);animation-delay:0.30s">
+            <div class="dash-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="20" height="20"><path d="M13 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7"/><polyline points="17 8 21 12 17 16"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div>
+            <div class="dash-kpi-lbl">Departing Today</div>
+            <div class="dash-kpi-val" id="statDepartingToday">—</div>
           </div>
-          <div class="stat-card" data-goto="reports" title="Open Reports">
-            <div class="stat-icon stat-gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
-            <div><p class="stat-label">Total Revenue</p><p class="stat-value" id="statRevenue">—</p></div>
+          <div class="stat-card dash-kpi-card" data-goto="reports" title="Open Reports" style="background:linear-gradient(135deg,#c9a96e,#b8832e);box-shadow:0 6px 22px rgba(201,169,110,.42);animation-delay:0.36s">
+            <div class="dash-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="20" height="20"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+            <div class="dash-kpi-lbl">Total Revenue</div>
+            <div class="dash-kpi-val" id="statRevenue">—</div>
           </div>
-          <div class="stat-card" data-goto="reports" title="Open Reports">
-            <div class="stat-icon stat-indigo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
-            <div><p class="stat-label">Occupancy</p><p class="stat-value" id="statOccupancy">—</p></div>
+          <div class="stat-card dash-kpi-card" data-goto="reports" title="Open Reports" style="background:linear-gradient(135deg,#6366f1,#4f46e5);box-shadow:0 6px 22px rgba(99,102,241,.36);animation-delay:0.42s">
+            <div class="dash-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="20" height="20"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+            <div class="dash-kpi-lbl">Occupancy</div>
+            <div class="dash-kpi-val" id="statOccupancy">—</div>
           </div>
-          <div class="stat-card" data-goto="contacts" title="View messages">
-            <div class="stat-icon stat-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
-            <div><p class="stat-label">Unread Messages</p><p class="stat-value" id="statUnread">—</p></div>
+          <div class="stat-card dash-kpi-card" data-goto="contacts" title="View messages" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);box-shadow:0 6px 22px rgba(139,92,246,.36);animation-delay:0.48s">
+            <div class="dash-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="20" height="20"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+            <div class="dash-kpi-lbl">Unread Messages</div>
+            <div class="dash-kpi-val" id="statUnread">—</div>
           </div>
         </div>
 
@@ -139,14 +148,24 @@
           <!-- Col 1: Today's Activity -->
           <div class="dash-widget">
             <div class="dash-widget-hdr">
-              <span class="dash-widget-title">Arriving Today</span>
+              <div class="dash-widget-hdr-left">
+                <div class="dash-sec-icon" style="background:rgba(8,145,178,0.10);color:#0891b2">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="15" height="15"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21 4 19.5 2.5S18 2 16.5 3.5L13 7 4.8 5.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>
+                </div>
+                <span class="dash-widget-title">Arriving Today</span>
+              </div>
               <span class="dash-count-badge dash-badge-green" id="dashArrCount">0</span>
             </div>
             <div id="dashArrList" class="dash-guest-list">
               <div class="dash-empty">No arrivals today</div>
             </div>
             <div class="dash-widget-hdr" style="margin-top:20px">
-              <span class="dash-widget-title">Departing Today</span>
+              <div class="dash-widget-hdr-left">
+                <div class="dash-sec-icon" style="background:rgba(249,115,22,0.10);color:#f97316">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="15" height="15"><path d="M13 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7"/><polyline points="17 8 21 12 17 16"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                </div>
+                <span class="dash-widget-title">Departing Today</span>
+              </div>
               <span class="dash-count-badge dash-badge-orange" id="dashDepCount">0</span>
             </div>
             <div id="dashDepList" class="dash-guest-list">
@@ -157,17 +176,32 @@
           <!-- Col 2: Occupancy + Upcoming -->
           <div class="dash-widget">
             <div class="dash-widget-hdr">
-              <span class="dash-widget-title">Live Occupancy</span>
+              <div class="dash-widget-hdr-left">
+                <div class="dash-sec-icon" style="background:rgba(22,163,74,0.10);color:#16a34a">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="15" height="15"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+                </div>
+                <span class="dash-widget-title">Live Occupancy</span>
+              </div>
               <span class="dash-occ-rooms" id="dashOccLabel">0 / 22 rooms</span>
             </div>
-            <div class="dash-occ-track">
-              <div class="dash-occ-fill" id="dashOccFill" style="width:0%"></div>
+            <div style="display:flex;align-items:center;gap:14px;margin-bottom:10px">
+              <div class="dash-occ-pct" id="dashOccPct">0%</div>
+              <div style="flex:1">
+                <div class="dash-occ-track">
+                  <div class="dash-occ-fill" id="dashOccFill" style="width:0%"></div>
+                </div>
+                <div style="font-size:11px;color:#94a3b8;font-weight:600;margin-top:4px" id="dashOccSub">0 occupied · 22 available</div>
+              </div>
             </div>
-            <div class="dash-occ-pct" id="dashOccPct">0%</div>
 
             <div class="dash-divider"></div>
             <div class="dash-widget-hdr">
-              <span class="dash-widget-title">Upcoming — Next 7 Days</span>
+              <div class="dash-widget-hdr-left">
+                <div class="dash-sec-icon" style="background:rgba(99,102,241,0.10);color:#6366f1">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="15" height="15"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                </div>
+                <span class="dash-widget-title">Upcoming — Next 7 Days</span>
+              </div>
             </div>
             <div id="dashUpcoming" class="dash-upcoming-list">
               <div class="dash-empty">No upcoming bookings</div>
@@ -177,7 +211,12 @@
           <!-- Col 3: Daily Tasks + Notes -->
           <div class="dash-widget dash-todo-widget">
             <div class="dash-widget-hdr">
-              <span class="dash-widget-title">Daily Tasks</span>
+              <div class="dash-widget-hdr-left">
+                <div class="dash-sec-icon" style="background:rgba(15,23,42,0.07);color:#475569">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="15" height="15"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                </div>
+                <span class="dash-widget-title">Daily Tasks</span>
+              </div>
               <span class="dash-todo-date-badge" id="dashTodoDate"></span>
             </div>
             <div class="dash-todo-input-row">
@@ -192,7 +231,12 @@
 
             <div class="dash-divider"></div>
             <div class="dash-widget-hdr">
-              <span class="dash-widget-title">Day Notes</span>
+              <div class="dash-widget-hdr-left">
+                <div class="dash-sec-icon" style="background:rgba(201,169,110,0.12);color:#b8832e">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="15" height="15"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                </div>
+                <span class="dash-widget-title">Day Notes</span>
+              </div>
               <span class="dash-note-saved hidden" id="dashNoteSaved">&#10003; Saved</span>
             </div>
             <textarea id="dashTodoNote" class="dash-todo-textarea" rows="5"

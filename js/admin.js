@@ -182,6 +182,7 @@ async function loadStats() {
     document.getElementById('dashOccFill').style.width = occPct + '%';
     document.getElementById('dashOccPct').textContent  = occPct + '%';
     document.getElementById('dashOccLabel').textContent = td.in_house + ' / ' + TOTAL_ROOMS + ' rooms';
+    (function() { var s = document.getElementById('dashOccSub'); if (s) s.textContent = td.in_house + ' occupied · ' + (TOTAL_ROOMS - td.in_house) + ' available'; }());
 
     // ── Arrivals list ──────────────────────────────────────────
     document.getElementById('dashArrCount').textContent = td.arrivals.length;
