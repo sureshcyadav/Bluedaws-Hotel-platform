@@ -1,6 +1,42 @@
 // ── Config ────────────────────────────────────────────────────
 const API = 'https://bluedaws-hotel-platform.onrender.com';
 
+// ── EmailJS config — fill in your own IDs after setting up EmailJS ──
+const EMAILJS_CONFIG = {
+  publicKey:   'YOUR_PUBLIC_KEY',      // From EmailJS → Account → API Keys
+  serviceId:   'YOUR_SERVICE_ID',      // From EmailJS → Email Services
+  templateId:  'YOUR_TEMPLATE_ID',     // From EmailJS → Email Templates
+};
+// Initialise EmailJS (runs once on page load)
+if (typeof emailjs !== 'undefined') {
+  emailjs.init({ publicKey: EMAILJS_CONFIG.publicKey });
+}
+
+async function sendBookingConfirmationEmail(booking) {
+  if (typeof emailjs === 'undefined') throw new Error('EmailJS SDK not loaded');
+  if (EMAILJS_CONFIG.publicKey === 'YOUR_PUBLIC_KEY') throw new Error('EmailJS not configured');
+  const payLabel = { card: 'Card', bank: 'Bank Transfer', payathotel: 'Pay at Hotel' };
+  const fmt = d => d ? new Date(d + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '—';
+  await emailjs.send(EMAILJS_CONFIG.serviceId, EMAILJS_CONFIG.templateId, {
+    to_name:       booking.guest_first_name + ' ' + booking.guest_last_name,
+    to_email:      booking.guest_email,
+    booking_ref:   booking.ref,
+    room_name:     booking.room_name,
+    room_code:     (booking.room_code || '').toUpperCase(),
+    checkin_date:  fmt(booking.checkin_date),
+    checkout_date: fmt(booking.checkout_date),
+    nights:        booking.nights,
+    adults:        booking.adults,
+    children:      booking.children || 0,
+    total_amount:  '£' + Number(booking.total_amount).toLocaleString(),
+    payment_method: payLabel[booking.payment_method] || booking.payment_method,
+    special_requests: booking.special_requests || 'None',
+    hotel_name:    'Bluedaws Hotel',
+    hotel_email:   'info@bluedawshotel.com',
+    hotel_phone:   '+44 1234 567890',
+  });
+}
+
 let allBookings = [];
 let allContacts = [];
 let bookingFilter      = 'all';
@@ -1909,14 +1945,39 @@ document.getElementById('newBookingSubmitBtn').addEventListener('click', async (
   }
   if (!body.room_code) { errEl.textContent = 'Please select a room.'; errEl.classList.remove('hidden'); return; }
   if (!body.checkin_date || !body.checkout_date) { errEl.textContent = 'Check-in and check-out dates are required.'; errEl.classList.remove('hidden'); return; }
+  const sendEmail = document.getElementById('nb_send_email').checked;
+  const emailStatusEl = document.getElementById('nbEmailStatus');
+  emailStatusEl.textContent = '';
+  emailStatusEl.className = 'nb-email-status';
+
   btn.disabled = true; btn.textContent = 'Creating…';
   try {
     const { ok, data } = await apiFetch('POST', '/api/admin/bookings', body);
     if (!ok) { errEl.textContent = data.message || 'Failed to create booking.'; errEl.classList.remove('hidden'); return; }
+
+    const booking = data.data;
+
+    // Send confirmation email if checkbox ticked
+    if (sendEmail) {
+      emailStatusEl.textContent = 'Sending…';
+      emailStatusEl.className = 'nb-email-status sending';
+      try {
+        await sendBookingConfirmationEmail(booking);
+        emailStatusEl.textContent = '✓ Email sent';
+        emailStatusEl.className = 'nb-email-status sent';
+        await new Promise(r => setTimeout(r, 1200));
+      } catch (emailErr) {
+        emailStatusEl.textContent = '✗ Email failed';
+        emailStatusEl.className = 'nb-email-status failed';
+        console.warn('EmailJS error:', emailErr.message);
+        await new Promise(r => setTimeout(r, 1400));
+      }
+    }
+
     closeNewBookingModal();
     loadBookings();
     loadStats();
-    alert('Booking created! Ref: ' + data.data.ref);
+    alert('Booking created! Ref: ' + booking.ref + (sendEmail ? '\nConfirmation email sent to guest.' : ''));
   } catch { errEl.textContent = 'Network error. Please try again.'; errEl.classList.remove('hidden'); }
   finally { btn.disabled = false; btn.textContent = 'Create Booking'; }
 });

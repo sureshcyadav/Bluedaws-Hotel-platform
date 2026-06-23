@@ -2865,3 +2865,39 @@ a:hover { text-decoration: underline; }
 
 /* Status badges — enhanced */
 .status-badge { padding: 4px 11px !important; border-radius: 20px !important; font-size: 11px !important; font-weight: 700 !important; }
+
+/* ── New Booking — confirmation email toggle ─────────────────── */
+.nb-email-toggle {
+  display: flex; align-items: flex-start; gap: 11px;
+  padding: 14px 16px; margin: 14px 0 6px;
+  background: #f8fafc; border: 1.5px solid #e2e8f0;
+  border-radius: 14px; cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.nb-email-toggle:hover { border-color: #c9a96e; background: #fffdf6; }
+.nb-email-toggle input[type="checkbox"] { display: none; }
+.nb-email-toggle-box {
+  width: 20px; height: 20px; border-radius: 6px; flex-shrink: 0; margin-top: 1px;
+  border: 2px solid #e2e8f0; background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s, border-color 0.15s;
+  color: transparent;
+}
+.nb-email-toggle input:checked + .nb-email-toggle-box {
+  background: linear-gradient(135deg,#c9a96e,#b8832e);
+  border-color: transparent; color: #fff;
+}
+.nb-email-toggle-lbl {
+  flex: 1; font-size: 13px; font-weight: 700; color: #0f172a; line-height: 1.3;
+}
+.nb-email-toggle-sub {
+  display: block; font-size: 11px; font-weight: 500; color: #94a3b8; margin-top: 2px;
+}
+.nb-email-status {
+  font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px;
+  white-space: nowrap; align-self: center;
+}
+.nb-email-status.sending  { background: #dbeafe; color: #1d4ed8; }
+.nb-email-status.sent     { background: #dcfce7; color: #16a34a; }
+.nb-email-status.failed   { background: #fee2e2; color: #dc2626; }
+.nb-email-status.skipped  { background: #f1f5f9; color: #94a3b8; }

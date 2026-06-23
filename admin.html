@@ -6,7 +6,9 @@
   <title>Admin — Bluedaws Hotel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/admin.css?v=3">
+  <link rel="stylesheet" href="css/admin.css?v=4">
+  <!-- EmailJS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
 
@@ -719,6 +721,20 @@
           <div class="modal-field" style="flex:1"><label>Admin Notes <span style="color:#94a3b8;font-size:11px">(internal only)</span></label><textarea id="nb_notes" class="cf-input" rows="2" placeholder="e.g. Repeat guest, VIP, early check-in arranged…"></textarea></div>
         </div>
         <div class="modal-error hidden" id="nbError"></div>
+
+        <!-- Confirmation email toggle -->
+        <label class="nb-email-toggle" id="nbEmailToggleRow">
+          <input type="checkbox" id="nb_send_email" checked>
+          <span class="nb-email-toggle-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><polyline points="20 6 9 17 4 12"/></svg>
+          </span>
+          <span class="nb-email-toggle-lbl">
+            Send confirmation email to guest
+            <span class="nb-email-toggle-sub">EmailJS must be configured — see Settings</span>
+          </span>
+          <span class="nb-email-status" id="nbEmailStatus"></span>
+        </label>
+
         <div class="modal-footer">
           <button class="btn-modal-cancel" id="newBookingCancelBtn">Cancel</button>
           <button class="btn-modal-confirm" id="newBookingSubmitBtn">Create Booking</button>
@@ -907,6 +923,6 @@
     </div>
   </div>
 
-  <script src="js/admin.js?v=3"></script>
+  <script src="js/admin.js?v=4"></script>
 </body>
 </html>
