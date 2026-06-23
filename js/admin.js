@@ -2058,53 +2058,107 @@ let _blocksData = [];
 
 document.getElementById('refreshBlocks').addEventListener('click', loadAvailability);
 
+async function loadAvailability() {
+  document.getElementById('blocksList').innerHTML = '<div class="table-loading">Loading…</div>';
+  document.getElementById('avMatrix').innerHTML   = '<div class="table-loading">Loading…</div>';
+  try {
+    const { ok, data } = await apiFetch('GET', '/api/admin/blocks');
+    if (!ok) return;
+    _blocksData = data.data || [];
+    renderBlocks();
+    renderAvMatrix();
+    _updateAvKPIs();
+  } catch {
+    document.getElementById('blocksList').innerHTML = '<div class="table-error">Failed to load.</div>';
+  }
+  renderMinStayList();
+  loadSiteControls();
+}
+
+function _updateAvKPIs() {
+  const today = new Date().toISOString().slice(0, 10);
+  const blockedRooms = new Set(
+    _blocksData.filter(bl => bl.start_date <= today && bl.end_date >= today).map(bl => bl.room_code)
+  );
+  const occupiedRooms = new Set(
+    allBookings.filter(b => b.checked_in_at && !b.checked_out_at).map(b => b.room_code.toLowerCase())
+  );
+  const total    = CAL_ROOMS.length;
+  const blocked  = blockedRooms.size;
+  const occupied = occupiedRooms.size;
+  document.getElementById('avKpiTotal').textContent   = total;
+  document.getElementById('avKpiAvail').textContent   = Math.max(0, total - blocked - occupied);
+  document.getElementById('avKpiOcc').textContent     = occupied;
+  document.getElementById('avKpiBlocked').textContent = blocked;
+}
+
+function renderAvMatrix() {
+  const today = new Date().toISOString().slice(0, 10);
+  const blockedMap = {};
+  _blocksData.filter(bl => bl.start_date <= today && bl.end_date >= today)
+             .forEach(bl => { blockedMap[bl.room_code] = bl.id; });
+  const occupiedSet = new Set(
+    allBookings.filter(b => b.checked_in_at && !b.checked_out_at).map(b => b.room_code.toLowerCase())
+  );
+  const arrivingSet = new Set(
+    allBookings.filter(b => (b.checkin_date||'').slice(0,10) === today && !b.checked_in_at)
+               .map(b => b.room_code.toLowerCase())
+  );
+  document.getElementById('avMatrix').innerHTML = CAL_ROOMS.map(r => {
+    const code = r.code.toLowerCase();
+    let cls = 'av-mat-avail', lbl = 'Available', act = '';
+    if (blockedMap[code])       { cls = 'av-mat-blk'; lbl = 'Blocked'; act = ' onclick="deleteBlock(' + blockedMap[code] + ')" title="Click to remove block"'; }
+    else if (occupiedSet.has(code)) { cls = 'av-mat-occ'; lbl = 'In-House'; }
+    else if (arrivingSet.has(code)) { cls = 'av-mat-arr'; lbl = 'Arriving'; }
+    return '<div class="av-mat-tile ' + cls + '"' + act + '>'
+      + '<span class="av-mat-code">' + r.code.toUpperCase() + '</span>'
+      + '<span class="av-mat-name">' + r.name + '</span>'
+      + '<span class="av-mat-lbl">' + lbl + '</span>'
+      + '</div>';
+  }).join('');
+}
+
 function toggleBlockForm() {
   const wrap = document.getElementById('blockFormWrap');
   const isHidden = wrap.classList.contains('hidden');
   wrap.classList.toggle('hidden', !isHidden);
   if (isHidden) {
     const sel = document.getElementById('blk_room');
-    if (sel.options.length <= 1) {
-      CAL_ROOMS.forEach(r => {
-        const o = document.createElement('option');
-        o.value = r.code.toLowerCase();
-        o.textContent = r.code.toUpperCase() + ' — ' + r.name;
-        sel.appendChild(o);
-      });
-    }
+    sel.innerHTML = '<option value="">Select room…</option>';
+    CAL_ROOMS.forEach(r => {
+      const o = document.createElement('option');
+      o.value = r.code.toLowerCase();
+      o.textContent = r.code.toUpperCase() + ' — ' + r.name;
+      sel.appendChild(o);
+    });
     document.getElementById('blk_from').value   = new Date().toISOString().slice(0, 10);
     document.getElementById('blk_to').value     = '';
     document.getElementById('blk_reason').value = '';
     document.getElementById('blkError').classList.add('hidden');
-  }
-}
-
-async function loadAvailability() {
-  document.getElementById('blocksList').innerHTML = '<div class="table-loading">Loading…</div>';
-  try {
-    const { ok, data } = await apiFetch('GET', '/api/admin/blocks');
-    if (!ok) return;
-    _blocksData = data.data || [];
-    renderBlocks();
-  } catch {
-    document.getElementById('blocksList').innerHTML = '<div class="table-error">Failed to load.</div>';
+    wrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 }
 
 function renderBlocks() {
+  const SVG_DEL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="13" height="13"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>';
   if (!_blocksData.length) {
-    document.getElementById('blocksList').innerHTML = '<div class="fd-empty">No blocks set — all rooms are available.</div>';
+    document.getElementById('blocksList').innerHTML = '<div class="av-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="30" height="30"><circle cx="12" cy="12" r="10"/><polyline points="20 6 9 17 4 12"/></svg><p>No blocks set — all rooms are available</p></div>';
     return;
   }
-  document.getElementById('blocksList').innerHTML = _blocksData.map(bl => {
-    const room = CAL_ROOMS.find(r => r.code.toLowerCase() === bl.room_code) || { name: bl.room_code.toUpperCase() };
-    return '<div class="block-item">'
-      + '<div class="block-item-room"><span class="price-card-code" style="background:#0f172a">' + bl.room_code.toUpperCase() + '</span><span class="block-item-name">' + room.name + '</span></div>'
-      + '<div class="block-item-dates">' + fmtDate(bl.start_date) + ' → ' + fmtDate(bl.end_date) + '</div>'
-      + '<div class="block-item-reason">' + (bl.reason ? esc(bl.reason) : '<span style="color:#94a3b8">No reason given</span>') + '</div>'
-      + '<button class="btn-action btn-cancel" onclick="deleteBlock(' + bl.id + ')">Remove</button>'
-      + '</div>';
-  }).join('');
+  const today = new Date().toISOString().slice(0, 10);
+  document.getElementById('blocksList').innerHTML = '<div class="av-blocks-list">'
+    + _blocksData.map(bl => {
+      const room   = CAL_ROOMS.find(r => r.code.toLowerCase() === bl.room_code) || { name: bl.room_code.toUpperCase() };
+      const active = bl.start_date <= today && bl.end_date >= today;
+      return '<div class="av-block-item">'
+        + '<div class="av-bi-room"><span class="av-bi-code">' + bl.room_code.toUpperCase() + '</span><span class="av-bi-name">' + room.name + '</span></div>'
+        + '<div class="av-bi-dates"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' + fmtDate(bl.start_date) + ' → ' + fmtDate(bl.end_date) + '</div>'
+        + '<div class="av-bi-reason">' + (bl.reason ? esc(bl.reason) : '<span style="color:#94a3b8">No reason given</span>') + '</div>'
+        + (active ? '<span class="av-bi-badge av-bi-active">Active</span>' : '<span class="av-bi-badge av-bi-upcoming">Upcoming</span>')
+        + '<button class="av-bi-remove" onclick="deleteBlock(' + bl.id + ')">' + SVG_DEL + ' Remove</button>'
+        + '</div>';
+    }).join('')
+    + '</div>';
 }
 
 async function submitBlock() {
@@ -2134,6 +2188,93 @@ async function deleteBlock(id) {
     if (!ok) { alert(data.message); return; }
     loadAvailability();
   } catch { alert('Failed to remove block.'); }
+}
+
+// ── Minimum Stay Rules (localStorage) ─────────────────────────
+const MS_KEY = 'bdw_minstay_rules';
+function _msLoad() { try { return JSON.parse(localStorage.getItem(MS_KEY) || '[]'); } catch { return []; } }
+function _msSave(rules) { localStorage.setItem(MS_KEY, JSON.stringify(rules)); }
+
+function toggleMinStayForm() {
+  const form = document.getElementById('minStayForm');
+  const hidden = form.classList.contains('hidden');
+  form.classList.toggle('hidden', !hidden);
+  if (hidden) {
+    document.getElementById('ms_label').value  = '';
+    document.getElementById('ms_from').value   = new Date().toISOString().slice(0,10);
+    document.getElementById('ms_to').value     = '';
+    document.getElementById('ms_nights').value = '2';
+  }
+}
+
+function saveMinStayRule() {
+  const label  = document.getElementById('ms_label').value.trim();
+  const from   = document.getElementById('ms_from').value;
+  const to     = document.getElementById('ms_to').value;
+  const nights = parseInt(document.getElementById('ms_nights').value, 10);
+  if (!label)  { alert('Enter a label for this rule.'); return; }
+  if (!from || !to) { alert('Both dates are required.'); return; }
+  if (new Date(to) <= new Date(from)) { alert('End date must be after start date.'); return; }
+  if (!nights || nights < 1) { alert('Min nights must be at least 1.'); return; }
+  const rules = _msLoad();
+  rules.push({ id: Date.now(), label, from, to, nights });
+  _msSave(rules);
+  toggleMinStayForm();
+  renderMinStayList();
+}
+
+function deleteMinStayRule(id) {
+  _msSave(_msLoad().filter(r => r.id !== id));
+  renderMinStayList();
+}
+
+function renderMinStayList() {
+  const rules = _msLoad();
+  const el = document.getElementById('minStayList');
+  if (!rules.length) {
+    el.innerHTML = '<div class="av-empty" style="padding:14px 0 4px"><p>No minimum stay rules set</p></div>';
+    return;
+  }
+  const SVG_DEL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="13" height="13"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>';
+  el.innerHTML = rules.map(r =>
+    '<div class="av-ms-item">'
+    + '<div class="av-ms-main"><span class="av-ms-nights">' + r.nights + 'n min</span><span class="av-ms-label">' + esc(r.label) + '</span></div>'
+    + '<div class="av-ms-dates">' + fmtDate(r.from) + ' – ' + fmtDate(r.to) + '</div>'
+    + '<button class="av-bi-remove" onclick="deleteMinStayRule(' + r.id + ')">' + SVG_DEL + ' Remove</button>'
+    + '</div>'
+  ).join('');
+}
+
+// ── Website Quick Controls (localStorage) ─────────────────────
+const SC_KEY = 'bdw_site_controls';
+
+function loadSiteControls() {
+  const defaults = { bookings_open: true, banner_on: false, banner_text: '', offer_on: false, offer_text: '', checkin_time: '14:00', checkout_time: '11:00' };
+  const sc = Object.assign({}, defaults, JSON.parse(localStorage.getItem(SC_KEY) || '{}'));
+  document.getElementById('sc_bookings_open').checked = sc.bookings_open;
+  document.getElementById('sc_banner_on').checked     = sc.banner_on;
+  document.getElementById('sc_banner_text').value     = sc.banner_text;
+  document.getElementById('sc_offer_on').checked      = sc.offer_on;
+  document.getElementById('sc_offer_text').value      = sc.offer_text;
+  document.getElementById('sc_checkin_time').value    = sc.checkin_time;
+  document.getElementById('sc_checkout_time').value   = sc.checkout_time;
+}
+
+function saveSiteControls() {
+  const sc = {
+    bookings_open:  document.getElementById('sc_bookings_open').checked,
+    banner_on:      document.getElementById('sc_banner_on').checked,
+    banner_text:    document.getElementById('sc_banner_text').value,
+    offer_on:       document.getElementById('sc_offer_on').checked,
+    offer_text:     document.getElementById('sc_offer_text').value,
+    checkin_time:   document.getElementById('sc_checkin_time').value,
+    checkout_time:  document.getElementById('sc_checkout_time').value,
+  };
+  localStorage.setItem(SC_KEY, JSON.stringify(sc));
+  const msg = document.getElementById('scSavedMsg');
+  msg.classList.remove('hidden');
+  clearTimeout(msg._t);
+  msg._t = setTimeout(() => msg.classList.add('hidden'), 2000);
 }
 
 // ── Guests ────────────────────────────────────────────────────
