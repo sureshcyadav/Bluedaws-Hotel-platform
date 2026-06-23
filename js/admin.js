@@ -2290,33 +2290,42 @@ function renderReports(d) {
   const cancelRate  = totalActive ? ((Number(s.cancelled || 0) / totalActive) * 100).toFixed(1) : '0.0';
   const occupancy   = ((Number(s.in_house_now || 0) / 22) * 100).toFixed(0);
 
-  // KPI strip 1 — data-breakdown drives the inline breakdown panel
-  document.getElementById('reportsSummary').innerHTML = [
-    { label: 'Total Revenue',      val: '£' + Number(s.total_revenue).toLocaleString(),      cls: 'stat-gold',   icon: RPT_ICONS.pound,    bd: 'revenue',       tip: 'Click for revenue breakdown' },
-    { label: 'This Month Revenue', val: '£' + Number(s.this_month_revenue).toLocaleString(), cls: 'stat-green',  icon: RPT_ICONS.calendar, bd: 'month-revenue', tip: 'Click for monthly trend' },
-    { label: 'Avg Booking Value',  val: '£' + Number(s.avg_booking_value).toFixed(0),        cls: 'stat-blue',   icon: RPT_ICONS.tag,      bd: 'avg-value',     tip: 'Click for value distribution' },
-    { label: 'Avg Stay (nights)',  val: Number(s.avg_nights).toFixed(1),                     cls: 'stat-purple', icon: RPT_ICONS.moon,     bd: 'avg-nights',    tip: 'Click for stay length breakdown' },
-    { label: 'Total Bookings',     val: s.total_bookings,                                    cls: 'stat-blue',   icon: RPT_ICONS.clipboard,bd: 'total-bookings',tip: 'Click for status breakdown' },
-    { label: 'This Month',         val: s.this_month_bookings + ' bookings',                 cls: 'stat-green',  icon: RPT_ICONS.trending, bd: 'month-bookings',tip: 'Click for this month\'s breakdown' },
-  ].map(function(x) {
-    return '<div class="stat-card stat-card-hover rpt-clickable" data-breakdown="' + x.bd + '" title="' + x.tip + '">'
-      + '<div class="stat-icon ' + x.cls + '">' + x.icon + '</div>'
-      + '<div><p class="stat-label">' + x.label + '</p>'
-      + '<p class="stat-value">' + x.val + '</p></div></div>';
+  // KPI strip 1 — full-gradient coloured cards
+  var kpi1Cards = [
+    { label:'Total Revenue',      val:'£'+Number(s.total_revenue).toLocaleString(),      note:'All time',                          icon:RPT_ICONS.pound,     bd:'revenue',       grad:'linear-gradient(135deg,#c9a96e,#b8832e)', shadow:'rgba(201,169,110,.40)', tip:'Revenue breakdown' },
+    { label:'This Month Revenue', val:'£'+Number(s.this_month_revenue).toLocaleString(), note:'Current month',                     icon:RPT_ICONS.calendar,  bd:'month-revenue', grad:'linear-gradient(135deg,#059669,#047857)', shadow:'rgba(5,150,105,.35)',   tip:'Monthly revenue trend' },
+    { label:'Avg Booking Value',  val:'£'+Number(s.avg_booking_value).toFixed(0),        note:'Per reservation',                   icon:RPT_ICONS.tag,       bd:'avg-value',     grad:'linear-gradient(135deg,#3b82f6,#2563eb)', shadow:'rgba(59,130,246,.35)',  tip:'Value distribution' },
+    { label:'Avg Stay',           val:Number(s.avg_nights).toFixed(1)+' nights',         note:'Average duration',                  icon:RPT_ICONS.moon,      bd:'avg-nights',    grad:'linear-gradient(135deg,#8b5cf6,#7c3aed)', shadow:'rgba(139,92,246,.35)', tip:'Stay length breakdown' },
+    { label:'Total Bookings',     val:String(s.total_bookings),                          note:'All reservations',                  icon:RPT_ICONS.clipboard, bd:'total-bookings',grad:'linear-gradient(135deg,#475569,#334155)', shadow:'rgba(71,85,105,.30)',   tip:'Status breakdown' },
+    { label:'This Month',         val:s.this_month_bookings+' bookings',                 note:'New this month',                    icon:RPT_ICONS.trending,  bd:'month-bookings',grad:'linear-gradient(135deg,#0891b2,#0e7490)', shadow:'rgba(8,145,178,.35)',   tip:'This month\'s breakdown' },
+  ];
+  document.getElementById('reportsSummary').innerHTML = kpi1Cards.map(function(x, i) {
+    return '<div class="stat-card rpt-clickable rpt-kpi-full" data-breakdown="' + x.bd + '" title="' + x.tip + '"'
+      + ' style="background:' + x.grad + ';box-shadow:0 6px 24px ' + x.shadow + ';animation-delay:' + (i*0.06) + 's">'
+      + '<div class="rpt-kpi-icon">' + x.icon + '</div>'
+      + '<div class="rpt-kpi-label">' + x.label + '</div>'
+      + '<div class="rpt-kpi-val">' + x.val + '</div>'
+      + '<div class="rpt-kpi-note">' + x.note + '</div>'
+      + '</div>';
   }).join('');
 
-  // KPI strip 2 — operational metrics
-  document.getElementById('reportsSummary2').innerHTML = [
-    { label: 'Occupancy Now',     val: occupancy + '%',                                  cls: 'stat-teal',   icon: RPT_ICONS.hotel,   note: s.in_house_now + ' / 22 rooms', bd: 'occupancy',    tip: 'Click for room occupancy breakdown' },
-    { label: 'Cancellation Rate', val: cancelRate + '%',                                 cls: 'stat-orange', icon: RPT_ICONS.xCircle, note: s.cancelled + ' cancelled',      bd: 'cancellation', tip: 'Click for cancellation breakdown' },
-    { label: 'Total Collected',   val: '£' + Number(s.total_collected).toLocaleString(), cls: 'stat-green',  icon: RPT_ICONS.checkOk, note: 'Payments received',             bd: 'collected',    tip: 'Click for payment collection breakdown' },
-    { label: 'Outstanding',       val: '£' + Number(s.outstanding).toLocaleString(),     cls: 'stat-indigo', icon: RPT_ICONS.alert,   note: 'Confirmed unpaid',              bd: 'outstanding',  tip: 'Click for outstanding balance breakdown' },
-  ].map(function(x) {
-    return '<div class="stat-card stat-card-hover rpt-kpi2-card rpt-clickable" data-breakdown="' + x.bd + '" title="' + x.tip + '">'
-      + '<div class="stat-icon ' + x.cls + '">' + x.icon + '</div>'
-      + '<div><p class="stat-label">' + x.label + '</p>'
-      + '<p class="stat-value">' + x.val + '</p>'
-      + '<p class="stat-note">' + x.note + '</p></div></div>';
+  // KPI strip 2 — accent-left white cards
+  var kpi2Cards = [
+    { label:'Occupancy Now',      val:occupancy+'%',                                  note:s.in_house_now+' / 22 rooms',  icon:RPT_ICONS.hotel,   bd:'occupancy',    accent:'#0891b2', abg:'rgba(8,145,178,0.10)',  tip:'Room occupancy breakdown' },
+    { label:'Cancellation Rate',  val:cancelRate+'%',                                 note:s.cancelled+' cancelled',      icon:RPT_ICONS.xCircle, bd:'cancellation', accent:'#f97316', abg:'rgba(249,115,22,0.10)', tip:'Cancellation breakdown' },
+    { label:'Total Collected',    val:'£'+Number(s.total_collected).toLocaleString(), note:'Payments received',            icon:RPT_ICONS.checkOk, bd:'collected',    accent:'#059669', abg:'rgba(5,150,105,0.10)',  tip:'Payment collection breakdown' },
+    { label:'Outstanding',        val:'£'+Number(s.outstanding).toLocaleString(),     note:'Confirmed unpaid',             icon:RPT_ICONS.alert,   bd:'outstanding',  accent:'#6366f1', abg:'rgba(99,102,241,0.10)', tip:'Outstanding balance breakdown' },
+  ];
+  document.getElementById('reportsSummary2').innerHTML = kpi2Cards.map(function(x, i) {
+    return '<div class="stat-card rpt-kpi2-card rpt-clickable rpt-kpi-accent" data-breakdown="' + x.bd + '" title="' + x.tip + '"'
+      + ' style="box-shadow:-4px 0 0 ' + x.accent + ',0 3px 16px rgba(0,0,0,0.07);animation-delay:' + (i*0.07+0.3) + 's">'
+      + '<div class="rpt-kpi-accent-head">'
+      + '<div class="rpt-kpi-accent-icon" style="background:' + x.abg + ';color:' + x.accent + '">' + x.icon + '</div>'
+      + '<div class="rpt-kpi-accent-label">' + x.label + '</div>'
+      + '</div>'
+      + '<div class="rpt-kpi-accent-val" style="color:' + x.accent + '">' + x.val + '</div>'
+      + '<div class="rpt-kpi-accent-note">' + x.note + '</div>'
+      + '</div>';
   }).join('');
 
   // Monthly revenue chart — build grid then hand off to _drawRevChart
@@ -2349,58 +2358,72 @@ function renderReports(d) {
     _drawRevChart();
   }());
 
-  // Top rooms
-  document.getElementById('roomsChart').innerHTML = (d.rooms || []).map(function(r) {
-    const maxBk = d.rooms[0].bookings || 1;
-    const pct = Math.round((r.bookings / maxBk) * 100);
-    return '<div class="horiz-bar-row">'
-      + '<span class="horiz-bar-label"><span class="price-card-code" style="background:#0f172a;font-size:10px">'
-      + r.room_code.toUpperCase() + '</span> ' + esc(r.room_name) + '</span>'
-      + '<div class="horiz-bar-track"><div class="horiz-bar-fill" style="width:' + pct + '%"></div></div>'
-      + '<span class="horiz-bar-val">' + r.bookings + '</span>'
+  // Top rooms — animated gradient bars
+  var maxRoomBk = (d.rooms && d.rooms[0]) ? (d.rooms[0].bookings || 1) : 1;
+  document.getElementById('roomsChart').innerHTML = (d.rooms || []).map(function(r, i) {
+    var pct = Math.round((r.bookings / maxRoomBk) * 100);
+    return '<div class="rpt-bar-row" style="animation-delay:' + (i*0.05) + 's">'
+      + '<div class="rpt-bar-label"><span class="price-card-code" style="background:#0f172a;font-size:10px;padding:1px 5px;border-radius:4px">'
+      + r.room_code.toUpperCase() + '</span>' + esc(r.room_name) + '</div>'
+      + '<div class="rpt-bar-track"><div class="rpt-bar-fill" data-w="' + pct + '%" style="--bc1:#c9a96e;--bc2:#b8832e"></div></div>'
+      + '<div class="rpt-bar-val">' + r.bookings + '</div>'
       + '</div>';
   }).join('') || '<div class="fd-empty">No data yet.</div>';
 
-  // Payment methods
-  const payLabels = { card: 'Card Payment', bank: 'Bank Transfer', payathotel: 'Pay at Hotel' };
-  const payColors = { card: '#6366f1', bank: '#0891b2', payathotel: '#059669' };
-  document.getElementById('paymentsChart').innerHTML = (d.payments || []).map(function(p) {
-    return '<div class="pay-row">'
-      + '<span class="pay-dot" style="background:' + (payColors[p.payment_method] || '#94a3b8') + '"></span>'
-      + '<span class="pay-label">' + (payLabels[p.payment_method] || p.payment_method) + '</span>'
-      + '<span class="pay-count">' + p.count + '</span>'
+  // Payment methods — card-style rows with emoji swatches
+  var payMeta = {
+    payathotel: { label:'Pay at Hotel',  sub:'On-site payment',    emoji:'🏨', color:'#059669', bg:'rgba(5,150,105,0.12)'   },
+    card:       { label:'Card Payment',  sub:'Debit / Credit card', emoji:'💳', color:'#6366f1', bg:'rgba(99,102,241,0.12)'  },
+    bank:       { label:'Bank Transfer', sub:'Online transfer',     emoji:'🏦', color:'#0891b2', bg:'rgba(8,145,178,0.12)'   },
+  };
+  document.getElementById('paymentsChart').innerHTML = (d.payments || []).map(function(p, i) {
+    var m = payMeta[p.payment_method] || { label:p.payment_method, emoji:'💰', color:'#94a3b8', bg:'rgba(148,163,184,0.12)', sub:'' };
+    return '<div class="rpt-pay-item" style="animation-delay:' + (i*0.08) + 's">'
+      + '<div class="rpt-pay-swatch" style="background:' + m.bg + ';color:' + m.color + '">' + m.emoji + '</div>'
+      + '<div><div class="rpt-pay-name">' + m.label + '</div><div class="rpt-pay-sub">' + m.sub + '</div></div>'
+      + '<div class="rpt-pay-pill">' + p.count + '</div>'
       + '</div>';
   }).join('') || '<div class="fd-empty">No data yet.</div>';
 
-  // Guest nationalities
-  const nations = d.nations || [];
-  const maxNat  = nations.length ? nations[0].count : 1;
-  document.getElementById('nationsChart').innerHTML = nations.map(function(n) {
-    const pct = Math.round((n.count / maxNat) * 100);
-    return '<div class="horiz-bar-row">'
-      + '<span class="horiz-bar-label" style="min-width:130px">' + esc(n.country || 'Unknown') + '</span>'
-      + '<div class="horiz-bar-track"><div class="horiz-bar-fill" style="width:' + pct + '%;background:#0891b2"></div></div>'
-      + '<span class="horiz-bar-val">' + n.count + '</span>'
+  // Guest nationalities — teal animated bars
+  var nations = d.nations || [];
+  var maxNat  = nations.length ? nations[0].count : 1;
+  document.getElementById('nationsChart').innerHTML = nations.map(function(n, i) {
+    var pct = Math.round((n.count / maxNat) * 100);
+    return '<div class="rpt-nat-row" style="animation-delay:' + (i*0.05) + 's">'
+      + '<div class="rpt-nat-label">' + esc(n.country || 'Unknown') + '</div>'
+      + '<div class="rpt-nat-track"><div class="rpt-nat-fill" data-w="' + pct + '%"></div></div>'
+      + '<div class="rpt-nat-val">' + n.count + '</div>'
       + '</div>';
   }).join('') || '<div class="fd-empty">No nationality data yet.</div>';
 
-  // Booking status breakdown
-  const statusItems = [
-    { label: 'Awaiting Confirmation', val: sb.awaiting_confirmation || 0, color: '#f59e0b' },
-    { label: 'Confirmed (pre arrival)', val: sb.confirmed_pending_checkin || 0, color: '#0891b2' },
-    { label: 'In House',              val: sb.in_house || 0,                  color: '#059669' },
-    { label: 'Checked Out',           val: sb.checked_out || 0,               color: '#475569' },
-    { label: 'Cancelled',             val: sb.cancelled || 0,                 color: '#ef4444' },
+  // Booking status — coloured dots + animated fills
+  var statusItems = [
+    { label:'Awaiting Confirmation',  val: sb.awaiting_confirmation || 0,       color:'#f59e0b' },
+    { label:'Confirmed (pre arrival)',val: sb.confirmed_pending_checkin || 0,    color:'#0891b2' },
+    { label:'In House',               val: sb.in_house || 0,                    color:'#059669' },
+    { label:'Checked Out',            val: sb.checked_out || 0,                 color:'#475569' },
+    { label:'Cancelled',              val: sb.cancelled || 0,                   color:'#ef4444' },
   ];
-  const maxStatus = Math.max.apply(null, statusItems.map(function(x) { return x.val; }).concat([1]));
-  document.getElementById('statusChart').innerHTML = statusItems.map(function(x) {
-    const pct = Math.round((x.val / maxStatus) * 100);
-    return '<div class="horiz-bar-row">'
-      + '<span class="horiz-bar-label" style="min-width:160px">' + x.label + '</span>'
-      + '<div class="horiz-bar-track"><div class="horiz-bar-fill" style="width:' + pct + '%;background:' + x.color + '"></div></div>'
-      + '<span class="horiz-bar-val">' + x.val + '</span>'
+  var maxStatus = Math.max.apply(null, statusItems.map(function(x){ return x.val; }).concat([1]));
+  document.getElementById('statusChart').innerHTML = statusItems.map(function(x, i) {
+    var pct = Math.round((x.val / maxStatus) * 100);
+    return '<div class="rpt-st-row" style="animation-delay:' + (i*0.07) + 's">'
+      + '<div class="rpt-st-dot" style="background:' + x.color + ';box-shadow:0 0 0 3px ' + x.color + '33"></div>'
+      + '<div class="rpt-st-label">' + x.label + '</div>'
+      + '<div class="rpt-st-track"><div class="rpt-st-fill" data-w="' + pct + '%" style="background:' + x.color + '"></div></div>'
+      + '<div class="rpt-st-val">' + x.val + '</div>'
       + '</div>';
   }).join('');
+
+  // Trigger animated bar-fill widths after DOM paint
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      document.querySelectorAll('.rpt-bar-fill,.rpt-nat-fill,.rpt-st-fill').forEach(function(el) {
+        if (el.dataset.w) el.style.width = el.dataset.w;
+      });
+    });
+  });
 }
 
 // ── Overview breakdown panel ───────────────────────────────────

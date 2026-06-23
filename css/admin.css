@@ -1907,10 +1907,289 @@ a:hover { text-decoration: underline; }
 .reports-quad {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 14px;
+  gap: 18px;
   margin-bottom: 24px;
 }
 @media (max-width: 900px) { .reports-quad { grid-template-columns: 1fr; } }
+
+/* ══════════════════════════════════════════════════════════════
+   REPORTS TAB — PREMIUM REDESIGN
+   ══════════════════════════════════════════════════════════════ */
+@keyframes rptCardIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Tab bar ─────────────────────────────────────────────────── */
+.rpt-tab-bar {
+  border-bottom: 2px solid #eaeff5;
+  margin-bottom: 26px;
+  gap: 4px;
+}
+.rpt-tab {
+  padding: 11px 24px;
+  font-size: 13.5px;
+  border-radius: 8px 8px 0 0;
+  letter-spacing: 0.1px;
+}
+.rpt-tab.active {
+  color: #c9a96e;
+  border-bottom-color: #c9a96e;
+  background: rgba(201,169,110,0.07);
+}
+.rpt-tab:hover:not(.active) { background: #f1f5f9; color: #0f172a; }
+
+/* ── KPI strip 1 — full gradient cards ──────────────────────── */
+.reports-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.stat-card.rpt-kpi-full {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  padding: 20px 20px 18px;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  animation: rptCardIn 0.45s ease both;
+  transition: transform 0.22s cubic-bezier(.34,1.56,.64,1), box-shadow 0.2s ease;
+}
+.stat-card.rpt-kpi-full:hover { transform: translateY(-7px); }
+.stat-card.rpt-kpi-full::before {
+  content: '';
+  position: absolute;
+  top: -20px; right: -20px;
+  width: 88px; height: 88px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.11);
+  pointer-events: none;
+}
+.stat-card.rpt-kpi-full::after {
+  content: '';
+  position: absolute;
+  bottom: -24px; right: 20px;
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.07);
+  pointer-events: none;
+}
+.rpt-kpi-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.22);
+  color: #fff;
+  margin-bottom: 14px;
+  flex-shrink: 0;
+}
+.rpt-kpi-label {
+  font-size: 10.5px; font-weight: 700;
+  color: rgba(255,255,255,0.72);
+  text-transform: uppercase; letter-spacing: 0.7px;
+  margin-bottom: 5px;
+}
+.rpt-kpi-val {
+  font-size: 26px; font-weight: 900;
+  color: #fff; line-height: 1.1;
+}
+.rpt-kpi-note {
+  font-size: 10.5px; color: rgba(255,255,255,0.55); margin-top: 5px;
+}
+
+/* ── KPI strip 2 — accent-left white cards ───────────────────── */
+.rpt-kpi2 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+@media (max-width: 1000px) { .rpt-kpi2 { grid-template-columns: 1fr 1fr; } }
+.stat-card.rpt-kpi-accent {
+  padding: 18px 20px 16px;
+  border-radius: 18px;
+  border: 1px solid #eaeff5;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  animation: rptCardIn 0.5s ease both;
+  transition: transform 0.22s cubic-bezier(.34,1.56,.64,1), box-shadow 0.2s ease;
+}
+.stat-card.rpt-kpi-accent:hover { transform: translateY(-4px); }
+.rpt-kpi-accent-head {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+}
+.rpt-kpi-accent-icon {
+  width: 32px; height: 32px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.rpt-kpi-accent-label {
+  font-size: 10.5px; font-weight: 700; color: #64748b;
+  text-transform: uppercase; letter-spacing: 0.6px;
+}
+.rpt-kpi-accent-val {
+  font-size: 28px; font-weight: 900; line-height: 1.1; color: #0f172a;
+}
+.rpt-kpi-accent-note {
+  font-size: 11px; color: #94a3b8; margin-top: 5px;
+}
+
+/* ── Monthly Revenue chart panel ─────────────────────────────── */
+.rpt-chart-panel {
+  background: white;
+  border-radius: 20px;
+  border: 1px solid #eaeff5;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+  overflow: hidden;
+  margin-bottom: 18px;
+  animation: rptCardIn 0.5s ease 0.1s both;
+}
+.rpt-chart-panel-head {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 18px 22px 14px;
+  border-bottom: 1px solid #f1f5f9;
+}
+.rpt-chart-panel-head h3 {
+  font-size: 15px; font-weight: 700; color: #0f172a; margin: 0 0 4px;
+}
+.rpt-chart-panel-head p { font-size: 11.5px; color: #94a3b8; margin: 0; }
+.rpt-chart-panel-emblem {
+  width: 38px; height: 38px; border-radius: 11px;
+  background: linear-gradient(135deg, rgba(201,169,110,0.18), rgba(201,169,110,0.06));
+  color: #c9a96e;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ── Bottom quad panels ──────────────────────────────────────── */
+.rpt-quad-panel {
+  background: white;
+  border-radius: 20px;
+  border: 1px solid #eaeff5;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  overflow: hidden;
+  animation: rptCardIn 0.5s ease both;
+  transition: box-shadow 0.2s ease;
+}
+.rpt-quad-panel:hover {
+  box-shadow: 0 8px 32px rgba(0,0,0,0.10);
+}
+.rpt-quad-head {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f1f5f9;
+  background: #fafbfc;
+}
+.rpt-quad-icon {
+  width: 34px; height: 34px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.rpt-quad-head-text h3 { font-size: 13.5px; font-weight: 700; color: #0f172a; margin: 0; }
+.rpt-quad-head-text p  { font-size: 11.5px; color: #94a3b8; margin: 3px 0 0; }
+.rpt-quad-body { padding: 14px 20px; }
+
+/* ── Animated horizontal bars (rooms, nations) ───────────────── */
+.rpt-bar-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid #f8fafc;
+  animation: rptCardIn 0.35s ease both;
+}
+.rpt-bar-row:last-child { border-bottom: none; }
+.rpt-bar-label {
+  font-size: 12px; color: #334155;
+  display: flex; align-items: center; gap: 7px;
+  min-width: 120px; flex-shrink: 0;
+}
+.rpt-bar-track {
+  flex: 1; height: 10px; background: #f1f5f9;
+  border-radius: 6px; overflow: hidden;
+}
+.rpt-bar-fill {
+  height: 100%; border-radius: 6px;
+  background: linear-gradient(90deg, var(--bc1,#c9a96e), var(--bc2,#b8832e));
+  width: 0;
+  transition: width 0.80s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.rpt-bar-val {
+  font-size: 12.5px; font-weight: 700; color: #0f172a;
+  min-width: 24px; text-align: right;
+}
+
+/* ── Payment method rows ─────────────────────────────────────── */
+.rpt-pay-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  margin-bottom: 10px;
+  animation: rptCardIn 0.4s ease both;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+.rpt-pay-item:last-child { margin-bottom: 0; }
+.rpt-pay-item:hover { background: #f0f9ff; border-color: #bae6fd; box-shadow: 0 2px 8px rgba(8,145,178,0.08); }
+.rpt-pay-swatch {
+  width: 38px; height: 38px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.rpt-pay-name { font-size: 13px; color: #0f172a; font-weight: 600; }
+.rpt-pay-sub  { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+.rpt-pay-pill {
+  font-size: 14px; font-weight: 800; color: #0f172a;
+  background: white; border: 1.5px solid #e2e8f0;
+  border-radius: 9px; padding: 3px 13px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  margin-left: auto;
+}
+
+/* ── Nationality bars ────────────────────────────────────────── */
+.rpt-nat-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid #f8fafc;
+  animation: rptCardIn 0.35s ease both;
+}
+.rpt-nat-row:last-child { border-bottom: none; }
+.rpt-nat-label { font-size: 12px; color: #334155; min-width: 130px; font-weight: 500; flex-shrink: 0; }
+.rpt-nat-track { flex: 1; height: 10px; background: #f1f5f9; border-radius: 6px; overflow: hidden; }
+.rpt-nat-fill {
+  height: 100%; border-radius: 6px;
+  background: linear-gradient(90deg, #0891b2, #0e7490);
+  width: 0;
+  transition: width 0.80s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.rpt-nat-val { font-size: 12.5px; font-weight: 700; color: #0f172a; min-width: 24px; text-align: right; }
+
+/* ── Booking status rows ─────────────────────────────────────── */
+.rpt-st-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f8fafc;
+  animation: rptCardIn 0.35s ease both;
+}
+.rpt-st-row:last-child { border-bottom: none; }
+.rpt-st-dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  flex-shrink: 0;
+}
+.rpt-st-label { font-size: 12px; color: #334155; min-width: 160px; font-weight: 500; }
+.rpt-st-track { flex: 1; height: 10px; background: #f1f5f9; border-radius: 6px; overflow: hidden; }
+.rpt-st-fill {
+  height: 100%; border-radius: 6px;
+  width: 0;
+  transition: width 0.85s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.rpt-st-val { font-size: 13px; font-weight: 800; color: #0f172a; min-width: 24px; text-align: right; }
 
 /* ── EOD toolbar ────────────────────────────────────────────── */
 .eod-toolbar {
