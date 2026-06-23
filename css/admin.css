@@ -2725,3 +2725,143 @@ a:hover { text-decoration: underline; }
 .dash-empty { font-size: 12.5px; color: #94a3b8; text-align: center; padding: 16px 0; font-style: italic; }
 @media (max-width: 1200px) { .dash-main-grid { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 700px)  { .dash-main-grid { grid-template-columns: 1fr; } }
+
+/* ══════════════════════════════════════════════════════════════
+   BOOKINGS TAB — PREMIUM REDESIGN
+   ══════════════════════════════════════════════════════════════ */
+
+/* Toolbar card */
+.bookings-toolbar {
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 3px 18px rgba(0,0,0,0.07);
+  border: none;
+  padding: 18px 22px 16px;
+  margin-bottom: 18px;
+  gap: 14px;
+}
+
+/* Filter tabs — row 1 */
+.bk-row1 .filter-btn {
+  border-radius: 24px;
+  font-weight: 700; font-size: 12px;
+  padding: 7px 17px;
+  transition: all 0.18s cubic-bezier(.34,1.56,.64,1);
+}
+.bk-row1 .filter-btn:hover:not(.active) { border-color: #c9a96e; color: #b8832e; transform: translateY(-1px); }
+.bk-row1 .filter-btn.active                           { background: #0f172a;                                   border-color: transparent; color: #fff; box-shadow: 0 3px 10px rgba(15,23,42,.22); }
+.bk-row1 .filter-btn[data-filter="pending"].active    { background: linear-gradient(135deg,#f59e0b,#d97706);   border-color: transparent; color: #fff; box-shadow: 0 3px 10px rgba(245,158,11,.30); }
+.bk-row1 .filter-btn[data-filter="confirmed"].active  { background: linear-gradient(135deg,#059669,#047857);   border-color: transparent; color: #fff; box-shadow: 0 3px 10px rgba(5,150,105,.28); }
+.bk-row1 .filter-btn[data-filter="checkedin"].active  { background: linear-gradient(135deg,#0891b2,#0e7490);   border-color: transparent; color: #fff; box-shadow: 0 3px 10px rgba(8,145,178,.28); }
+.bk-row1 .filter-btn[data-filter="checkedout"].active { background: linear-gradient(135deg,#475569,#334155);   border-color: transparent; color: #fff; box-shadow: 0 3px 10px rgba(71,85,105,.25); }
+.bk-row1 .filter-btn[data-filter="cancelled"].active  { background: linear-gradient(135deg,#ef4444,#dc2626);   border-color: transparent; color: #fff; box-shadow: 0 3px 10px rgba(239,68,68,.28); }
+
+/* Search input with icon */
+.bk-search-wrap { position: relative; flex-shrink: 0; }
+.bk-search-wrap::before {
+  content: '';
+  position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+  width: 14px; height: 14px; pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.2' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") center/contain no-repeat;
+}
+.booking-search { padding-left: 38px !important; border-radius: 12px !important; width: 270px; }
+
+/* Sort chip row */
+.bk-sort-label { font-size: 12px; font-weight: 700; color: #64748b; }
+.bk-sort-chip { border-radius: 9px; font-weight: 700; font-size: 12px; padding: 6px 13px; }
+.bk-sort-chip.active { background: #0f172a; border-color: #0f172a; color: #c9a96e; }
+.bk-sort-chip:hover:not(.active) { border-color: #c9a96e; color: #b8832e; }
+.bk-results-count { background: #f1f5f9; color: #475569; padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+
+/* Table wrap */
+.table-wrap {
+  border-radius: 20px !important;
+  border: none !important;
+  box-shadow: 0 4px 28px rgba(0,0,0,0.08) !important;
+  overflow: hidden; overflow-x: auto;
+}
+
+/* Table header — dark gradient */
+.data-table thead tr { background: linear-gradient(135deg,#0f172a 0%,#1e2f4f 100%) !important; }
+.data-table th {
+  color: rgba(255,255,255,0.52) !important;
+  border-bottom: none !important;
+  padding: 14px 16px !important;
+  font-size: 9.5px !important; font-weight: 800 !important; letter-spacing: 0.9px !important;
+}
+
+/* Table rows */
+.data-table td { padding: 13px 16px !important; vertical-align: middle !important; }
+.data-table tbody tr { transition: background 0.12s; }
+.data-table tbody tr:hover td { background: #f8fafd !important; }
+.bk-row-click td:first-child { border-left: 3px solid transparent; transition: border-color 0.15s; }
+.bk-row-click:hover td:first-child { border-left-color: #c9a96e; }
+
+/* REF badge */
+.ref-badge {
+  background: #0f172a; color: #c9a96e;
+  font-family: 'Courier New', monospace;
+  font-size: 10px; font-weight: 700;
+  padding: 4px 9px; border-radius: 8px;
+  white-space: nowrap; letter-spacing: 0.3px;
+  display: inline-block;
+}
+
+/* Guest cell with avatar */
+.bk-guest-cell { display: flex; align-items: center; gap: 10px; }
+.bk-avatar {
+  width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+  background: linear-gradient(135deg,#0f172a,#1e293b);
+  color: #c9a96e; font-size: 13px; font-weight: 800;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.bk-guest-info { display: flex; flex-direction: column; }
+.bk-guest-name { font-size: 13px; font-weight: 700; color: #0f172a; white-space: nowrap; }
+.bk-guest-sub  { font-size: 11px; color: #94a3b8; margin-top: 1px; }
+
+/* Room column */
+.bk-room-name { font-size: 13px; font-weight: 600; color: #0f172a; }
+.bk-room-code {
+  display: inline-block; margin-top: 3px;
+  background: #334155; color: #fff;
+  font-family: 'Courier New', monospace; font-size: 10px; font-weight: 700;
+  padding: 2px 8px; border-radius: 6px;
+}
+
+/* Nights chip */
+.bk-nights {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 30px; height: 30px; border-radius: 9px;
+  background: #f1f5f9; color: #334155;
+  font-size: 13px; font-weight: 800;
+}
+
+/* Total amount */
+.bk-total { font-size: 14px; font-weight: 800; color: #0f172a; }
+
+/* Payment badges */
+.bk-pay { display: inline-block; font-size: 11px; font-weight: 700; padding: 4px 11px; border-radius: 20px; white-space: nowrap; }
+.bk-pay-card  { background: #dbeafe; color: #1d4ed8; }
+.bk-pay-hotel { background: #fef3c7; color: #a16207; }
+.bk-pay-bank  { background: #ede9fe; color: #6d28d9; }
+
+/* Action buttons */
+.bk-btn {
+  display: inline-flex; align-items: center;
+  padding: 6px 12px; border: none; border-radius: 8px;
+  font-size: 11.5px; font-weight: 700; cursor: pointer;
+  font-family: inherit; white-space: nowrap; margin-right: 4px;
+  transition: transform 0.15s cubic-bezier(.34,1.56,.64,1), box-shadow 0.12s;
+}
+.bk-btn:hover { transform: translateY(-2px); }
+.bk-btn-confirm { background: linear-gradient(135deg,#059669,#047857); color: #fff; box-shadow: 0 2px 8px rgba(5,150,105,.25); }
+.bk-btn-confirm:hover { box-shadow: 0 4px 14px rgba(5,150,105,.38); }
+.bk-btn-cancel  { background: #fee2e2; color: #b91c1c; }
+.bk-btn-cancel:hover  { background: #fecaca; }
+.bk-btn-restore { background: #f1f5f9; color: #475569; }
+.bk-btn-restore:hover { background: #e2e8f0; }
+.bk-btn-profile { background: linear-gradient(135deg,#0f172a,#1e293b); color: #c9a96e; box-shadow: 0 2px 8px rgba(15,23,42,.20); }
+.bk-btn-profile:hover { box-shadow: 0 5px 16px rgba(15,23,42,.32); }
+
+/* Status badges — enhanced */
+.status-badge { padding: 4px 11px !important; border-radius: 20px !important; font-size: 11px !important; font-weight: 700 !important; }

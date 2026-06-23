@@ -559,7 +559,11 @@ function renderBookings() {
     tbody.innerHTML = '<tr><td colspan="11" class="table-empty">No bookings found.</td></tr>';
     return;
   }
-  const payLabel = { card: 'Card', bank: 'Bank Transfer', payathotel: 'Pay at Hotel' };
+  const payBadge = {
+    card:       ['bk-pay-card',  'Card'],
+    bank:       ['bk-pay-bank',  'Bank Transfer'],
+    payathotel: ['bk-pay-hotel', 'Pay at Hotel'],
+  };
   tbody.innerHTML = list.map(b => {
     const checkedIn  = !!b.checked_in_at;
     const checkedOut = !!b.checked_out_at;
@@ -569,25 +573,28 @@ function renderBookings() {
     if (checkedOut)               statusHtml += ' <span class="status-badge status-checkedout">Checked Out</span>';
     const hasNotes = b.admin_notes || b.special_requests;
     const hasId    = b.guest_id_number || b.guest_id_type;
+    const initials = (esc(b.guest_first_name).charAt(0) + esc(b.guest_last_name || '').charAt(0)).toUpperCase();
+    const [payCls, payLbl] = payBadge[b.payment_method] || ['bk-pay-hotel', b.payment_method];
     return '<tr class="bk-row-click" onclick="if(!event.target.closest(\'button,a\'))openCalBooking(' + b.id + ')">'
       + '<td><span class="ref-badge">' + b.ref + '</span>'
       + (hasNotes ? ' <span class="notes-dot" title="Has notes">●</span>' : '') + '</td>'
-      + '<td><strong>' + esc(b.guest_first_name) + ' ' + esc(b.guest_last_name) + '</strong>'
-      + (hasId ? ' <span class="bpd-id-badge" title="Identity on file">ID&#10003;</span>' : '')
-      + '<br><small>' + esc(b.guest_country) + '</small></td>'
+      + '<td><div class="bk-guest-cell"><div class="bk-avatar">' + initials + '</div>'
+      + '<div class="bk-guest-info"><div class="bk-guest-name">' + esc(b.guest_first_name) + ' ' + esc(b.guest_last_name)
+      + (hasId ? ' <span class="bpd-id-badge" title="Identity on file">ID&#10003;</span>' : '') + '</div>'
+      + '<div class="bk-guest-sub">' + esc(b.guest_country) + '</div></div></div></td>'
       + '<td><a href="mailto:' + esc(b.guest_email) + '">' + esc(b.guest_email) + '</a><br><small>' + esc(b.guest_phone) + '</small></td>'
-      + '<td>' + esc(b.room_name) + '<br><small style="font-family:monospace">' + b.room_code.toUpperCase() + '</small></td>'
+      + '<td><div class="bk-room-name">' + esc(b.room_name) + '</div><span class="bk-room-code">' + b.room_code.toUpperCase() + '</span></td>'
       + '<td>' + fmtDate(b.checkin_date) + '</td>'
       + '<td>' + fmtDate(b.checkout_date) + '</td>'
-      + '<td>' + b.nights + '</td>'
-      + '<td>£' + Number(b.total_amount).toLocaleString() + '</td>'
-      + '<td>' + (payLabel[b.payment_method] || b.payment_method) + '</td>'
+      + '<td><span class="bk-nights">' + b.nights + '</span></td>'
+      + '<td><span class="bk-total">£' + Number(b.total_amount).toLocaleString() + '</span></td>'
+      + '<td><span class="bk-pay ' + payCls + '">' + payLbl + '</span></td>'
       + '<td>' + statusHtml + '</td>'
       + '<td class="actions-cell">'
-      + (b.status === 'pending'   ? '<button class="btn-action btn-confirm" onclick="updateBooking(' + b.id + ',\'confirmed\')">Confirm</button>' : '')
-      + (b.status !== 'cancelled' ? '<button class="btn-action btn-cancel"  onclick="updateBooking(' + b.id + ',\'cancelled\')">Cancel</button>'  : '')
-      + (b.status === 'cancelled' ? '<button class="btn-action btn-restore" onclick="updateBooking(' + b.id + ',\'pending\')">Restore</button>'   : '')
-      + '<button class="btn-profile" onclick="openCalBooking(' + b.id + ')" title="Guest profile">&#128100; Profile</button>'
+      + (b.status === 'pending'   ? '<button class="bk-btn bk-btn-confirm" onclick="updateBooking(' + b.id + ',\'confirmed\')">Confirm</button>' : '')
+      + (b.status !== 'cancelled' ? '<button class="bk-btn bk-btn-cancel"  onclick="updateBooking(' + b.id + ',\'cancelled\')">Cancel</button>'  : '')
+      + (b.status === 'cancelled' ? '<button class="bk-btn bk-btn-restore" onclick="updateBooking(' + b.id + ',\'pending\')">Restore</button>'   : '')
+      + '<button class="bk-btn bk-btn-profile" onclick="openCalBooking(' + b.id + ')" title="Guest profile">Profile</button>'
       + '</td></tr>';
   }).join('');
 }
