@@ -1239,6 +1239,7 @@ async function bpAction(newStatus) {
   });
   openCalBooking(_calCurrentBookingId);
   renderCalendar();
+  renderBookings();
 }
 
 async function bpCheckIn() {
@@ -1248,10 +1249,11 @@ async function bpCheckIn() {
   var ts = new Date().toISOString();
   [calBookings, allBookings].forEach(arr => {
     var b = arr.find(x => x.id === _calCurrentBookingId);
-    if (b) { b.checked_in_at = ts; b.status = 'confirmed'; }
+    if (b) { b.checked_in_at = ts; b.checked_out_at = null; b.status = 'confirmed'; }
   });
   openCalBooking(_calCurrentBookingId);
   renderCalendar();
+  renderBookings();
 }
 
 async function bpCheckOut() {
@@ -1265,6 +1267,7 @@ async function bpCheckOut() {
   });
   openCalBooking(_calCurrentBookingId);
   renderCalendar();
+  renderBookings();
 }
 
 // Stay-status pill handler — lets admin freely toggle between all three states
@@ -1300,6 +1303,7 @@ async function bpSetStay(action) {
 
   openCalBooking(_calCurrentBookingId);
   renderCalendar();
+  renderBookings();
   loadFrontDesk();
 }
 
@@ -1792,9 +1796,14 @@ async function checkInGuest(id) {
   try {
     const { ok, data } = await apiFetch('PATCH', '/api/admin/bookings/' + id + '/checkin', {});
     if (!ok) { alert(data.message); return; }
-    const b = allBookings.find(x => x.id === id);
-    if (b) b.checked_in_at = new Date().toISOString();
+    var ts = new Date().toISOString();
+    [allBookings, calBookings].forEach(function(arr) {
+      var b = arr.find(function(x) { return x.id === id; });
+      if (b) { b.checked_in_at = ts; b.checked_out_at = null; }
+    });
     loadFrontDesk();
+    renderBookings();
+    renderCalendar();
   } catch { alert('Failed to check in.'); }
 }
 
@@ -1803,9 +1812,14 @@ async function checkOutGuest(id) {
   try {
     const { ok, data } = await apiFetch('PATCH', '/api/admin/bookings/' + id + '/checkout', {});
     if (!ok) { alert(data.message); return; }
-    const b = allBookings.find(x => x.id === id);
-    if (b) b.checked_out_at = new Date().toISOString();
+    var ts = new Date().toISOString();
+    [allBookings, calBookings].forEach(function(arr) {
+      var b = arr.find(function(x) { return x.id === id; });
+      if (b) { if (!b.checked_in_at) b.checked_in_at = ts; b.checked_out_at = ts; }
+    });
     loadFrontDesk();
+    renderBookings();
+    renderCalendar();
   } catch { alert('Failed to check out.'); }
 }
 
