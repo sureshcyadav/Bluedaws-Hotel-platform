@@ -1157,12 +1157,21 @@ function openCalBooking(id) {
   if (b.status === 'cancelled')
     foot += '<button class="btn-action" style="background:#475569;color:#fff;padding:6px 12px" onclick="bpAction(\'pending\')">Restore Booking</button>';
   foot += '<span style="flex:1"></span>';
-  if (b.status === 'confirmed' && !b.checked_in_at)
-    foot += '<button class="btn-fd-checkin" style="min-width:110px" onclick="bpCheckIn()">&#10003; Check In</button>';
-  if (b.checked_in_at && !b.checked_out_at)
-    foot += '<button class="btn-fd-checkout" style="min-width:110px" onclick="bpCheckOut()">Check Out</button>';
-  if (b.checked_in_at && b.checked_out_at)
-    foot += '<span class="fd-done-badge">&#10003; Checked Out</span>';
+
+  // Stay-status pill group — always shown for non-cancelled bookings, always changeable
+  if (b.status !== 'cancelled') {
+    var notArrived = !b.checked_in_at;
+    var inHouse    =  b.checked_in_at && !b.checked_out_at;
+    var out        = !!b.checked_out_at;
+    foot += '<div class="bp-stay-status">'
+      + '<span class="bp-stay-label">Stay</span>'
+      + '<div class="bp-stay-pills">'
+      + '<button class="bp-pill' + (notArrived ? ' bp-pill-on' : '') + '" onclick="bpSetStay(\'not-arrived\')" title="Reset — guest has not arrived">Not Arrived</button>'
+      + '<button class="bp-pill bp-pill-cin' + (inHouse ? ' bp-pill-on' : '') + '" onclick="bpSetStay(\'checkin\')" title="Mark as checked in">&#10003; Checked In</button>'
+      + '<button class="bp-pill bp-pill-cout' + (out ? ' bp-pill-on' : '') + '" onclick="bpSetStay(\'checkout\')" title="Mark as checked out">&#10003; Checked Out</button>'
+      + '</div></div>';
+  }
+
   document.getElementById('bpFooter').innerHTML = foot;
 
   document.getElementById('bookingProfileModal').classList.remove('hidden');
@@ -1201,10 +1210,46 @@ async function bpCheckOut() {
   var ts = new Date().toISOString();
   [calBookings, allBookings].forEach(arr => {
     var b = arr.find(x => x.id === _calCurrentBookingId);
-    if (b) b.checked_out_at = ts;
+    if (b) { if (!b.checked_in_at) b.checked_in_at = ts; b.checked_out_at = ts; }
   });
   openCalBooking(_calCurrentBookingId);
   renderCalendar();
+}
+
+// Stay-status pill handler — lets admin freely toggle between all three states
+async function bpSetStay(action) {
+  if (!_calCurrentBookingId) return;
+  var endpoint =
+    action === 'not-arrived' ? '/api/admin/bookings/' + _calCurrentBookingId + '/undo-checkin'  :
+    action === 'checkin'     ? '/api/admin/bookings/' + _calCurrentBookingId + '/checkin'        :
+                               '/api/admin/bookings/' + _calCurrentBookingId + '/checkout';
+
+  var footerEl = document.getElementById('bpFooter');
+  if (footerEl) footerEl.style.opacity = '0.5';
+
+  var { ok, data } = await apiFetch('PATCH', endpoint, {});
+  if (footerEl) footerEl.style.opacity = '';
+  if (!ok) { alert(data.message || 'Failed to update stay status.'); return; }
+
+  var ts = new Date().toISOString();
+  [calBookings, allBookings].forEach(function(arr) {
+    var b = arr.find(function(x) { return x.id === _calCurrentBookingId; });
+    if (!b) return;
+    if (action === 'not-arrived') {
+      b.checked_in_at = null;
+      b.checked_out_at = null;
+    } else if (action === 'checkin') {
+      b.checked_in_at = ts;
+      b.checked_out_at = null;
+    } else {
+      if (!b.checked_in_at) b.checked_in_at = ts;
+      b.checked_out_at = ts;
+    }
+  });
+
+  openCalBooking(_calCurrentBookingId);
+  renderCalendar();
+  loadFrontDesk();
 }
 
 async function saveGuestProfile() {

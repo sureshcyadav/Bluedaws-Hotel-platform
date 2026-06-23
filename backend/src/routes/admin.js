@@ -246,11 +246,11 @@ router.patch('/bookings/:id/notes', adminAuth, async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
-// PATCH /api/admin/bookings/:id/checkin
+// PATCH /api/admin/bookings/:id/checkin  — also clears checked_out_at so re-checkin works
 router.patch('/bookings/:id/checkin', adminAuth, async (req, res) => {
   try {
     const { rowCount } = await pool.query(
-      `UPDATE bookings SET checked_in_at=NOW(), status='confirmed' WHERE id=$1 AND status!='cancelled'`,
+      `UPDATE bookings SET checked_in_at=NOW(), checked_out_at=NULL, status='confirmed' WHERE id=$1 AND status!='cancelled'`,
       [req.params.id]
     );
     if (!rowCount) return res.status(404).json({ success: false, message: 'Booking not found or cancelled.' });
@@ -262,7 +262,20 @@ router.patch('/bookings/:id/checkin', adminAuth, async (req, res) => {
 router.patch('/bookings/:id/checkout', adminAuth, async (req, res) => {
   try {
     const { rowCount } = await pool.query(
-      `UPDATE bookings SET checked_out_at=NOW() WHERE id=$1`, [req.params.id]
+      `UPDATE bookings SET checked_out_at=NOW(), checked_in_at=COALESCE(checked_in_at, NOW()) WHERE id=$1`,
+      [req.params.id]
+    );
+    if (!rowCount) return res.status(404).json({ success: false, message: 'Booking not found.' });
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+});
+
+// PATCH /api/admin/bookings/:id/undo-checkin — resets to "not arrived" (clears both timestamps)
+router.patch('/bookings/:id/undo-checkin', adminAuth, async (req, res) => {
+  try {
+    const { rowCount } = await pool.query(
+      `UPDATE bookings SET checked_in_at=NULL, checked_out_at=NULL WHERE id=$1`,
+      [req.params.id]
     );
     if (!rowCount) return res.status(404).json({ success: false, message: 'Booking not found.' });
     res.json({ success: true });

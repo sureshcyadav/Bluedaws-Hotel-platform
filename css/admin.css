@@ -988,6 +988,23 @@ a:hover { text-decoration: underline; }
   background: #f8fafc;
 }
 
+/* Stay-status pill group in booking profile footer */
+.bp-stay-status { display: flex; align-items: center; gap: 8px; }
+.bp-stay-label  { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+.bp-stay-pills  { display: flex; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; }
+.bp-pill {
+  padding: 6px 13px; font-size: 11.5px; font-weight: 600;
+  border: none; border-right: 1px solid #e2e8f0;
+  background: #f8fafc; color: #64748b;
+  cursor: pointer; font-family: inherit; white-space: nowrap;
+  transition: background 0.12s, color 0.12s;
+}
+.bp-pill:last-child { border-right: none; }
+.bp-pill:hover:not(.bp-pill-on) { background: #f1f5f9; color: #0f172a; }
+.bp-pill.bp-pill-on             { background: #475569; color: #fff; cursor: default; }
+.bp-pill.bp-pill-cin.bp-pill-on { background: #0891b2; }
+.bp-pill.bp-pill-cout.bp-pill-on{ background: #059669; }
+
 @media (max-width: 640px) {
   .bp-top-row    { grid-template-columns: 1fr; }
   .bp-panel-right { border-left: none; border-top: 1px solid #f1f5f9; }
