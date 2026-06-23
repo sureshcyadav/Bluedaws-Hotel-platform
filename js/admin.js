@@ -377,64 +377,112 @@ function _renderFrontDesk(roomStatus, arrivals, departures) {
   const occupied  = Object.values(roomStatus).filter(s => s === 'occupied').length;
   const available = CAL_ROOMS.length - Object.keys(roomStatus).length;
 
-  const SVG_ARR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>';
-  const SVG_DEP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>';
-  const SVG_BED = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/></svg>';
-  const SVG_CHK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>';
+  const SVG_ARR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="24" height="24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>';
+  const SVG_DEP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="24" height="24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>';
+  const SVG_BED = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="24" height="24"><path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/></svg>';
+  const SVG_CHK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="24" height="24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>';
 
+  // KPI cards — data-val powers the CSS watermark number
   document.getElementById('fdSummary').innerHTML = [
     { label: 'Arriving Today',     val: arrivals.length,   cls: 'fd-stat-arriving',  icon: SVG_ARR },
     { label: 'Departing Today',    val: departures.length, cls: 'fd-stat-departing', icon: SVG_DEP },
     { label: 'Currently Occupied', val: occupied,          cls: 'fd-stat-occupied',  icon: SVG_BED },
     { label: 'Available Now',      val: available,         cls: 'fd-stat-available', icon: SVG_CHK },
-  ].map(s => '<div class="fd-stat-card ' + s.cls + '">'
-    + '<div class="fd-stat-icon">' + s.icon + '</div>'
-    + '<div><div class="fd-stat-val">' + s.val + '</div><div class="fd-stat-label">' + s.label + '</div></div>'
-    + '</div>'
-  ).join('');
+  ].map(function(s) {
+    return '<div class="fd-stat-card ' + s.cls + '" data-val="' + s.val + '">'
+      + '<div class="fd-stat-icon">' + s.icon + '</div>'
+      + '<div class="fd-stat-content">'
+      + '<div class="fd-stat-val">' + s.val + '</div>'
+      + '<div class="fd-stat-label">' + s.label + '</div>'
+      + '</div></div>';
+  }).join('');
 
+  // Room tiles — staggered entrance + ripple click
   const stLabel = { available: 'Free', arriving: 'Arriving', occupied: 'Occupied', departing: 'Check-out' };
-  document.getElementById('fdRoomGrid').innerHTML = CAL_ROOMS.map(r => {
-    const st = roomStatus[r.code] || 'available';
-    return '<div class="fd-room-tile fd-' + st + '" title="' + r.name + ' — ' + stLabel[st] + '">'
+  document.getElementById('fdRoomGrid').innerHTML = CAL_ROOMS.map(function(r, i) {
+    var st = roomStatus[r.code] || 'available';
+    return '<div class="fd-room-tile fd-' + st + '"'
+      + ' title="' + r.name + ' — ' + stLabel[st] + '"'
+      + ' style="animation-delay:' + (i * 0.03) + 's"'
+      + ' onclick="fdRoomClick(event,this,\'' + r.code + '\')">'
       + '<span class="fd-room-code">' + r.code + '</span>'
       + '<span class="fd-room-name">' + r.name + '</span>'
       + '<span class="fd-room-st">' + stLabel[st] + '</span>'
       + '</div>';
   }).join('');
 
+  // Guest rows — avatar + improved layout
   const payLabel = { card: 'Card', bank: 'Bank Transfer', payathotel: 'Pay at Hotel' };
 
-  const arrivalRow = b => '<div class="fd-guest-row fd-row-click" onclick="openCalBooking(' + b.id + ')">'
-    + '<div class="fd-guest-info"><strong>' + esc(b.guest_first_name) + ' ' + esc(b.guest_last_name) + '</strong>'
-    + '<span>' + esc(b.room_name) + ' · ' + b.room_code.toUpperCase() + ' · ' + b.nights + ' night' + (b.nights > 1 ? 's' : '') + ' · ' + (payLabel[b.payment_method] || b.payment_method) + '</span></div>'
-    + '<div class="fd-guest-meta"><span class="fd-ref">' + b.ref + '</span></div>'
-    + '<div class="fd-guest-actions">'
-    + (b.checked_in_at
-        ? '<span class="fd-done-badge">✓ Checked In</span>'
-        : '<button class="btn-fd-checkin" onclick="event.stopPropagation();checkInGuest(' + b.id + ')">Check In</button>')
-    + '</div></div>';
+  function initials(b) {
+    return ((b.guest_first_name || '?').charAt(0) + (b.guest_last_name || '?').charAt(0)).toUpperCase();
+  }
 
-  const departureRow = b => '<div class="fd-guest-row fd-row-click" onclick="openCalBooking(' + b.id + ')">'
-    + '<div class="fd-guest-info"><strong>' + esc(b.guest_first_name) + ' ' + esc(b.guest_last_name) + '</strong>'
-    + '<span>' + esc(b.room_name) + ' · ' + b.room_code.toUpperCase() + ' · £' + Number(b.total_amount).toLocaleString() + '</span></div>'
-    + '<div class="fd-guest-meta"><span class="fd-ref">' + b.ref + '</span></div>'
-    + '<div class="fd-guest-actions">'
-    + (b.checked_out_at
-        ? '<span class="fd-done-badge">✓ Checked Out</span>'
-        : '<button class="btn-fd-checkout" onclick="event.stopPropagation();checkOutGuest(' + b.id + ')">Check Out</button>')
-    + '</div></div>';
+  const arrivalRow = function(b) {
+    return '<div class="fd-guest-row fd-row-click" onclick="openCalBooking(' + b.id + ')">'
+      + '<div class="fd-avatar fd-avatar-arr">' + initials(b) + '</div>'
+      + '<div class="fd-guest-body">'
+      + '<strong>' + esc(b.guest_first_name) + ' ' + esc(b.guest_last_name) + '</strong>'
+      + '<span>' + esc(b.room_name) + ' &middot; ' + b.room_code.toUpperCase() + ' &middot; ' + b.nights + 'n &middot; ' + (payLabel[b.payment_method] || b.payment_method) + '</span>'
+      + '</div>'
+      + '<div class="fd-guest-meta"><span class="fd-ref">' + b.ref + '</span></div>'
+      + '<div class="fd-guest-actions">'
+      + (b.checked_in_at
+          ? '<span class="fd-done-badge">&#10003; In</span>'
+          : '<button class="btn-fd-checkin" onclick="event.stopPropagation();checkInGuest(' + b.id + ')">Check In</button>')
+      + '</div></div>';
+  };
+
+  const departureRow = function(b) {
+    return '<div class="fd-guest-row fd-row-click" onclick="openCalBooking(' + b.id + ')">'
+      + '<div class="fd-avatar fd-avatar-dep">' + initials(b) + '</div>'
+      + '<div class="fd-guest-body">'
+      + '<strong>' + esc(b.guest_first_name) + ' ' + esc(b.guest_last_name) + '</strong>'
+      + '<span>' + esc(b.room_name) + ' &middot; ' + b.room_code.toUpperCase() + ' &middot; &pound;' + Number(b.total_amount).toLocaleString() + '</span>'
+      + '</div>'
+      + '<div class="fd-guest-meta"><span class="fd-ref">' + b.ref + '</span></div>'
+      + '<div class="fd-guest-actions">'
+      + (b.checked_out_at
+          ? '<span class="fd-done-badge fd-done-dep">&#10003; Out</span>'
+          : '<button class="btn-fd-checkout" onclick="event.stopPropagation();checkOutGuest(' + b.id + ')">Check Out</button>')
+      + '</div></div>';
+  };
 
   document.getElementById('fdArrivalCount').textContent   = arrivals.length;
   document.getElementById('fdDepartureCount').textContent = departures.length;
 
-  document.getElementById('fdArrivalList').innerHTML = arrivals.length
-    ? arrivals.map(arrivalRow).join('')
-    : '<div class="fd-empty">No arrivals today</div>';
+  var emptyArr = '<div class="fd-empty">'
+    + '<svg viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" width="32" height="32"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'
+    + 'No arrivals today</div>';
+  var emptyDep = '<div class="fd-empty">'
+    + '<svg viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" width="32" height="32"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'
+    + 'No departures today</div>';
 
-  document.getElementById('fdDepartureList').innerHTML = departures.length
-    ? departures.map(departureRow).join('')
-    : '<div class="fd-empty">No departures today</div>';
+  document.getElementById('fdArrivalList').innerHTML   = arrivals.length   ? arrivals.map(arrivalRow).join('')     : emptyArr;
+  document.getElementById('fdDepartureList').innerHTML = departures.length ? departures.map(departureRow).join('') : emptyDep;
+}
+
+// Room tile click — ripple animation + open guest profile for active rooms
+function fdRoomClick(event, tile, code) {
+  var ripple = document.createElement('span');
+  ripple.className = 'fd-ripple';
+  var rect = tile.getBoundingClientRect();
+  var size = Math.max(rect.width, rect.height) * 2.5;
+  ripple.style.cssText = 'width:' + size + 'px;height:' + size + 'px;'
+    + 'left:' + (event.clientX - rect.left - size/2) + 'px;'
+    + 'top:' + (event.clientY - rect.top  - size/2) + 'px;';
+  tile.appendChild(ripple);
+  setTimeout(function() { if (ripple.parentNode) ripple.parentNode.removeChild(ripple); }, 600);
+
+  // Open guest profile if this room has an active or arriving booking
+  var today = new Date().toISOString().slice(0, 10);
+  var b = allBookings.find(function(bk) {
+    return bk.room_code.toLowerCase() === code.toLowerCase() && bk.checked_in_at && !bk.checked_out_at;
+  }) || allBookings.find(function(bk) {
+    return bk.room_code.toLowerCase() === code.toLowerCase()
+      && (bk.checkin_date || '').slice(0, 10) === today && !bk.checked_in_at && bk.status !== 'cancelled';
+  });
+  if (b) openCalBooking(b.id);
 }
 
 // ── Bookings ──────────────────────────────────────────────────
