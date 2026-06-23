@@ -3081,8 +3081,10 @@ a:hover { text-decoration: underline; }
 }
 .nb-modal-close:hover { background: rgba(255,255,255,0.18) !important; color: #fff !important; }
 
-/* Body */
-.nb-modal .modal-body { padding: 22px 28px !important; }
+/* Body — scrollable so modal never overflows viewport */
+.nb-modal { max-height: calc(100vh - 48px) !important; display: flex !important; flex-direction: column !important; }
+.nb-modal-hdr { flex-shrink: 0; }
+.nb-modal .modal-body { padding: 22px 28px !important; overflow-y: auto !important; flex: 1 !important; }
 
 /* Section headers with icon chips */
 .nb-section-hdr {
