@@ -281,7 +281,7 @@ async function loadStats() {
 }
 
 // ── Daily To-Do (localStorage) ────────────────────────────────
-var _dashTodoKey = 'bdw_todo_' + new Date().toISOString().slice(0, 10);
+var _dashTodoKey = 'bdw_todo_' + _localDate();
 
 function dashGetData() {
   try { return JSON.parse(localStorage.getItem(_dashTodoKey)) || { tasks: [], note: '' }; }
@@ -375,7 +375,7 @@ async function loadFrontDesk() {
     // Merge into allBookings so openCalBooking can find them from any tab
     allBookings = data.data || [];
 
-    const today    = new Date().toISOString().slice(0, 10);
+    const today    = _localDate();
     const bookings = allBookings.filter(b => b.status !== 'cancelled');
 
     const roomStatus = {};
@@ -512,7 +512,7 @@ function fdRoomClick(event, tile, code) {
   setTimeout(function() { if (ripple.parentNode) ripple.parentNode.removeChild(ripple); }, 600);
 
   // Open guest profile if this room has an active or arriving booking
-  var today = new Date().toISOString().slice(0, 10);
+  var today = _localDate();
   var b = allBookings.find(function(bk) {
     return bk.room_code.toLowerCase() === code.toLowerCase() && bk.checked_in_at && !bk.checked_out_at;
   }) || allBookings.find(function(bk) {
@@ -1823,6 +1823,15 @@ document.getElementById('bookingProfileModal').addEventListener('click', e => {
 });
 
 // ── Helpers ───────────────────────────────────────────────────
+// Returns today's date in YYYY-MM-DD using the CLIENT's LOCAL timezone.
+// Using toISOString() gives UTC which is wrong for UK (BST = UTC+1) users,
+// causing blocks/arrivals to appear off by one day near midnight.
+function _localDate(offset) {
+  const d = new Date();
+  if (offset) d.setDate(d.getDate() + offset);
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
 function fmtDate(s) {
   if (!s) return '—';
   return new Date(s).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -1885,10 +1894,8 @@ function openNewBookingModal() {
       sel.appendChild(o);
     });
   }
-  const today = new Date().toISOString().slice(0, 10);
-  const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
-  document.getElementById('nb_checkin').value  = today;
-  document.getElementById('nb_checkout').value = tomorrow;
+  document.getElementById('nb_checkin').value  = _localDate();
+  document.getElementById('nb_checkout').value = _localDate(1);
   document.getElementById('nbError').classList.add('hidden');
   document.getElementById('newBookingModal').classList.remove('hidden');
   calcNewBookingTotal();
@@ -2056,6 +2063,7 @@ document.getElementById('editBookingSubmitBtn').addEventListener('click', async 
 // ── Availability / Room Blocks ────────────────────────────────
 let _blocksData = [];
 
+
 document.getElementById('refreshBlocks').addEventListener('click', loadAvailability);
 
 async function loadAvailability() {
@@ -2080,7 +2088,7 @@ async function loadAvailability() {
 }
 
 function _updateAvKPIs() {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = _localDate();
   const blockedRooms = new Set(
     _blocksData.filter(bl => bl.start_date.slice(0,10) <= today && bl.end_date.slice(0,10) >= today).map(bl => bl.room_code)
   );
@@ -2097,7 +2105,7 @@ function _updateAvKPIs() {
 }
 
 function renderAvMatrix() {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = _localDate();
   const blockedMap = {};
   _blocksData.filter(bl => bl.start_date.slice(0,10) <= today && bl.end_date.slice(0,10) >= today)
              .forEach(bl => { blockedMap[bl.room_code] = bl.id; });
@@ -2135,7 +2143,7 @@ function toggleBlockForm() {
       o.textContent = r.code.toUpperCase() + ' — ' + r.name;
       sel.appendChild(o);
     });
-    document.getElementById('blk_from').value   = new Date().toISOString().slice(0, 10);
+    document.getElementById('blk_from').value   = _localDate();
     document.getElementById('blk_to').value     = '';
     document.getElementById('blk_reason').value = '';
     document.getElementById('blkError').classList.add('hidden');
@@ -2149,7 +2157,7 @@ function renderBlocks() {
     document.getElementById('blocksList').innerHTML = '<div class="av-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="30" height="30"><circle cx="12" cy="12" r="10"/><polyline points="20 6 9 17 4 12"/></svg><p>No blocks set — all rooms are available</p></div>';
     return;
   }
-  const today = new Date().toISOString().slice(0, 10);
+  const today = _localDate();
   document.getElementById('blocksList').innerHTML = '<div class="av-blocks-list">'
     + _blocksData.map(bl => {
       const room   = CAL_ROOMS.find(r => r.code.toLowerCase() === bl.room_code) || { name: bl.room_code.toUpperCase() };
@@ -2205,7 +2213,7 @@ function toggleMinStayForm() {
   form.classList.toggle('hidden', !hidden);
   if (hidden) {
     document.getElementById('ms_label').value  = '';
-    document.getElementById('ms_from').value   = new Date().toISOString().slice(0,10);
+    document.getElementById('ms_from').value   = _localDate();
     document.getElementById('ms_to').value     = '';
     document.getElementById('ms_nights').value = '2';
   }
