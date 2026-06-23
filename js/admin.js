@@ -2062,9 +2062,13 @@ async function loadAvailability() {
   document.getElementById('blocksList').innerHTML = '<div class="table-loading">Loading…</div>';
   document.getElementById('avMatrix').innerHTML   = '<div class="table-loading">Loading…</div>';
   try {
-    const { ok, data } = await apiFetch('GET', '/api/admin/blocks');
-    if (!ok) return;
-    _blocksData = data.data || [];
+    const needBookings = !allBookings.length;
+    const requests = [apiFetch('GET', '/api/admin/blocks')];
+    if (needBookings) requests.push(apiFetch('GET', '/api/admin/bookings'));
+    const [blocksRes, bookingsRes] = await Promise.all(requests);
+    if (!blocksRes.ok) return;
+    _blocksData = blocksRes.data.data || [];
+    if (needBookings && bookingsRes && bookingsRes.ok) allBookings = bookingsRes.data.data || [];
     renderBlocks();
     renderAvMatrix();
     _updateAvKPIs();
@@ -2078,7 +2082,7 @@ async function loadAvailability() {
 function _updateAvKPIs() {
   const today = new Date().toISOString().slice(0, 10);
   const blockedRooms = new Set(
-    _blocksData.filter(bl => bl.start_date <= today && bl.end_date >= today).map(bl => bl.room_code)
+    _blocksData.filter(bl => bl.start_date.slice(0,10) <= today && bl.end_date.slice(0,10) >= today).map(bl => bl.room_code)
   );
   const occupiedRooms = new Set(
     allBookings.filter(b => b.checked_in_at && !b.checked_out_at).map(b => b.room_code.toLowerCase())
@@ -2095,7 +2099,7 @@ function _updateAvKPIs() {
 function renderAvMatrix() {
   const today = new Date().toISOString().slice(0, 10);
   const blockedMap = {};
-  _blocksData.filter(bl => bl.start_date <= today && bl.end_date >= today)
+  _blocksData.filter(bl => bl.start_date.slice(0,10) <= today && bl.end_date.slice(0,10) >= today)
              .forEach(bl => { blockedMap[bl.room_code] = bl.id; });
   const occupiedSet = new Set(
     allBookings.filter(b => b.checked_in_at && !b.checked_out_at).map(b => b.room_code.toLowerCase())
@@ -2149,7 +2153,7 @@ function renderBlocks() {
   document.getElementById('blocksList').innerHTML = '<div class="av-blocks-list">'
     + _blocksData.map(bl => {
       const room   = CAL_ROOMS.find(r => r.code.toLowerCase() === bl.room_code) || { name: bl.room_code.toUpperCase() };
-      const active = bl.start_date <= today && bl.end_date >= today;
+      const active = bl.start_date.slice(0,10) <= today && bl.end_date.slice(0,10) >= today;
       return '<div class="av-block-item">'
         + '<div class="av-bi-room"><span class="av-bi-code">' + bl.room_code.toUpperCase() + '</span><span class="av-bi-name">' + room.name + '</span></div>'
         + '<div class="av-bi-dates"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' + fmtDate(bl.start_date) + ' → ' + fmtDate(bl.end_date) + '</div>'
