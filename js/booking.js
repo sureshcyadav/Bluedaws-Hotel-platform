@@ -31,29 +31,30 @@ const ROOMS = {
 };
 
 // ---------- Load live prices from admin settings ----------
-(function loadLivePrices() {
-  function applyPrices(d) {
-    Object.keys(ROOMS).forEach(function(key) {
-      var val = d['price_' + key];
-      if (val !== undefined) {
-        var p = parseInt(val, 10);
-        if (!isNaN(p) && p > 0) ROOMS[key].price = p;
-      }
-    });
+function applyBDWPrices(d) {
+  Object.keys(ROOMS).forEach(function(key) {
+    var val = d['price_' + key];
+    if (val !== undefined) {
+      var p = parseInt(val, 10);
+      if (!isNaN(p) && p > 0) ROOMS[key].price = p;
+    }
+  });
+}
+window.applyBDWPrices = applyBDWPrices;
+
+// If prices.js script tag already ran, apply now
+if (window.__BDW_PRICES__) applyBDWPrices(window.__BDW_PRICES__);
+
+// Fetch fallback with retries
+(function() {
+  function attempt(n) {
+    fetch(API_BASE + '/api/settings', { cache: 'no-store' })
+      .then(function(r) { return r.json(); })
+      .then(function(res) { if (res && res.data) applyBDWPrices(res.data); })
+      .catch(function() { if (n > 0) setTimeout(function() { attempt(n - 1); }, 8000); });
   }
-  fetch(API_BASE + '/api/settings', { cache: 'no-store' })
-    .then(function(r) { return r.json(); })
-    .then(function(res) { if (res && res.data) applyPrices(res.data); })
-    .catch(function() {
-      // Retry once after 8s in case backend is waking up
-      setTimeout(function() {
-        fetch(API_BASE + '/api/settings', { cache: 'no-store' })
-          .then(function(r) { return r.json(); })
-          .then(function(res) { if (res && res.data) applyPrices(res.data); })
-          .catch(function() {});
-      }, 8000);
-    });
-})();
+  attempt(3);
+}());
 
 // ---------- State ----------
 const state = {
