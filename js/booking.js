@@ -504,8 +504,7 @@ document.getElementById('confirmBooking').addEventListener('click', async () => 
     const ref = data.data.ref;
     state.bookingRef = ref;
 
-    // Send confirmation emails (non-blocking)
-    sendBookingEmails(ref).catch(() => {});
+    // Emails are now sent server-side in bookingController.js
 
     const refEl   = document.getElementById('successRef');
     const emailEl = document.getElementById('successEmail');

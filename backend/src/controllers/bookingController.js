@@ -1,5 +1,6 @@
-const { pool }       = require('../config/db');
-const { VALID_ROOMS } = require('../middleware/validate');
+const { pool }          = require('../config/db');
+const { VALID_ROOMS }   = require('../middleware/validate');
+const { sendBookingEmails } = require('../utils/mailer');
 
 function generateRef() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -107,6 +108,30 @@ async function createBooking(req, res) {
     const saved = rows[0];
 
     await client.query('COMMIT');
+
+    // Send emails in background — non-blocking so response goes out immediately
+    const guestStr = `${Number(adults)} Adult${Number(adults) !== 1 ? 's' : ''}${Number(children) > 0 ? `, ${Number(children)} Child${Number(children) !== 1 ? 'ren' : ''}` : ''}`;
+    setImmediate(() => {
+      sendBookingEmails({
+        ref,
+        guest: {
+          firstName: guest_first_name.trim(),
+          lastName:  guest_last_name.trim(),
+          email:     guest_email.trim(),
+          phone:     guest_phone.trim(),
+          country:   guest_country.trim(),
+        },
+        roomLabel:    `${room.name} (${room_code.toUpperCase()})`,
+        checkin:      checkin_date,
+        checkout:     checkout_date,
+        nights:       String(nights),
+        guests:       guestStr,
+        total:        total.toLocaleString(),
+        payment:      payment_method,
+        requests:     special_requests || '',
+        dateReceived: new Date().toLocaleString('en-GB', { dateStyle: 'long', timeStyle: 'short' }),
+      }).catch(err => console.error('[mailer] Failed to send booking emails:', err.message));
+    });
 
     return res.status(201).json({
       success: true,

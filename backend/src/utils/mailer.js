@@ -1,0 +1,125 @@
+const nodemailer = require('nodemailer');
+
+let _transporter = null;
+
+function getTransporter() {
+  if (_transporter) return _transporter;
+  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) return null;
+  _transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false,
+    auth: {
+      user: process.env.GMAIL_USER,
+      pass: process.env.GMAIL_APP_PASSWORD,
+    },
+  });
+  return _transporter;
+}
+
+function row(label, value) {
+  return `
+    <tr style="border-top:1px solid #f1f5f9">
+      <td style="padding:9px 0;font-size:11.5px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;font-weight:600;width:130px">${label}</td>
+      <td style="padding:9px 0;color:#1e293b">${value}</td>
+    </tr>`;
+}
+
+function headerHtml(subtitle) {
+  return `
+    <div style="background:#0f172a;padding:24px 28px;border-radius:8px 8px 0 0;text-align:center">
+      <div style="color:#c9a96e;font-size:22px;font-weight:700;letter-spacing:3px">BLUEDAWS</div>
+      <div style="color:#94a3b8;font-size:11px;letter-spacing:2px;margin-top:2px">${subtitle}</div>
+    </div>`;
+}
+
+function wrapHtml(header, body) {
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:20px;background:#f1f5f9;font-family:Arial,sans-serif">
+<div style="max-width:580px;margin:0 auto">
+  ${header}
+  <div style="background:#fff;border:1px solid #e2e8f0;border-top:none;padding:28px 28px 24px;border-radius:0 0 8px 8px">
+    ${body}
+  </div>
+  <p style="text-align:center;color:#94a3b8;font-size:11px;margin:16px 0 0">
+    Bluedaws Private Hotel · 16-20 Argyle Square, London WC1H 8AS
+  </p>
+</div>
+</body></html>`;
+}
+
+async function sendBookingEmails({ ref, guest, roomLabel, checkin, checkout, nights, guests, total, payment, requests, dateReceived }) {
+  const t = getTransporter();
+  if (!t) {
+    console.log('[mailer] GMAIL_USER / GMAIL_APP_PASSWORD not set — email skipped');
+    return;
+  }
+
+  const payLabels = { card: 'Credit / Debit Card', bank: 'Bank Transfer', payathotel: 'Pay at Hotel' };
+  const payStr = payLabels[payment] || payment;
+  const hotelAddr = process.env.GMAIL_USER;
+
+  // ── Hotel notification ───────────────────────────────────────────
+  const notifBody = `
+    <h2 style="margin:0 0 4px;color:#0f172a;font-size:18px">New Booking Received</h2>
+    <p style="margin:0 0 20px;color:#64748b;font-size:13px">${dateReceived}</p>
+    <table style="width:100%;border-collapse:collapse">
+      ${row('Reference', `<strong style="font-size:16px">${ref}</strong>`)}
+      ${row('Guest', `${guest.firstName} ${guest.lastName}`)}
+      ${row('Email', `<a href="mailto:${guest.email}" style="color:#c9a96e">${guest.email}</a>`)}
+      ${row('Phone', guest.phone)}
+      ${row('Country', guest.country)}
+      ${row('Room', roomLabel)}
+      ${row('Check-in', checkin)}
+      ${row('Check-out', checkout)}
+      ${row('Nights', nights)}
+      ${row('Guests', guests)}
+      ${row('Total', `<strong>£${total}</strong>`)}
+      ${row('Payment', payStr)}
+      ${requests ? row('Special Requests', requests) : ''}
+    </table>`;
+
+  await t.sendMail({
+    from: `"Bluedaws Bookings" <${hotelAddr}>`,
+    to: hotelAddr,
+    subject: `New Booking ${ref} — ${guest.firstName} ${guest.lastName}`,
+    html: wrapHtml(headerHtml('BOOKING NOTIFICATION'), notifBody),
+  });
+
+  // ── Guest confirmation ───────────────────────────────────────────
+  const confirmBody = `
+    <h2 style="margin:0 0 16px;color:#059669;font-size:20px">✓ Booking Confirmed</h2>
+    <p style="margin:0 0 8px;color:#1e293b">Dear <strong>${guest.firstName}</strong>,</p>
+    <p style="margin:0 0 22px;color:#475569;font-size:14px;line-height:1.6">
+      Your booking at Bluedaws Private Hotel has been received. We'll confirm within 24 hours.
+    </p>
+    <table style="width:100%;border-collapse:collapse">
+      ${row('Reference', `<strong style="font-size:18px;color:#0f172a">${ref}</strong>`)}
+      ${row('Room', roomLabel)}
+      ${row('Check-in', `${checkin} &nbsp;<span style="color:#64748b;font-size:12px">(from 1:00 PM)</span>`)}
+      ${row('Check-out', `${checkout} &nbsp;<span style="color:#64748b;font-size:12px">(by 12:00 PM)</span>`)}
+      ${row('Nights', nights)}
+      ${row('Guests', guests)}
+      ${row('Total', `<strong style="font-size:16px;color:#0f172a">£${total}</strong>`)}
+      ${row('Payment', payStr)}
+      ${requests ? row('Special Requests', requests) : ''}
+    </table>
+    <div style="margin:24px 0 20px;padding:14px 16px;background:#f8fafc;border-radius:8px;font-size:13px;color:#475569">
+      <strong>What's included:</strong> Free Wi-Fi · Breakfast · Heating &amp; Fan · Hair Dryer · Towels &amp; Linen
+    </div>
+    <p style="margin:0 0 20px;font-size:13px;color:#64748b">
+      Questions? Email <a href="mailto:reservations@bluedawshotel.com" style="color:#c9a96e">reservations@bluedawshotel.com</a>
+    </p>
+    <p style="margin:0;color:#475569;font-size:14px">Warm regards,<br><strong>The Bluedaws Team</strong></p>`;
+
+  await t.sendMail({
+    from: `"Bluedaws Private Hotel" <${hotelAddr}>`,
+    to: guest.email,
+    subject: `Booking Confirmed ${ref} — Bluedaws Private Hotel`,
+    html: wrapHtml(headerHtml('PRIVATE HOTEL'), confirmBody),
+  });
+
+  console.log(`[mailer] Sent booking emails for ${ref} → hotel + ${guest.email}`);
+}
+
+module.exports = { sendBookingEmails };
