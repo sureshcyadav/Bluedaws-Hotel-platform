@@ -92,63 +92,6 @@ function genRef() {
   return r;
 }
 
-// ---------- EmailJS sending ----------
-function sendBookingEmails(ref) {
-  if (typeof emailjs === 'undefined' || !EMAILJS || EMAILJS.publicKey === 'YOUR_PUBLIC_KEY') {
-    return Promise.resolve({ skipped: true });
-  }
-  const room = ROOMS[state.roomKey];
-  const total = state.nights * room.price;
-  const guestStr = `${state.adults} Adult${state.adults !== 1 ? 's' : ''}${state.children > 0 ? `, ${state.children} Child${state.children !== 1 ? 'ren' : ''}` : ''}`;
-  const payLabel = { card: 'Credit / Debit Card', bank: 'Bank Transfer', payathotel: 'Pay at Hotel' };
-  const now = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-
-  const baseParams = {
-    ref,
-    guest_name:  `${state.guest.firstName} ${state.guest.lastName}`,
-    guest_email: state.guest.email,
-    guest_phone: state.guest.phone,
-    room_name:   `${room.name} (${room.code}) — ${room.floor}`,
-    checkin:     fmtDateShort(state.checkin),
-    checkout:    fmtDateShort(state.checkout),
-    nights:      String(state.nights),
-    guests:      guestStr,
-    total:       total.toLocaleString(),
-    payment:     payLabel[state.payment] || state.payment,
-    requests:    state.guest.requests || 'None',
-    date_received: now,
-  };
-
-  const hotelEmail = emailjs.send(EMAILJS.serviceId, EMAILJS.bookingNotificationTemplate, {
-    ...baseParams, to_email: EMAILJS.hotelEmail,
-  });
-
-  const guestEmail = emailjs.send(EMAILJS.serviceId, EMAILJS.bookingConfirmTemplate, {
-    ...baseParams, to_email: state.guest.email, to_name: state.guest.firstName,
-  });
-
-  return Promise.allSettled([hotelEmail, guestEmail]);
-}
-
-function sendContactEmail(data) {
-  if (typeof emailjs === 'undefined' || !EMAILJS || EMAILJS.publicKey === 'YOUR_PUBLIC_KEY') {
-    return Promise.resolve({ skipped: true });
-  }
-  return emailjs.send(EMAILJS.serviceId, EMAILJS.contactTemplate, {
-    to_email:     EMAILJS.hotelEmail,
-    from_name:    `${data.firstName} ${data.lastName}`,
-    from_email:   data.email,
-    phone:        data.phone || 'Not provided',
-    subject_label: data.subjectLabel,
-    message:      data.message,
-  });
-}
-
-// ---------- Init EmailJS ----------
-if (typeof emailjs !== 'undefined' && EMAILJS && EMAILJS.publicKey !== 'YOUR_PUBLIC_KEY') {
-  emailjs.init({ publicKey: EMAILJS.publicKey });
-}
-
 // ---------- Step management ----------
 function showStep(n) {
   document.querySelectorAll('.booking-step').forEach((el, i) => {
