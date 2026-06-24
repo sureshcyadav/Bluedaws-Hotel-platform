@@ -91,7 +91,7 @@ async function sendBookingEmails({ ref, guest, roomLabel, checkin, checkout, nig
     <h2 style="margin:0 0 16px;color:#059669;font-size:20px">✓ Booking Confirmed</h2>
     <p style="margin:0 0 8px;color:#1e293b">Dear <strong>${guest.firstName}</strong>,</p>
     <p style="margin:0 0 22px;color:#475569;font-size:14px;line-height:1.6">
-      Your booking at Bluedaws Private Hotel has been received. We'll confirm within 24 hours.
+      Your booking at Bluedaws Private Hotel is <strong>confirmed</strong>. We look forward to welcoming you!
     </p>
     <table style="width:100%;border-collapse:collapse">
       ${row('Reference', `<strong style="font-size:18px;color:#0f172a">${ref}</strong>`)}
