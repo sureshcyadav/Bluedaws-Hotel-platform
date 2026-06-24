@@ -48,18 +48,16 @@ function wrapHtml(header, body) {
 </body></html>`;
 }
 
+// ── Sent immediately when guest makes a booking ───────────────────────────────
 async function sendBookingEmails({ ref, guest, roomLabel, checkin, checkout, nights, guests, total, payment, requests, dateReceived }) {
   const t = getTransporter();
-  if (!t) {
-    console.log('[mailer] GMAIL_USER / GMAIL_APP_PASSWORD not set — email skipped');
-    return;
-  }
+  if (!t) { console.log('[mailer] Email credentials not set — skipping'); return; }
 
   const payLabels = { card: 'Credit / Debit Card', bank: 'Bank Transfer', payathotel: 'Pay at Hotel' };
-  const payStr = payLabels[payment] || payment;
+  const payStr    = payLabels[payment] || payment;
   const hotelAddr = process.env.GMAIL_USER;
 
-  // ── Hotel notification ───────────────────────────────────────────
+  // Hotel notification
   const notifBody = `
     <h2 style="margin:0 0 4px;color:#0f172a;font-size:18px">New Booking Received</h2>
     <p style="margin:0 0 20px;color:#64748b;font-size:13px">${dateReceived}</p>
@@ -86,12 +84,13 @@ async function sendBookingEmails({ ref, guest, roomLabel, checkin, checkout, nig
     html: wrapHtml(headerHtml('BOOKING NOTIFICATION'), notifBody),
   });
 
-  // ── Guest confirmation ───────────────────────────────────────────
-  const confirmBody = `
-    <h2 style="margin:0 0 16px;color:#059669;font-size:20px">✓ Booking Confirmed</h2>
+  // Guest: booking received (NOT confirmed yet)
+  const receivedBody = `
+    <h2 style="margin:0 0 16px;color:#c9a96e;font-size:20px">Booking Received</h2>
     <p style="margin:0 0 8px;color:#1e293b">Dear <strong>${guest.firstName}</strong>,</p>
     <p style="margin:0 0 22px;color:#475569;font-size:14px;line-height:1.6">
-      Your booking at Bluedaws Private Hotel is <strong>confirmed</strong>. We look forward to welcoming you!
+      Thank you! We have received your booking request at Bluedaws Private Hotel.
+      We will review and send you a <strong>confirmation email within 1 hour</strong>.
     </p>
     <table style="width:100%;border-collapse:collapse">
       ${row('Reference', `<strong style="font-size:18px;color:#0f172a">${ref}</strong>`)}
@@ -104,8 +103,53 @@ async function sendBookingEmails({ ref, guest, roomLabel, checkin, checkout, nig
       ${row('Payment', payStr)}
       ${requests ? row('Special Requests', requests) : ''}
     </table>
-    <div style="margin:24px 0 20px;padding:14px 16px;background:#f8fafc;border-radius:8px;font-size:13px;color:#475569">
-      <strong>What's included:</strong> Free Wi-Fi · Breakfast · Heating &amp; Fan · Hair Dryer · Towels &amp; Linen
+    <div style="margin:24px 0 20px;padding:14px 16px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;font-size:13px;color:#92400e">
+      ⏳ Your booking is <strong>pending confirmation</strong>. You will receive a confirmation email within 1 hour.
+    </div>
+    <p style="margin:0 0 20px;font-size:13px;color:#64748b">
+      Questions? Email <a href="mailto:reservations@bluedawshotel.com" style="color:#c9a96e">reservations@bluedawshotel.com</a>
+    </p>
+    <p style="margin:0;color:#475569;font-size:14px">Warm regards,<br><strong>The Bluedaws Team</strong></p>`;
+
+  await t.sendMail({
+    from: `"Bluedaws Private Hotel" <${hotelAddr}>`,
+    to: guest.email,
+    subject: `Booking Received ${ref} — Bluedaws Private Hotel`,
+    html: wrapHtml(headerHtml('PRIVATE HOTEL'), receivedBody),
+  });
+
+  console.log(`[mailer] Sent booking-received emails for ${ref} → hotel + ${guest.email}`);
+}
+
+// ── Sent when admin clicks Confirm in the admin portal ────────────────────────
+async function sendBookingConfirmedEmail({ ref, guest, roomLabel, checkin, checkout, nights, guests, total, payment, requests }) {
+  const t = getTransporter();
+  if (!t) { console.log('[mailer] Email credentials not set — skipping confirmation email'); return; }
+
+  const payLabels = { card: 'Credit / Debit Card', bank: 'Bank Transfer', payathotel: 'Pay at Hotel' };
+  const payStr    = payLabels[payment] || payment;
+  const hotelAddr = process.env.GMAIL_USER;
+
+  const confirmedBody = `
+    <h2 style="margin:0 0 16px;color:#059669;font-size:20px">✓ Booking Confirmed</h2>
+    <p style="margin:0 0 8px;color:#1e293b">Dear <strong>${guest.firstName}</strong>,</p>
+    <p style="margin:0 0 22px;color:#475569;font-size:14px;line-height:1.6">
+      Great news! Your booking at Bluedaws Private Hotel is <strong>confirmed</strong>.
+      We look forward to welcoming you!
+    </p>
+    <table style="width:100%;border-collapse:collapse">
+      ${row('Reference', `<strong style="font-size:18px;color:#0f172a">${ref}</strong>`)}
+      ${row('Room', roomLabel)}
+      ${row('Check-in', `${checkin} &nbsp;<span style="color:#64748b;font-size:12px">(from 1:00 PM)</span>`)}
+      ${row('Check-out', `${checkout} &nbsp;<span style="color:#64748b;font-size:12px">(by 12:00 PM)</span>`)}
+      ${row('Nights', nights)}
+      ${row('Guests', guests)}
+      ${row('Total', `<strong style="font-size:16px;color:#0f172a">£${total}</strong>`)}
+      ${row('Payment', payStr)}
+      ${requests ? row('Special Requests', requests) : ''}
+    </table>
+    <div style="margin:24px 0 20px;padding:14px 16px;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;font-size:13px;color:#166534">
+      ✓ <strong>Confirmed</strong> — What's included: Free Wi-Fi · Breakfast · Heating &amp; Fan · Hair Dryer · Towels &amp; Linen
     </div>
     <p style="margin:0 0 20px;font-size:13px;color:#64748b">
       Questions? Email <a href="mailto:reservations@bluedawshotel.com" style="color:#c9a96e">reservations@bluedawshotel.com</a>
@@ -116,10 +160,10 @@ async function sendBookingEmails({ ref, guest, roomLabel, checkin, checkout, nig
     from: `"Bluedaws Private Hotel" <${hotelAddr}>`,
     to: guest.email,
     subject: `Booking Confirmed ${ref} — Bluedaws Private Hotel`,
-    html: wrapHtml(headerHtml('PRIVATE HOTEL'), confirmBody),
+    html: wrapHtml(headerHtml('PRIVATE HOTEL'), confirmedBody),
   });
 
-  console.log(`[mailer] Sent booking emails for ${ref} → hotel + ${guest.email}`);
+  console.log(`[mailer] Sent booking-confirmed email for ${ref} → ${guest.email}`);
 }
 
-module.exports = { sendBookingEmails };
+module.exports = { sendBookingEmails, sendBookingConfirmedEmail };

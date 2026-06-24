@@ -4,6 +4,7 @@ const rateLimit = require('express-rate-limit');
 const { pool }  = require('../config/db');
 const adminAuth = require('../middleware/adminAuth');
 const { VALID_ROOMS } = require('../middleware/validate');
+const { sendBookingConfirmedEmail } = require('../utils/mailer');
 
 const router = express.Router();
 const secret = () => process.env.ADMIN_PASSWORD || 'changeme';
@@ -224,9 +225,34 @@ router.patch('/bookings/:id/status', adminAuth, async (req, res) => {
   if (!['pending', 'confirmed', 'cancelled'].includes(status))
     return res.status(400).json({ success: false, message: 'Invalid status.' });
   try {
-    const { rowCount } = await pool.query('UPDATE bookings SET status=$1 WHERE id=$2', [status, req.params.id]);
+    const { rows, rowCount } = await pool.query(
+      `UPDATE bookings SET status=$1 WHERE id=$2
+       RETURNING ref, guest_first_name, guest_last_name, guest_email, guest_phone, guest_country,
+                 room_code, room_name, checkin_date, checkout_date, nights, adults, children,
+                 total_amount, payment_method, special_requests`,
+      [status, req.params.id]
+    );
     if (!rowCount) return res.status(404).json({ success: false, message: 'Booking not found.' });
     res.json({ success: true });
+
+    if (status === 'confirmed') {
+      const b = rows[0];
+      const guestStr = `${b.adults} Adult${b.adults !== 1 ? 's' : ''}${b.children > 0 ? `, ${b.children} Child${b.children !== 1 ? 'ren' : ''}` : ''}`;
+      setImmediate(() => {
+        sendBookingConfirmedEmail({
+          ref:       b.ref,
+          guest:     { firstName: b.guest_first_name, lastName: b.guest_last_name, email: b.guest_email, phone: b.guest_phone, country: b.guest_country },
+          roomLabel: `${b.room_name} (${b.room_code.toUpperCase()})`,
+          checkin:   b.checkin_date.toISOString().slice(0, 10),
+          checkout:  b.checkout_date.toISOString().slice(0, 10),
+          nights:    String(b.nights),
+          guests:    guestStr,
+          total:     Number(b.total_amount).toLocaleString(),
+          payment:   b.payment_method,
+          requests:  b.special_requests || '',
+        }).catch(err => console.error('[mailer] Failed to send confirmation email:', err.message));
+      });
+    }
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
