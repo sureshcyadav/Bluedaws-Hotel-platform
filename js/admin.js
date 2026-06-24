@@ -928,7 +928,7 @@ function _renderPrices(list) {
     const items = g.codes.map(code => byCode[code]).filter(Boolean);
     if (!items.length) return;
     const groupId = 'pg-' + items[0].key;
-    const groupKeys = JSON.stringify(items.map(s => s.key));
+    const groupKeys = JSON.stringify(items.map(s => s.key)).replace(/"/g, "'");
     html += '<div class="price-group">'
       + '<div class="price-group-header">'
       + '<span class="price-group-dot" style="background:' + g.color + '"></span>'
