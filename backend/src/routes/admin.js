@@ -256,6 +256,34 @@ router.patch('/bookings/:id/status', adminAuth, async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
+// POST /api/admin/bookings/:id/send-confirmation — resend confirmation email to guest
+router.post('/bookings/:id/send-confirmation', adminAuth, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT ref, guest_first_name, guest_last_name, guest_email, guest_phone, guest_country,
+              room_code, room_name, checkin_date, checkout_date, nights, adults, children,
+              total_amount, payment_method, special_requests FROM bookings WHERE id=$1`,
+      [req.params.id]
+    );
+    if (!rows.length) return res.status(404).json({ success: false, message: 'Booking not found.' });
+    const b = rows[0];
+    const guestStr = `${b.adults} Adult${b.adults !== 1 ? 's' : ''}${b.children > 0 ? `, ${b.children} Child${b.children !== 1 ? 'ren' : ''}` : ''}`;
+    await sendBookingConfirmedEmail({
+      ref:       b.ref,
+      guest:     { firstName: b.guest_first_name, lastName: b.guest_last_name, email: b.guest_email, phone: b.guest_phone, country: b.guest_country },
+      roomLabel: `${b.room_name} (${b.room_code.toUpperCase()})`,
+      checkin:   b.checkin_date.toISOString().slice(0, 10),
+      checkout:  b.checkout_date.toISOString().slice(0, 10),
+      nights:    String(b.nights),
+      guests:    guestStr,
+      total:     Number(b.total_amount).toLocaleString(),
+      payment:   b.payment_method,
+      requests:  b.special_requests || '',
+    });
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+});
+
 // PATCH /api/admin/bookings/:id/notes — update admin notes + special requests
 router.patch('/bookings/:id/notes', adminAuth, async (req, res) => {
   const { admin_notes, special_requests } = req.body || {};

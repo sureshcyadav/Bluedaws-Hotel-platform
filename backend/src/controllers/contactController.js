@@ -1,4 +1,5 @@
 const { pool } = require('../config/db');
+const { sendContactEmail } = require('../utils/mailer');
 
 async function createContact(req, res) {
   const { first_name, last_name, email, phone = null, subject, message } = req.body;
@@ -9,6 +10,17 @@ async function createContact(req, res) {
        VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
       [first_name.trim(), last_name.trim(), email.trim(), phone || null, subject.trim(), message.trim()]
     );
+
+    setImmediate(() => {
+      sendContactEmail({
+        firstName:    first_name.trim(),
+        lastName:     last_name.trim(),
+        email:        email.trim(),
+        phone:        phone || null,
+        subjectLabel: subject.trim(),
+        message:      message.trim(),
+      }).catch(err => console.error('[mailer] Failed to send contact email:', err.message));
+    });
 
     return res.status(201).json({
       success: true,

@@ -1,11 +1,6 @@
 ﻿// ======================================================================
-// BLUEDAWS HOTEL — Contact Form + EmailJS
+// BLUEDAWS HOTEL — Contact Form
 // ======================================================================
-
-// Init EmailJS if configured
-if (typeof emailjs !== 'undefined' && typeof EMAILJS !== 'undefined' && EMAILJS.publicKey !== 'YOUR_PUBLIC_KEY') {
-  emailjs.init({ publicKey: EMAILJS.publicKey });
-}
 
 const form        = document.getElementById('contactForm');
 const formSuccess = document.getElementById('formSuccess');
@@ -81,18 +76,6 @@ if (form) {
           message:    data.message,
         }),
       });
-
-      // Send email notification (non-blocking)
-      if (typeof emailjs !== 'undefined' && typeof EMAILJS !== 'undefined' && EMAILJS.publicKey !== 'YOUR_PUBLIC_KEY') {
-        emailjs.send(EMAILJS.serviceId, EMAILJS.contactTemplate, {
-          to_email:      EMAILJS.hotelEmail,
-          from_name:     `${data.firstName} ${data.lastName}`,
-          from_email:    data.email,
-          phone:         data.phone || 'Not provided',
-          subject_label: data.subjectLabel,
-          message:       data.message,
-        }).catch(() => {});
-      }
 
       if (formSuccess) formSuccess.classList.add('visible');
       form.reset();

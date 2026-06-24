@@ -166,4 +166,33 @@ async function sendBookingConfirmedEmail({ ref, guest, roomLabel, checkin, check
   console.log(`[mailer] Sent booking-confirmed email for ${ref} → ${guest.email}`);
 }
 
-module.exports = { sendBookingEmails, sendBookingConfirmedEmail };
+// ── Sent when a contact form enquiry is submitted ─────────────────────────────
+async function sendContactEmail({ firstName, lastName, email, phone, subjectLabel, message }) {
+  const t = getTransporter();
+  if (!t) { console.log('[mailer] Email credentials not set — skipping contact email'); return; }
+
+  const hotelAddr = process.env.GMAIL_USER;
+
+  const body = `
+    <h2 style="margin:0 0 4px;color:#0f172a;font-size:18px">New Website Enquiry</h2>
+    <p style="margin:0 0 20px;color:#64748b;font-size:13px">${subjectLabel}</p>
+    <table style="width:100%;border-collapse:collapse">
+      ${row('From', `${firstName} ${lastName}`)}
+      ${row('Email', `<a href="mailto:${email}" style="color:#c9a96e">${email}</a>`)}
+      ${row('Phone', phone || 'Not provided')}
+      ${row('Subject', subjectLabel)}
+      ${row('Message', `<span style="white-space:pre-wrap">${message}</span>`)}
+    </table>`;
+
+  await t.sendMail({
+    from: `"Bluedaws Website" <${hotelAddr}>`,
+    to: hotelAddr,
+    replyTo: email,
+    subject: `Website Enquiry — ${subjectLabel} (${firstName} ${lastName})`,
+    html: wrapHtml(headerHtml('ENQUIRY NOTIFICATION'), body),
+  });
+
+  console.log(`[mailer] Sent contact email from ${email}`);
+}
+
+module.exports = { sendBookingEmails, sendBookingConfirmedEmail, sendContactEmail };

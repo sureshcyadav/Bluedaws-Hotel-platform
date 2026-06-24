@@ -1,40 +1,9 @@
 // ── Config ────────────────────────────────────────────────────
 const API = 'https://bluedaws-hotel-platform.onrender.com';
 
-// ── EmailJS config — fill in your own IDs after setting up EmailJS ──
-const EMAILJS_CONFIG = {
-  publicKey:   'Tajjc_ip_Es4kTp0Z',
-  serviceId:   'service_b6frwcw',
-  templateId:  'template_ch8va6n',
-};
-// Initialise EmailJS (runs once on page load)
-if (typeof emailjs !== 'undefined') {
-  emailjs.init({ publicKey: EMAILJS_CONFIG.publicKey });
-}
-
 async function sendBookingConfirmationEmail(booking) {
-  if (typeof emailjs === 'undefined') throw new Error('EmailJS SDK not loaded');
-  if (EMAILJS_CONFIG.publicKey === 'YOUR_PUBLIC_KEY') throw new Error('EmailJS not configured');
-  const payLabel = { card: 'Card', bank: 'Bank Transfer', payathotel: 'Pay at Hotel' };
-  const fmt = d => d ? new Date(d + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '—';
-  await emailjs.send(EMAILJS_CONFIG.serviceId, EMAILJS_CONFIG.templateId, {
-    to_name:       booking.guest_first_name + ' ' + booking.guest_last_name,
-    to_email:      booking.guest_email,
-    booking_ref:   booking.ref,
-    room_name:     booking.room_name,
-    room_code:     (booking.room_code || '').toUpperCase(),
-    checkin_date:  fmt(booking.checkin_date),
-    checkout_date: fmt(booking.checkout_date),
-    nights:        booking.nights,
-    adults:        booking.adults,
-    children:      booking.children || 0,
-    total_amount:  '£' + Number(booking.total_amount).toLocaleString(),
-    payment_method: payLabel[booking.payment_method] || booking.payment_method,
-    special_requests: booking.special_requests || 'None',
-    hotel_name:    'Bluedaws Hotel',
-    hotel_email:   'info@bluedawshotel.com',
-    hotel_phone:   '+44 1234 567890',
-  });
+  const { ok, data } = await apiFetch('POST', '/api/admin/bookings/' + booking.id + '/send-confirmation');
+  if (!ok) throw new Error(data.message || 'Failed to send confirmation email');
 }
 
 let allBookings = [];
@@ -2041,7 +2010,7 @@ document.getElementById('newBookingSubmitBtn').addEventListener('click', async (
       } catch (emailErr) {
         emailStatusEl.textContent = '✗ Email failed';
         emailStatusEl.className = 'nb-email-status failed';
-        console.warn('EmailJS error:', emailErr.text || emailErr.message || emailErr);
+        console.warn('Email error:', emailErr.message || emailErr);
         await new Promise(r => setTimeout(r, 1600));
       }
     }
