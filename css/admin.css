@@ -304,6 +304,11 @@ a:hover { text-decoration: underline; }
 .price-group-count {
   font-size: 11px; color: #94a3b8; font-weight: 500;
 }
+.price-group-actions {
+  display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+}
+.price-group-header .btn-cf-save { padding: 6px 14px; font-size: 11.5px; }
+.price-group-header .cf-feedback { margin-top: 0; font-size: 11px; }
 .price-cards-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
@@ -332,8 +337,6 @@ a:hover { text-decoration: underline; }
   font-size: 16px; font-weight: 700; color: #0f172a; padding: 8px 10px;
 }
 .price-card .cf-prefix { font-size: 16px; font-weight: 700; color: #0f172a; }
-.price-card .btn-cf-save { padding: 8px 14px; }
-.price-card .cf-feedback { color: #059669; }
 
 /* ── Front Desk ──────────────────────────────────────────────── */
 #sectionFrontdesk { padding: 0; }

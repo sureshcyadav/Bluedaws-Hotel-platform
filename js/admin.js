@@ -927,15 +927,21 @@ function _renderPrices(list) {
   GROUPS.forEach(g => {
     const items = g.codes.map(code => byCode[code]).filter(Boolean);
     if (!items.length) return;
+    const groupId = 'pg-' + items[0].key;
+    const groupKeys = JSON.stringify(items.map(s => s.key));
     html += '<div class="price-group">'
       + '<div class="price-group-header">'
       + '<span class="price-group-dot" style="background:' + g.color + '"></span>'
       + '<span class="price-group-label">' + g.label + '</span>'
       + '<span class="price-group-count">' + items.length + ' room' + (items.length > 1 ? 's' : '') + '</span>'
+      + '<div class="price-group-actions">'
+      + '<button class="btn-cf-save" id="' + groupId + '-btn" onclick="saveGroup(' + groupKeys + ')">Save</button>'
+      + '<span class="cf-feedback hidden" id="' + groupId + '-fbk">&#10003; Saved!</span>'
+      + '</div>'
       + '</div>'
       + '<div class="price-cards-grid">'
       + items.map(s => {
-          const code = s.key.replace('room_', '').replace('_price', '').toUpperCase();
+          const code = s.key.replace('price_', '').toUpperCase();
           const name = s.label.replace(/\s*\([A-Z0-9]+\)\s*$/, '').trim();
           return '<div class="price-card">'
             + '<div class="price-card-top">'
@@ -945,9 +951,7 @@ function _renderPrices(list) {
             + '<div class="cf-row">'
             + '<span class="cf-prefix">£</span>'
             + '<input type="number" class="cf-input" id="cfi-' + s.key + '" value="' + esc(s.value) + '" min="0" step="1">'
-            + '<button class="btn-cf-save" onclick="saveContent(\'' + s.key + '\')">Save</button>'
             + '</div>'
-            + '<span class="cf-feedback hidden" id="cfb-' + s.key + '">&#10003; Saved!</span>'
             + '</div>';
         }).join('')
       + '</div></div>';
@@ -1043,6 +1047,28 @@ async function saveContent(key, isImage) {
     setTimeout(() => feedback.classList.add('hidden'), 2500);
   } catch { alert('Failed to save.'); }
   finally { btn.textContent = 'Save'; btn.disabled = false; }
+}
+
+async function saveGroup(keys) {
+  const id  = 'pg-' + keys[0];
+  const btn = document.getElementById(id + '-btn');
+  const fbk = document.getElementById(id + '-fbk');
+  if (btn) { btn.textContent = 'Saving…'; btn.disabled = true; }
+  try {
+    const lp = JSON.parse(localStorage.getItem('bdw_prices') || '{}');
+    for (const key of keys) {
+      const input = document.getElementById('cfi-' + key);
+      if (!input) continue;
+      const { ok, data } = await apiFetch('PATCH', '/api/admin/content/' + key, { value: input.value });
+      if (!ok) { alert(data.message); return; }
+      const item = _allSettingsData.find(s => s.key === key);
+      if (item) item.value = input.value;
+      lp[key] = input.value;
+    }
+    localStorage.setItem('bdw_prices', JSON.stringify(lp));
+    if (fbk) { fbk.classList.remove('hidden'); setTimeout(() => fbk.classList.add('hidden'), 2500); }
+  } catch { alert('Failed to save.'); }
+  finally { if (btn) { btn.textContent = 'Save'; btn.disabled = false; } }
 }
 
 // ── Calendar ───────────────────────────────────────────────────
