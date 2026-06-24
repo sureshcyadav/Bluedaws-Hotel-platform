@@ -1029,6 +1029,12 @@ async function saveContent(key, isImage) {
     if (!ok) { alert(data.message); return; }
     const item = _allSettingsData.find(s => s.key === key);
     if (item) item.value = input.value;
+    // Cache in localStorage so rooms.html reflects the change instantly on same browser
+    try {
+      const lp = JSON.parse(localStorage.getItem('bdw_prices') || '{}');
+      lp[key] = input.value;
+      localStorage.setItem('bdw_prices', JSON.stringify(lp));
+    } catch(_) {}
     if (isImage && input.value) {
       const prev = document.getElementById('cfp-' + key);
       if (prev) prev.outerHTML = '<img class="cf-img-preview" id="cfp-' + key + '" src="' + esc(input.value) + '" alt="" onerror="this.style.display=\'none\'">';

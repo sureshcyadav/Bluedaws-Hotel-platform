@@ -85,10 +85,20 @@ function applyBDWPrices(data) {
 }
 window.applyBDWPrices = applyBDWPrices;
 
-// If prices.js script already ran, apply immediately
+// Layer 1: localStorage — instant, set by admin portal on same browser
+try {
+  var _lp = JSON.parse(localStorage.getItem('bdw_prices') || 'null');
+  if (_lp && typeof _lp === 'object') applyBDWPrices(_lp);
+} catch(_) {}
+
+// Layer 2: prices.js <script async> tag already ran (common when backend is awake)
 if (window.__BDW_PRICES__) applyBDWPrices(window.__BDW_PRICES__);
 
-// Also fetch via API as a fallback (handles case where script tag failed)
+// Layer 3: main.js fetch result — hook in so we get prices as soon as main.js resolves
+window._onBdwSettingsLoaded = applyBDWPrices;
+if (window._bdwSettings) applyBDWPrices(window._bdwSettings);
+
+// Layer 4: own fetch with retries (backend cold-start safety net)
 (function fetchPricesFallback() {
   var url = 'https://bluedaws-hotel-platform.onrender.com/api/settings';
   function attempt(retriesLeft) {

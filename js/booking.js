@@ -42,10 +42,20 @@ function applyBDWPrices(d) {
 }
 window.applyBDWPrices = applyBDWPrices;
 
-// If prices.js script tag already ran, apply now
+// Layer 1: localStorage — instant, set by admin portal on same browser
+try {
+  var _lp = JSON.parse(localStorage.getItem('bdw_prices') || 'null');
+  if (_lp && typeof _lp === 'object') applyBDWPrices(_lp);
+} catch(_) {}
+
+// Layer 2: prices.js <script async> tag already ran
 if (window.__BDW_PRICES__) applyBDWPrices(window.__BDW_PRICES__);
 
-// Fetch fallback with retries
+// Layer 3: main.js fetch result
+window._onBdwSettingsLoaded = applyBDWPrices;
+if (window._bdwSettings) applyBDWPrices(window._bdwSettings);
+
+// Layer 4: own fetch with retries
 (function() {
   function attempt(n) {
     fetch(API_BASE + '/api/settings', { cache: 'no-store' })

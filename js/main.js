@@ -53,12 +53,13 @@ if (navToggle && navLinks) {
   }
   window.addEventListener('resize', adjustPagePadding, { passive: true });
 
-  fetch(API_BASE + '/api/settings')
+  fetch(API_BASE + '/api/settings', { cache: 'no-store' })
     .then(function (r) { return r.json(); })
     .then(function (res) {
       if (!res || !res.data) return;
       var d = res.data;
       window._bdwSettings = d;
+      if (typeof window._onBdwSettingsLoaded === 'function') window._onBdwSettingsLoaded(d);
 
       // ── Announcement bar ──────────────────────────────────────
       if (d.ann_active === 'true' && d.ann_text && siteHeader && nav) {
