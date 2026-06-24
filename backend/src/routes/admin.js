@@ -179,7 +179,7 @@ router.post('/bookings', adminAuth, async (req, res) => {
 
   let pricePerNight = room.price;
   try {
-    const { rows } = await pool.query('SELECT value FROM settings WHERE key=$1', ['room_' + room_code.toLowerCase() + '_price']);
+    const { rows } = await pool.query('SELECT value FROM settings WHERE key=$1', ['price_' + room_code.toLowerCase()]);
     if (rows.length) { const p = parseFloat(rows[0].value); if (!isNaN(p) && p > 0) pricePerNight = p; }
   } catch (_) {}
 

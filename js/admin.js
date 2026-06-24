@@ -902,7 +902,7 @@ function _cfToggle(s, liveLabel, offLabel) {
 function _renderPrices(list) {
   const byCode = {};
   list.forEach(s => {
-    const code = s.key.replace('room_', '').replace('_price', '').toUpperCase();
+    const code = s.key.replace('price_', '').toUpperCase();
     byCode[code] = s;
   });
 
@@ -954,7 +954,7 @@ function _renderPrices(list) {
   });
 
   const others = list.filter(s => {
-    const code = s.key.replace('room_', '').replace('_price', '').toUpperCase();
+    const code = s.key.replace('price_', '').toUpperCase();
     return !allGroupedCodes.includes(code);
   });
   if (others.length) {

@@ -79,7 +79,7 @@ roomCards.forEach(c => cardObs.observe(c));
       const codeEl = card.querySelector('.room-code');
       if (!codeEl) return;
       const code  = codeEl.textContent.trim().toLowerCase();
-      const price = parseFloat(data['room_' + code + '_price']);
+      const price = parseFloat(data['price_' + code]);
       if (!isNaN(price) && price > 0) {
         const amt = card.querySelector('.price-amount');
         if (amt) amt.textContent = '£' + price;
