@@ -70,35 +70,34 @@ const cardObs = new IntersectionObserver((entries) => {
 roomCards.forEach(c => cardObs.observe(c));
 
 // ---------- Dynamic prices from backend ----------
-(async function loadPrices() {
-  const SETTINGS_URL = 'https://bluedaws-hotel-platform.onrender.com/api/settings';
-  function applyPrices(data) {
-    document.querySelectorAll('.room-card').forEach(card => {
-      const codeEl = card.querySelector('.room-code');
-      if (!codeEl) return;
-      const code  = codeEl.textContent.trim().toLowerCase();
-      const price = parseFloat(data['price_' + code]);
-      if (!isNaN(price) && price > 0) {
-        const amt = card.querySelector('.price-amount');
-        if (amt) amt.textContent = '£' + price;
-        card.dataset.price = price;
-      }
-    });
+function applyBDWPrices(data) {
+  document.querySelectorAll('.room-card').forEach(function(card) {
+    var codeEl = card.querySelector('.room-code');
+    if (!codeEl) return;
+    var code  = codeEl.textContent.trim().toLowerCase();
+    var price = parseFloat(data['price_' + code]);
+    if (!isNaN(price) && price > 0) {
+      var amt = card.querySelector('.price-amount');
+      if (amt) amt.textContent = '£' + price;
+      card.dataset.price = price;
+    }
+  });
+}
+window.applyBDWPrices = applyBDWPrices;
+
+// If prices.js script already ran, apply immediately
+if (window.__BDW_PRICES__) applyBDWPrices(window.__BDW_PRICES__);
+
+// Also fetch via API as a fallback (handles case where script tag failed)
+(function fetchPricesFallback() {
+  var url = 'https://bluedaws-hotel-platform.onrender.com/api/settings';
+  function attempt(retriesLeft) {
+    fetch(url, { cache: 'no-store' })
+      .then(function(r) { return r.json(); })
+      .then(function(res) { if (res && res.data) applyBDWPrices(res.data); })
+      .catch(function() {
+        if (retriesLeft > 0) setTimeout(function() { attempt(retriesLeft - 1); }, 8000);
+      });
   }
-  try {
-    const res = await fetch(SETTINGS_URL, { cache: 'no-store' });
-    if (!res.ok) return;
-    const { data } = await res.json();
-    applyPrices(data);
-  } catch (_) {
-    // Backend may be waking up — retry once after 8 seconds
-    setTimeout(async () => {
-      try {
-        const res = await fetch(SETTINGS_URL, { cache: 'no-store' });
-        if (!res.ok) return;
-        const { data } = await res.json();
-        applyPrices(data);
-      } catch (_) {}
-    }, 8000);
-  }
-})();
+  attempt(3);
+}());
