@@ -1050,25 +1050,35 @@ async function saveContent(key, isImage) {
 }
 
 async function saveGroup(keys) {
-  const id  = 'pg-' + keys[0];
-  const btn = document.getElementById(id + '-btn');
-  const fbk = document.getElementById(id + '-fbk');
+  const btn = document.getElementById('pg-' + keys[0] + '-btn');
   if (btn) { btn.textContent = 'Saving…'; btn.disabled = true; }
+  let saved = false;
   try {
     const lp = JSON.parse(localStorage.getItem('bdw_prices') || '{}');
     for (const key of keys) {
       const input = document.getElementById('cfi-' + key);
       if (!input) continue;
       const { ok, data } = await apiFetch('PATCH', '/api/admin/content/' + key, { value: input.value });
-      if (!ok) { alert(data.message); return; }
+      if (!ok) { alert('Error: ' + (data.message || 'Save failed')); return; }
       const item = _allSettingsData.find(s => s.key === key);
       if (item) item.value = input.value;
       lp[key] = input.value;
     }
     localStorage.setItem('bdw_prices', JSON.stringify(lp));
-    if (fbk) { fbk.classList.remove('hidden'); setTimeout(() => fbk.classList.add('hidden'), 2500); }
-  } catch { alert('Failed to save.'); }
-  finally { if (btn) { btn.textContent = 'Save'; btn.disabled = false; } }
+    saved = true;
+  } catch(e) { alert('Failed to save. Please try again.'); }
+  finally {
+    if (btn) {
+      btn.disabled = false;
+      if (saved) {
+        btn.textContent = '✓ Saved!';
+        btn.style.background = '#059669';
+        setTimeout(() => { btn.textContent = 'Save'; btn.style.background = ''; }, 2500);
+      } else {
+        btn.textContent = 'Save';
+      }
+    }
+  }
 }
 
 // ── Calendar ───────────────────────────────────────────────────
