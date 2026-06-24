@@ -39,7 +39,7 @@ const ROOMS = {
       if (!res || !res.data) return;
       var d = res.data;
       Object.keys(ROOMS).forEach(function(key) {
-        var val = d['price_' + key];
+        var val = d['room_' + key + '_price'];
         if (val !== undefined) {
           var p = parseInt(val, 10);
           if (!isNaN(p) && p > 0) ROOMS[key].price = p;

@@ -68,3 +68,23 @@ const cardObs = new IntersectionObserver((entries) => {
 }, { threshold: 0.08 });
 
 roomCards.forEach(c => cardObs.observe(c));
+
+// ---------- Dynamic prices from backend ----------
+(async function loadPrices() {
+  try {
+    const res  = await fetch('https://bluedaws-hotel-platform.onrender.com/api/settings');
+    if (!res.ok) return;
+    const { data } = await res.json();
+    document.querySelectorAll('.room-card').forEach(card => {
+      const codeEl = card.querySelector('.room-code');
+      if (!codeEl) return;
+      const code  = codeEl.textContent.trim().toLowerCase();
+      const price = parseFloat(data['room_' + code + '_price']);
+      if (!isNaN(price) && price > 0) {
+        const amt = card.querySelector('.price-amount');
+        if (amt) amt.textContent = '£' + price;
+        card.dataset.price = price;
+      }
+    });
+  } catch (_) {}
+})();
