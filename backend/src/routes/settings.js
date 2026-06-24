@@ -8,6 +8,7 @@ router.get('/', async (req, res) => {
     const { rows } = await pool.query('SELECT key, value FROM settings');
     const data = {};
     rows.forEach(r => { data[r.key] = r.value; });
+    res.set('Cache-Control', 'no-store');
     res.json({ success: true, data });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

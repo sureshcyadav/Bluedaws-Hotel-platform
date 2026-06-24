@@ -31,22 +31,28 @@ const ROOMS = {
 };
 
 // ---------- Load live prices from admin settings ----------
-// Runs silently on page load; falls back to hardcoded prices if fetch fails.
 (function loadLivePrices() {
-  fetch(API_BASE + '/api/settings')
+  function applyPrices(d) {
+    Object.keys(ROOMS).forEach(function(key) {
+      var val = d['price_' + key];
+      if (val !== undefined) {
+        var p = parseInt(val, 10);
+        if (!isNaN(p) && p > 0) ROOMS[key].price = p;
+      }
+    });
+  }
+  fetch(API_BASE + '/api/settings', { cache: 'no-store' })
     .then(function(r) { return r.json(); })
-    .then(function(res) {
-      if (!res || !res.data) return;
-      var d = res.data;
-      Object.keys(ROOMS).forEach(function(key) {
-        var val = d['price_' + key];
-        if (val !== undefined) {
-          var p = parseInt(val, 10);
-          if (!isNaN(p) && p > 0) ROOMS[key].price = p;
-        }
-      });
-    })
-    .catch(function() { /* silently use hardcoded fallbacks */ });
+    .then(function(res) { if (res && res.data) applyPrices(res.data); })
+    .catch(function() {
+      // Retry once after 8s in case backend is waking up
+      setTimeout(function() {
+        fetch(API_BASE + '/api/settings', { cache: 'no-store' })
+          .then(function(r) { return r.json(); })
+          .then(function(res) { if (res && res.data) applyPrices(res.data); })
+          .catch(function() {});
+      }, 8000);
+    });
 })();
 
 // ---------- State ----------
