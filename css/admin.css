@@ -195,6 +195,37 @@ a:hover { text-decoration: underline; }
 .btn-cancel:hover  { background: #dc2626; color: white; border-color: #dc2626; }
 .btn-restore { background: #fffbeb; color: #d97706; border-color: #fde68a; }
 .btn-restore:hover { background: #d97706; color: white; border-color: #d97706; }
+.btn-reply   { background: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
+.btn-reply:hover   { background: #2563eb; color: white; border-color: #2563eb; }
+
+/* ── Reply compose section (inside message modal) ─────────────── */
+.modal-reply-section {
+  margin-top: 20px; padding-top: 18px; border-top: 1px solid #e2e8f0;
+}
+.modal-reply-label {
+  font-size: 12px; font-weight: 600; color: #64748b;
+  text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px;
+}
+.modal-reply-textarea {
+  width: 100%; box-sizing: border-box;
+  border: 1px solid #e2e8f0; border-radius: 8px;
+  padding: 10px 12px; font-size: 13.5px; font-family: inherit;
+  color: #1e293b; resize: vertical; min-height: 110px;
+  transition: border-color .15s;
+  outline: none;
+}
+.modal-reply-textarea:focus { border-color: #c9a96e; box-shadow: 0 0 0 3px rgba(201,169,110,.12); }
+.modal-reply-actions { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
+.btn-reply-send {
+  padding: 7px 18px; border-radius: 8px; font-size: 13px; font-weight: 600;
+  cursor: pointer; border: none; background: #c9a96e; color: white;
+  font-family: inherit; transition: background .15s;
+}
+.btn-reply-send:hover { background: #b8935a; }
+.btn-reply-send:disabled { opacity: .6; cursor: not-allowed; }
+.reply-status { font-size: 12.5px; font-weight: 500; }
+.reply-success { color: #059669; }
+.reply-error   { color: #dc2626; }
 
 /* ── Message preview ─────────────────────────────────────────── */
 .msg-preview { color: #64748b; font-size: 12px; display: block; margin-bottom: 3px; }

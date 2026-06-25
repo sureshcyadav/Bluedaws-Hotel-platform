@@ -767,6 +767,7 @@ function renderContacts() {
     + '<td>' + fmtDateTime(c.created_at) + '</td>'
     + '<td><span class="status-badge status-' + c.status + '">' + c.status + '</span></td>'
     + '<td class="actions-cell">'
+    + '<button class="btn-action btn-reply" onclick="openModal(' + c.id + ',true)">Reply</button>'
     + (c.status === 'unread'  ? '<button class="btn-action btn-confirm" onclick="updateContact(' + c.id + ',\'read\')">Mark Read</button>' : '')
     + (c.status !== 'replied' ? '<button class="btn-action btn-restore" onclick="updateContact(' + c.id + ',\'replied\')">Mark Replied</button>' : '')
     + '</td></tr>'
@@ -1798,23 +1799,57 @@ function generateRegCard() {
 }
 
 // ── Message Modal ─────────────────────────────────────────────
-function openModal(id) {
+function openModal(id, focusReply) {
   const c = allContacts.find(x => x.id === id);
   if (!c) return;
   document.getElementById('modalTitle').textContent = c.first_name + ' ' + c.last_name + ' — ' + c.subject;
   document.getElementById('modalBody').innerHTML =
     '<div class="modal-meta">'
+    + '<span>From: <strong>' + c.first_name + ' ' + c.last_name + '</strong></span>'
     + '<span>Email: <a href="mailto:' + c.email + '">' + c.email + '</a></span>'
     + (c.phone ? '<span>Phone: ' + c.phone + '</span>' : '')
     + '<span>Received: ' + fmtDateTime(c.created_at) + '</span>'
-    + '<span>Status: <span class="status-badge status-' + c.status + '">' + c.status + '</span></span>'
     + '</div>'
     + '<p class="modal-message">' + c.message.replace(/\n/g, '<br>') + '</p>'
-    + '<div class="modal-actions">'
-    + '<a href="mailto:' + c.email + '?subject=Re: ' + encodeURIComponent(c.subject) + '" class="btn-action btn-confirm" onclick="updateContact(' + c.id + ',\'replied\')">Reply via Email</a>'
+    + '<div class="modal-reply-section">'
+    + '<div class="modal-reply-label">Reply to ' + esc(c.first_name) + '</div>'
+    + '<textarea id="replyTextarea" class="modal-reply-textarea" placeholder="Type your reply here…" rows="5"></textarea>'
+    + '<div class="modal-reply-actions">'
+    + '<button class="btn-action btn-reply-send" id="replySubmitBtn" onclick="sendReply(' + c.id + ')">Send Reply</button>'
+    + '<span id="replyStatus" class="reply-status"></span>'
+    + '</div>'
     + '</div>';
   document.getElementById('messageModal').classList.remove('hidden');
   if (c.status === 'unread') updateContact(id, 'read');
+  if (focusReply) setTimeout(() => {
+    const ta = document.getElementById('replyTextarea');
+    if (ta) { ta.focus(); ta.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+  }, 120);
+}
+
+async function sendReply(id) {
+  const textarea = document.getElementById('replyTextarea');
+  const btn      = document.getElementById('replySubmitBtn');
+  const statusEl = document.getElementById('replyStatus');
+  const text     = textarea ? textarea.value.trim() : '';
+  if (!text) { statusEl.textContent = 'Please type a reply first.'; statusEl.className = 'reply-status reply-error'; return; }
+
+  btn.disabled = true; btn.textContent = 'Sending…';
+  statusEl.textContent = ''; statusEl.className = 'reply-status';
+
+  try {
+    const { ok, data } = await apiFetch('POST', '/api/admin/contacts/' + id + '/reply', { message: text });
+    if (!ok) { statusEl.textContent = data.message || 'Failed to send reply.'; statusEl.className = 'reply-status reply-error'; return; }
+    statusEl.textContent = '✓ Reply sent!'; statusEl.className = 'reply-status reply-success';
+    const c = allContacts.find(x => x.id === id);
+    if (c) c.status = 'replied';
+    renderContacts(); loadStats();
+    setTimeout(() => document.getElementById('messageModal').classList.add('hidden'), 1500);
+  } catch {
+    statusEl.textContent = 'Network error. Please try again.'; statusEl.className = 'reply-status reply-error';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Send Reply';
+  }
 }
 
 document.getElementById('modalClose').addEventListener('click', () =>

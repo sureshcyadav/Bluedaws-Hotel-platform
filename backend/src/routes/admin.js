@@ -4,7 +4,7 @@ const rateLimit = require('express-rate-limit');
 const { pool }  = require('../config/db');
 const adminAuth = require('../middleware/adminAuth');
 const { VALID_ROOMS } = require('../middleware/validate');
-const { sendBookingConfirmedEmail } = require('../utils/mailer');
+const { sendBookingConfirmedEmail, sendContactReplyEmail } = require('../utils/mailer');
 
 const router = express.Router();
 const secret = () => process.env.ADMIN_PASSWORD || 'changeme';
@@ -393,6 +393,33 @@ router.patch('/contacts/:id/status', adminAuth, async (req, res) => {
     if (!rowCount) return res.status(404).json({ success: false, message: 'Contact not found.' });
     res.json({ success: true });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+});
+
+// POST /api/admin/contacts/:id/reply — send reply email and mark as replied
+router.post('/contacts/:id/reply', adminAuth, async (req, res) => {
+  const { message: replyText } = req.body || {};
+  if (!replyText || !replyText.trim())
+    return res.status(400).json({ success: false, message: 'Reply message is required.' });
+  try {
+    const { rows } = await pool.query(
+      'SELECT first_name, last_name, email, subject, message FROM contacts WHERE id=$1',
+      [req.params.id]
+    );
+    if (!rows.length) return res.status(404).json({ success: false, message: 'Contact not found.' });
+    const c = rows[0];
+    await sendContactReplyEmail({
+      to:              c.email,
+      firstName:       c.first_name,
+      subject:         c.subject,
+      originalMessage: c.message,
+      replyText:       replyText.trim(),
+    });
+    await pool.query('UPDATE contacts SET status=$1 WHERE id=$2', ['replied', req.params.id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[reply]', err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
 // GET /api/admin/content

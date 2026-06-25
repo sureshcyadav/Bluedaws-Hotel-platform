@@ -195,4 +195,38 @@ async function sendContactEmail({ firstName, lastName, email, phone, subjectLabe
   console.log(`[mailer] Sent contact email from ${email}`);
 }
 
-module.exports = { sendBookingEmails, sendBookingConfirmedEmail, sendContactEmail };
+// ── Sent when admin replies to a contact enquiry ──────────────────────────────
+async function sendContactReplyEmail({ to, firstName, subject, originalMessage, replyText }) {
+  const t = getTransporter();
+  if (!t) { console.log('[mailer] Email credentials not set — skipping reply email'); return; }
+
+  const hotelAddr = process.env.GMAIL_USER;
+
+  const body = `
+    <p style="margin:0 0 8px;color:#1e293b">Dear <strong>${firstName}</strong>,</p>
+    <p style="margin:0 0 20px;color:#475569;font-size:14px;line-height:1.6">
+      Thank you for contacting Bluedaws Private Hotel. Here is our response to your enquiry:
+    </p>
+    <div style="background:#f8fafc;border-left:4px solid #c9a96e;padding:16px 18px;border-radius:0 8px 8px 0;margin-bottom:24px;color:#1e293b;font-size:14px;line-height:1.75">
+      ${replyText.replace(/\n/g, '<br>')}
+    </div>
+    <div style="background:#f1f5f9;border-radius:8px;padding:14px 16px;margin-bottom:20px;font-size:12px;color:#94a3b8">
+      <strong style="display:block;margin-bottom:6px;color:#64748b">Your original message:</strong>
+      <em>${originalMessage.replace(/\n/g, '<br>')}</em>
+    </div>
+    <p style="margin:0 0 20px;font-size:13px;color:#64748b">
+      Need anything else? Reply to this email or call us directly.
+    </p>
+    <p style="margin:0;color:#475569;font-size:14px">Warm regards,<br><strong>The Bluedaws Team</strong></p>`;
+
+  await t.sendMail({
+    from: `"Bluedaws Private Hotel" <${hotelAddr}>`,
+    to,
+    subject: `Re: ${subject} — Bluedaws Private Hotel`,
+    html: wrapHtml(headerHtml('PRIVATE HOTEL'), body),
+  });
+
+  console.log(`[mailer] Sent reply email to ${to}`);
+}
+
+module.exports = { sendBookingEmails, sendBookingConfirmedEmail, sendContactEmail, sendContactReplyEmail };
