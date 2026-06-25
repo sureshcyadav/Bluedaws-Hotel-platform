@@ -197,7 +197,7 @@ async function getBookingByRef(req, res) {
 
   try {
     const { rows } = await pool.query(
-      `SELECT id, ref, guest_first_name, guest_last_name, guest_email,
+      `SELECT ref, guest_first_name, guest_last_name, guest_email,
               room_code, room_name, checkin_date, checkout_date, nights,
               total_amount, payment_method, status, created_at
        FROM bookings WHERE ref = $1`,
@@ -206,7 +206,11 @@ async function getBookingByRef(req, res) {
     if (rows.length === 0) {
       return res.status(404).json({ success: false, message: `No booking found with reference ${ref}.` });
     }
-    return res.json({ success: true, data: rows[0] });
+    const b = rows[0];
+    // Mask email — show only first char and domain (e.g. s***@gmail.com)
+    const [user, domain] = b.guest_email.split('@');
+    b.guest_email = user[0] + '***@' + domain;
+    return res.json({ success: true, data: b });
   } catch (err) {
     console.error('[getBookingByRef]', err.message);
     return res.status(500).json({ success: false, message: 'Server error.' });
