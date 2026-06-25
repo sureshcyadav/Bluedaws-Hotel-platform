@@ -276,22 +276,6 @@ router.post('/bookings', adminAuth, async (req, res) => {
     ]);
     await client.query('COMMIT');
     res.status(201).json({ success: true, data: rows[0] });
-
-    const guestStr = `${Number(adults)} Adult${Number(adults) !== 1 ? 's' : ''}${Number(children) > 0 ? `, ${Number(children)} Child${Number(children) !== 1 ? 'ren' : ''}` : ''}`;
-    setImmediate(() => {
-      sendBookingConfirmedEmail({
-        ref,
-        guest:     { firstName: guest_first_name.trim(), lastName: guest_last_name.trim(), email: guest_email.trim(), phone: guest_phone.trim(), country: guest_country.trim() },
-        roomLabel: `${room.name} (${room_code.toUpperCase()})`,
-        checkin:   checkin_date,
-        checkout:  checkout_date,
-        nights:    String(nights),
-        guests:    guestStr,
-        total:     (nights * pricePerNight).toLocaleString(),
-        payment:   payment_method,
-        requests:  special_requests || '',
-      }).catch(err => console.error('[mailer] Failed to send walk-in confirmation email:', err.message));
-    });
   } catch (err) {
     await client.query('ROLLBACK');
     res.status(500).json({ success: false, message: err.message });

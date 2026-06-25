@@ -2039,6 +2039,7 @@ document.getElementById('newBookingSubmitBtn').addEventListener('click', async (
     const nights    = Math.round((new Date(body.checkout_date) - new Date(body.checkin_date)) / 86400000);
     const totalDisp = document.getElementById('nbTotal');
     const emailBooking = {
+      id:               created.id,
       ref:              created.ref,
       guest_first_name: body.guest_first_name,
       guest_last_name:  body.guest_last_name,
