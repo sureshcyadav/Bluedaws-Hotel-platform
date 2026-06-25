@@ -50,6 +50,10 @@ function toIntId(val) {
       )
     `);
     await pool.query(`DELETE FROM admin_sessions WHERE expires_at < NOW()`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_bookings_checkout
+      ON bookings (checkout_date)`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_bookings_availability
+      ON bookings (room_code, checkin_date, checkout_date) WHERE status != 'cancelled'`);
     console.log('✓ Admin: schema up to date');
   } catch (e) {
     console.error('[admin/migration]', e.message);

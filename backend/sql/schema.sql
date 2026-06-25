@@ -46,10 +46,15 @@ CREATE TABLE IF NOT EXISTS bookings (
   updated_at          TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_bookings_email    ON bookings (guest_email);
-CREATE INDEX IF NOT EXISTS idx_bookings_checkin  ON bookings (checkin_date);
-CREATE INDEX IF NOT EXISTS idx_bookings_status   ON bookings (status);
-CREATE INDEX IF NOT EXISTS idx_bookings_room     ON bookings (room_code);
+CREATE INDEX IF NOT EXISTS idx_bookings_email        ON bookings (guest_email);
+CREATE INDEX IF NOT EXISTS idx_bookings_checkin      ON bookings (checkin_date);
+CREATE INDEX IF NOT EXISTS idx_bookings_checkout     ON bookings (checkout_date);
+CREATE INDEX IF NOT EXISTS idx_bookings_status       ON bookings (status);
+CREATE INDEX IF NOT EXISTS idx_bookings_room         ON bookings (room_code);
+-- Compound partial index covering the exact availability query pattern
+CREATE INDEX IF NOT EXISTS idx_bookings_availability
+  ON bookings (room_code, checkin_date, checkout_date)
+  WHERE status != 'cancelled';
 
 -- Auto-update updated_at on every row change
 CREATE OR REPLACE FUNCTION set_updated_at()
