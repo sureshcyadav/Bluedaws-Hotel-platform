@@ -779,21 +779,23 @@ function renderContacts() {
     tbody.innerHTML = '<tr><td colspan="8" class="table-empty">No messages found.</td></tr>';
     return;
   }
-  tbody.innerHTML = list.map(c => '<tr>'
-    + '<td><strong>' + c.first_name + ' ' + c.last_name + '</strong></td>'
-    + '<td><a href="mailto:' + c.email + '">' + c.email + '</a></td>'
-    + '<td>' + (c.phone || '—') + '</td>'
-    + '<td>' + c.subject + '</td>'
-    + '<td><span class="msg-preview">' + c.message.substring(0, 55) + (c.message.length > 55 ? '…' : '') + '</span>'
-    + '<button class="btn-read-more" onclick="openModal(' + c.id + ')">Read more</button></td>'
-    + '<td>' + fmtDateTime(c.created_at) + '</td>'
-    + '<td><span class="status-badge status-' + c.status + '">' + c.status + '</span></td>'
-    + '<td class="actions-cell">'
-    + '<button class="btn-action btn-reply" onclick="openModal(' + c.id + ',true)">Reply</button>'
-    + (c.status === 'unread'  ? '<button class="btn-action btn-confirm" onclick="updateContact(' + c.id + ',\'read\')">Mark Read</button>' : '')
-    + (c.status !== 'replied' ? '<button class="btn-action btn-restore" onclick="updateContact(' + c.id + ',\'replied\')">Mark Replied</button>' : '')
-    + '</td></tr>'
-  ).join('');
+  tbody.innerHTML = list.map(c => {
+    const preview = esc(c.message.length > 55 ? c.message.substring(0, 55) + '…' : c.message);
+    return '<tr>'
+      + '<td><strong>' + esc(c.first_name) + ' ' + esc(c.last_name) + '</strong></td>'
+      + '<td><a href="mailto:' + esc(c.email) + '">' + esc(c.email) + '</a></td>'
+      + '<td>' + esc(c.phone || '—') + '</td>'
+      + '<td>' + esc(c.subject) + '</td>'
+      + '<td><span class="msg-preview">' + preview + '</span>'
+      + '<button class="btn-read-more" onclick="openModal(' + c.id + ')">Read more</button></td>'
+      + '<td>' + fmtDateTime(c.created_at) + '</td>'
+      + '<td><span class="status-badge status-' + c.status + '">' + c.status + '</span></td>'
+      + '<td class="actions-cell">'
+      + '<button class="btn-action btn-reply" onclick="openModal(' + c.id + ',true)">Reply</button>'
+      + (c.status === 'unread'  ? '<button class="btn-action btn-confirm" onclick="updateContact(' + c.id + ',\'read\')">Mark Read</button>' : '')
+      + (c.status !== 'replied' ? '<button class="btn-action btn-restore" onclick="updateContact(' + c.id + ',\'replied\')">Mark Replied</button>' : '')
+      + '</td></tr>';
+  }).join('');
 }
 
 async function updateContact(id, status) {
@@ -1827,12 +1829,12 @@ function openModal(id, focusReply) {
   document.getElementById('modalTitle').textContent = c.first_name + ' ' + c.last_name + ' — ' + c.subject;
   document.getElementById('modalBody').innerHTML =
     '<div class="modal-meta">'
-    + '<span>From: <strong>' + c.first_name + ' ' + c.last_name + '</strong></span>'
-    + '<span>Email: <a href="mailto:' + c.email + '">' + c.email + '</a></span>'
-    + (c.phone ? '<span>Phone: ' + c.phone + '</span>' : '')
+    + '<span>From: <strong>' + esc(c.first_name) + ' ' + esc(c.last_name) + '</strong></span>'
+    + '<span>Email: <a href="mailto:' + esc(c.email) + '">' + esc(c.email) + '</a></span>'
+    + (c.phone ? '<span>Phone: ' + esc(c.phone) + '</span>' : '')
     + '<span>Received: ' + fmtDateTime(c.created_at) + '</span>'
     + '</div>'
-    + '<p class="modal-message">' + c.message.replace(/\n/g, '<br>') + '</p>'
+    + '<p class="modal-message">' + esc(c.message).replace(/\n/g, '<br>') + '</p>'
     + '<div class="modal-reply-section">'
     + '<div class="modal-reply-label">Reply to ' + esc(c.first_name) + '</div>'
     + '<textarea id="replyTextarea" class="modal-reply-textarea" placeholder="Type your reply here…" rows="5"></textarea>'

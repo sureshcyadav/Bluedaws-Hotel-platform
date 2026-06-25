@@ -234,6 +234,12 @@ router.post('/bookings', adminAuth, async (req, res) => {
   if (!VALID_PAYMENT_METHODS.includes(payment_method))
     return res.status(400).json({ success: false, message: 'Invalid payment method.' });
 
+  const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+  if (!DATE_RE.test(checkin_date)  || isNaN(Date.parse(checkin_date)))
+    return res.status(400).json({ success: false, message: 'Invalid check-in date. Use YYYY-MM-DD.' });
+  if (!DATE_RE.test(checkout_date) || isNaN(Date.parse(checkout_date)))
+    return res.status(400).json({ success: false, message: 'Invalid check-out date. Use YYYY-MM-DD.' });
+
   const nights = Math.round((new Date(checkout_date) - new Date(checkin_date)) / 86400000);
   if (nights < 1) return res.status(400).json({ success: false, message: 'Check-out must be after check-in.' });
 
