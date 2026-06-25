@@ -4,7 +4,7 @@ const crypto    = require('crypto');
 const { pool }  = require('../config/db');
 const { adminAuth, jwtSecret } = require('../middleware/adminAuth');
 const { VALID_ROOMS } = require('../middleware/validate');
-const { sendBookingConfirmedEmail, sendContactReplyEmail } = require('../utils/mailer');
+const { sendBookingConfirmedEmail, sendBookingCancelledEmail, sendContactReplyEmail } = require('../utils/mailer');
 const { loginLimiter } = require('../middleware/rateLimits');
 
 const router = express.Router();
@@ -276,6 +276,22 @@ router.post('/bookings', adminAuth, async (req, res) => {
     ]);
     await client.query('COMMIT');
     res.status(201).json({ success: true, data: rows[0] });
+
+    const guestStr = `${Number(adults)} Adult${Number(adults) !== 1 ? 's' : ''}${Number(children) > 0 ? `, ${Number(children)} Child${Number(children) !== 1 ? 'ren' : ''}` : ''}`;
+    setImmediate(() => {
+      sendBookingConfirmedEmail({
+        ref,
+        guest:     { firstName: guest_first_name.trim(), lastName: guest_last_name.trim(), email: guest_email.trim(), phone: guest_phone.trim(), country: guest_country.trim() },
+        roomLabel: `${room.name} (${room_code.toUpperCase()})`,
+        checkin:   checkin_date,
+        checkout:  checkout_date,
+        nights:    String(nights),
+        guests:    guestStr,
+        total:     (nights * pricePerNight).toLocaleString(),
+        payment:   payment_method,
+        requests:  special_requests || '',
+      }).catch(err => console.error('[mailer] Failed to send walk-in confirmation email:', err.message));
+    });
   } catch (err) {
     await client.query('ROLLBACK');
     res.status(500).json({ success: false, message: err.message });
@@ -302,8 +318,8 @@ router.patch('/bookings/:id/status', adminAuth, async (req, res) => {
     if (!rowCount) return res.status(404).json({ success: false, message: 'Booking not found.' });
     res.json({ success: true });
 
+    const b = rows[0];
     if (status === 'confirmed') {
-      const b = rows[0];
       const guestStr = `${b.adults} Adult${b.adults !== 1 ? 's' : ''}${b.children > 0 ? `, ${b.children} Child${b.children !== 1 ? 'ren' : ''}` : ''}`;
       setImmediate(() => {
         sendBookingConfirmedEmail({
@@ -318,6 +334,18 @@ router.patch('/bookings/:id/status', adminAuth, async (req, res) => {
           payment:   b.payment_method,
           requests:  b.special_requests || '',
         }).catch(err => console.error('[mailer] Failed to send confirmation email:', err.message));
+      });
+    } else if (status === 'cancelled') {
+      setImmediate(() => {
+        sendBookingCancelledEmail({
+          ref:       b.ref,
+          guest:     { firstName: b.guest_first_name, lastName: b.guest_last_name, email: b.guest_email },
+          roomLabel: `${b.room_name} (${b.room_code.toUpperCase()})`,
+          checkin:   b.checkin_date.toISOString().slice(0, 10),
+          checkout:  b.checkout_date.toISOString().slice(0, 10),
+          nights:    String(b.nights),
+          total:     Number(b.total_amount).toLocaleString(),
+        }).catch(err => console.error('[mailer] Failed to send cancellation email:', err.message));
       });
     }
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
