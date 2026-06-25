@@ -80,6 +80,18 @@ a:hover { text-decoration: underline; }
   font-family: inherit; width: calc(100% - 28px);
 }
 .btn-logout:hover { background: rgba(239,68,68,0.2); }
+.btn-revoke-sessions {
+  display: flex; align-items: center; gap: 8px;
+  margin: 0 14px 14px; padding: 7px 14px;
+  background: transparent; color: #94a3b8;
+  border: 1px solid rgba(148,163,184,0.2); border-radius: 8px;
+  font-size: 11px; cursor: pointer; transition: all 0.15s;
+  font-family: inherit; width: calc(100% - 28px); letter-spacing: 0.2px;
+}
+.btn-revoke-sessions:hover {
+  background: rgba(239,68,68,0.08); color: #f87171;
+  border-color: rgba(239,68,68,0.25);
+}
 
 /* ── Main ────────────────────────────────────────────────────── */
 .admin-main { flex: 1; margin-left: 220px; padding: 28px 32px; min-height: 100vh; }

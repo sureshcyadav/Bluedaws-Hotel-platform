@@ -124,9 +124,31 @@ async function login() {
 }
 
 // ── Logout ────────────────────────────────────────────────────
-document.getElementById('logoutBtn').addEventListener('click', () => {
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  try { await apiFetch('POST', '/api/admin/logout'); } catch (_) {}
   clearToken();
   showLogin();
+});
+
+// ── Emergency: Revoke All Sessions ────────────────────────────
+// Works from any device using only the admin password (no token needed).
+// Use this if you suspect a session token has been stolen.
+document.getElementById('revokeSessionsBtn').addEventListener('click', async () => {
+  const pw = prompt('Enter admin password to immediately revoke ALL active sessions.\n\nAny stolen or open sessions will be logged out instantly.');
+  if (!pw) return;
+  try {
+    const res  = await fetch(API + '/api/admin/revoke-all', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ password: pw }),
+    });
+    const data = await res.json();
+    if (!res.ok) { alert(data.message || 'Incorrect password.'); return; }
+    clearToken();
+    showLogin();
+  } catch (_) {
+    alert('Network error. Please try again.');
+  }
 });
 
 // ── Nav ───────────────────────────────────────────────────────

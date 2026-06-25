@@ -1,5 +1,6 @@
 const express   = require('express');
 const jwt       = require('jsonwebtoken');
+const crypto    = require('crypto');
 const { pool }  = require('../config/db');
 const { adminAuth, jwtSecret } = require('../middleware/adminAuth');
 const { VALID_ROOMS } = require('../middleware/validate');
@@ -41,6 +42,14 @@ function toIntId(val) {
         created_at TIMESTAMPTZ DEFAULT NOW()
       )
     `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS admin_sessions (
+        jti        VARCHAR(32) PRIMARY KEY,
+        expires_at TIMESTAMPTZ NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    await pool.query(`DELETE FROM admin_sessions WHERE expires_at < NOW()`);
     console.log('✓ Admin: schema up to date');
   } catch (e) {
     console.error('[admin/migration]', e.message);
@@ -60,14 +69,49 @@ async function makeRef() {
 }
 
 // POST /api/admin/login
-router.post('/login', loginLimiter, (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
   const { password } = req.body || {};
   if (!process.env.ADMIN_PASSWORD)
     return res.status(500).json({ success: false, message: 'Admin password not configured on server.' });
   if (password !== process.env.ADMIN_PASSWORD)
     return res.status(401).json({ success: false, message: 'Incorrect password.' });
-  const token = jwt.sign({ admin: true }, jwtSecret(), { expiresIn: '24h' });
-  res.json({ success: true, token });
+  try {
+    const jti = crypto.randomBytes(16).toString('hex');
+    await pool.query('DELETE FROM admin_sessions');
+    await pool.query(
+      "INSERT INTO admin_sessions (jti, expires_at) VALUES ($1, NOW() + INTERVAL '8 hours')",
+      [jti]
+    );
+    const token = jwt.sign({ admin: true, jti }, jwtSecret(), { expiresIn: '8h' });
+    res.json({ success: true, token });
+  } catch (err) {
+    console.error('[login]', err.message);
+    res.status(500).json({ success: false, message: 'Login failed. Please try again.' });
+  }
+});
+
+// POST /api/admin/logout — invalidates the session immediately server-side
+router.post('/logout', adminAuth, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM admin_sessions');
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// POST /api/admin/revoke-all — emergency revocation using password (no token needed)
+// Use this from any device if you suspect a token has been stolen.
+router.post('/revoke-all', loginLimiter, async (req, res) => {
+  const { password } = req.body || {};
+  if (!process.env.ADMIN_PASSWORD || password !== process.env.ADMIN_PASSWORD)
+    return res.status(401).json({ success: false, message: 'Incorrect password.' });
+  try {
+    await pool.query('DELETE FROM admin_sessions');
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
 // GET /api/admin/stats
