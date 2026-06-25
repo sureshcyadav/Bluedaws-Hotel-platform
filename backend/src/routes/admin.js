@@ -2,12 +2,20 @@ const express   = require('express');
 const jwt       = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
 const { pool }  = require('../config/db');
-const adminAuth = require('../middleware/adminAuth');
+const { adminAuth, jwtSecret } = require('../middleware/adminAuth');
 const { VALID_ROOMS } = require('../middleware/validate');
 const { sendBookingConfirmedEmail, sendContactReplyEmail } = require('../utils/mailer');
 
 const router = express.Router();
-const secret = () => process.env.ADMIN_PASSWORD || 'changeme';
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+const VALID_PAYMENT_STATUSES = ['unpaid', 'partial', 'paid'];
+const VALID_PAYMENT_METHODS  = ['card', 'bank', 'payathotel'];
+
+function toIntId(val) {
+  const n = parseInt(val, 10);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
 
 // ── Startup: add new columns & tables if missing ───────────────────────────
 ;(async () => {
@@ -65,7 +73,7 @@ router.post('/login', loginLimiter, (req, res) => {
     return res.status(500).json({ success: false, message: 'Admin password not configured on server.' });
   if (password !== process.env.ADMIN_PASSWORD)
     return res.status(401).json({ success: false, message: 'Incorrect password.' });
-  const token = jwt.sign({ admin: true }, secret(), { expiresIn: '24h' });
+  const token = jwt.sign({ admin: true }, jwtSecret(), { expiresIn: '24h' });
   res.json({ success: true, token });
 });
 
@@ -174,6 +182,8 @@ router.post('/bookings', adminAuth, async (req, res) => {
 
   const room = VALID_ROOMS[room_code.toLowerCase()];
   if (!room) return res.status(400).json({ success: false, message: 'Invalid room code.' });
+  if (!VALID_PAYMENT_METHODS.includes(payment_method))
+    return res.status(400).json({ success: false, message: 'Invalid payment method.' });
 
   const nights = Math.round((new Date(checkout_date) - new Date(checkin_date)) / 86400000);
   if (nights < 1) return res.status(400).json({ success: false, message: 'Check-out must be after check-in.' });
@@ -224,13 +234,15 @@ router.patch('/bookings/:id/status', adminAuth, async (req, res) => {
   const { status } = req.body || {};
   if (!['pending', 'confirmed', 'cancelled'].includes(status))
     return res.status(400).json({ success: false, message: 'Invalid status.' });
+  const id = toIntId(req.params.id);
+  if (!id) return res.status(400).json({ success: false, message: 'Invalid booking ID.' });
   try {
     const { rows, rowCount } = await pool.query(
       `UPDATE bookings SET status=$1 WHERE id=$2
        RETURNING ref, guest_first_name, guest_last_name, guest_email, guest_phone, guest_country,
                  room_code, room_name, checkin_date, checkout_date, nights, adults, children,
                  total_amount, payment_method, special_requests`,
-      [status, req.params.id]
+      [status, id]
     );
     if (!rowCount) return res.status(404).json({ success: false, message: 'Booking not found.' });
     res.json({ success: true });
@@ -258,12 +270,14 @@ router.patch('/bookings/:id/status', adminAuth, async (req, res) => {
 
 // POST /api/admin/bookings/:id/send-confirmation — resend confirmation email to guest
 router.post('/bookings/:id/send-confirmation', adminAuth, async (req, res) => {
+  const id = toIntId(req.params.id);
+  if (!id) return res.status(400).json({ success: false, message: 'Invalid booking ID.' });
   try {
     const { rows } = await pool.query(
       `SELECT ref, guest_first_name, guest_last_name, guest_email, guest_phone, guest_country,
               room_code, room_name, checkin_date, checkout_date, nights, adults, children,
               total_amount, payment_method, special_requests FROM bookings WHERE id=$1`,
-      [req.params.id]
+      [id]
     );
     if (!rows.length) return res.status(404).json({ success: false, message: 'Booking not found.' });
     const b = rows[0];
@@ -287,13 +301,15 @@ router.post('/bookings/:id/send-confirmation', adminAuth, async (req, res) => {
 // PATCH /api/admin/bookings/:id/notes — update admin notes + special requests
 router.patch('/bookings/:id/notes', adminAuth, async (req, res) => {
   const { admin_notes, special_requests } = req.body || {};
+  const id = toIntId(req.params.id);
+  if (!id) return res.status(400).json({ success: false, message: 'Invalid booking ID.' });
   try {
     const { rowCount } = await pool.query(
       `UPDATE bookings SET
         admin_notes      = CASE WHEN $1::text IS NOT NULL THEN $1 ELSE admin_notes END,
         special_requests = CASE WHEN $2::text IS NOT NULL THEN $2 ELSE special_requests END
        WHERE id=$3`,
-      [admin_notes ?? null, special_requests ?? null, req.params.id]
+      [admin_notes ?? null, special_requests ?? null, id]
     );
     if (!rowCount) return res.status(404).json({ success: false, message: 'Booking not found.' });
     res.json({ success: true });
@@ -302,10 +318,12 @@ router.patch('/bookings/:id/notes', adminAuth, async (req, res) => {
 
 // PATCH /api/admin/bookings/:id/checkin  — also clears checked_out_at so re-checkin works
 router.patch('/bookings/:id/checkin', adminAuth, async (req, res) => {
+  const id = toIntId(req.params.id);
+  if (!id) return res.status(400).json({ success: false, message: 'Invalid booking ID.' });
   try {
     const { rowCount } = await pool.query(
       `UPDATE bookings SET checked_in_at=NOW(), checked_out_at=NULL, status='confirmed' WHERE id=$1 AND status!='cancelled'`,
-      [req.params.id]
+      [id]
     );
     if (!rowCount) return res.status(404).json({ success: false, message: 'Booking not found or cancelled.' });
     res.json({ success: true });
@@ -314,10 +332,12 @@ router.patch('/bookings/:id/checkin', adminAuth, async (req, res) => {
 
 // PATCH /api/admin/bookings/:id/checkout
 router.patch('/bookings/:id/checkout', adminAuth, async (req, res) => {
+  const id = toIntId(req.params.id);
+  if (!id) return res.status(400).json({ success: false, message: 'Invalid booking ID.' });
   try {
     const { rowCount } = await pool.query(
       `UPDATE bookings SET checked_out_at=NOW(), checked_in_at=COALESCE(checked_in_at, NOW()) WHERE id=$1`,
-      [req.params.id]
+      [id]
     );
     if (!rowCount) return res.status(404).json({ success: false, message: 'Booking not found.' });
     res.json({ success: true });
@@ -326,10 +346,12 @@ router.patch('/bookings/:id/checkout', adminAuth, async (req, res) => {
 
 // PATCH /api/admin/bookings/:id/undo-checkin — resets to "not arrived" (clears both timestamps)
 router.patch('/bookings/:id/undo-checkin', adminAuth, async (req, res) => {
+  const id = toIntId(req.params.id);
+  if (!id) return res.status(400).json({ success: false, message: 'Invalid booking ID.' });
   try {
     const { rowCount } = await pool.query(
       `UPDATE bookings SET checked_in_at=NULL, checked_out_at=NULL WHERE id=$1`,
-      [req.params.id]
+      [id]
     );
     if (!rowCount) return res.status(404).json({ success: false, message: 'Booking not found.' });
     res.json({ success: true });
@@ -343,6 +365,10 @@ router.patch('/bookings/:id/guest', adminAuth, async (req, res) => {
     admin_notes, special_requests,
     payment_status, amount_paid, payment_mode, payment_note,
   } = req.body || {};
+  if (payment_status && !VALID_PAYMENT_STATUSES.includes(payment_status))
+    return res.status(400).json({ success: false, message: 'Invalid payment_status.' });
+  const id = toIntId(req.params.id);
+  if (!id) return res.status(400).json({ success: false, message: 'Invalid booking ID.' });
   try {
     const { rowCount } = await pool.query(`
       UPDATE bookings SET
@@ -388,8 +414,10 @@ router.patch('/contacts/:id/status', adminAuth, async (req, res) => {
   const { status } = req.body || {};
   if (!['unread', 'read', 'replied'].includes(status))
     return res.status(400).json({ success: false, message: 'Invalid status.' });
+  const id = toIntId(req.params.id);
+  if (!id) return res.status(400).json({ success: false, message: 'Invalid contact ID.' });
   try {
-    const { rowCount } = await pool.query('UPDATE contacts SET status=$1 WHERE id=$2', [status, req.params.id]);
+    const { rowCount } = await pool.query('UPDATE contacts SET status=$1 WHERE id=$2', [status, id]);
     if (!rowCount) return res.status(404).json({ success: false, message: 'Contact not found.' });
     res.json({ success: true });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
@@ -400,10 +428,12 @@ router.post('/contacts/:id/reply', adminAuth, async (req, res) => {
   const { message: replyText } = req.body || {};
   if (!replyText || !replyText.trim())
     return res.status(400).json({ success: false, message: 'Reply message is required.' });
+  const id = toIntId(req.params.id);
+  if (!id) return res.status(400).json({ success: false, message: 'Invalid contact ID.' });
   try {
     const { rows } = await pool.query(
       'SELECT first_name, last_name, email, subject, message FROM contacts WHERE id=$1',
-      [req.params.id]
+      [id]
     );
     if (!rows.length) return res.status(404).json({ success: false, message: 'Contact not found.' });
     const c = rows[0];
@@ -414,7 +444,7 @@ router.post('/contacts/:id/reply', adminAuth, async (req, res) => {
       originalMessage: c.message,
       replyText:       replyText.trim(),
     });
-    await pool.query('UPDATE contacts SET status=$1 WHERE id=$2', ['replied', req.params.id]);
+    await pool.query('UPDATE contacts SET status=$1 WHERE id=$2', ['replied', id]);
     res.json({ success: true });
   } catch (err) {
     console.error('[reply]', err.message);
@@ -469,8 +499,10 @@ router.post('/blocks', adminAuth, async (req, res) => {
 
 // DELETE /api/admin/blocks/:id
 router.delete('/blocks/:id', adminAuth, async (req, res) => {
+  const id = toIntId(req.params.id);
+  if (!id) return res.status(400).json({ success: false, message: 'Invalid block ID.' });
   try {
-    const { rowCount } = await pool.query('DELETE FROM room_blocks WHERE id=$1', [req.params.id]);
+    const { rowCount } = await pool.query('DELETE FROM room_blocks WHERE id=$1', [id]);
     if (!rowCount) return res.status(404).json({ success: false, message: 'Block not found.' });
     res.json({ success: true });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
