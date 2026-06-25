@@ -202,7 +202,7 @@ router.get('/bookings', adminAuth, async (req, res) => {
               payment_mode, payment_note, special_requests, admin_notes,
               checked_in_at, checked_out_at, guest_id_type, guest_id_number,
               guest_dob, guest_nationality, created_at
-       FROM bookings ORDER BY created_at DESC LIMIT 1000`
+       FROM bookings ORDER BY created_at DESC LIMIT 3000`
     );
     res.json({ success: true, data: rows });
   } catch (err) {
