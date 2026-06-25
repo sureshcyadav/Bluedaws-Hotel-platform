@@ -7,6 +7,7 @@ const bookingRoutes  = require('./routes/bookings');
 const contactRoutes  = require('./routes/contacts');
 const adminRoutes    = require('./routes/admin');
 const settingsRoutes = require('./routes/settings');
+const { globalLimiter } = require('./middleware/rateLimits');
 
 const app = express();
 
@@ -43,6 +44,9 @@ app.use(express.urlencoded({ extended: false }));
 if (process.env.NODE_ENV !== 'test') {
   app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 }
+
+// ── Global rate limit (safety net for all endpoints) ────────────────
+app.use(globalLimiter);
 
 // ── Health check ────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {

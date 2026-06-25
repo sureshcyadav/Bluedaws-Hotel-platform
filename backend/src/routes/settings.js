@@ -1,9 +1,10 @@
 const express  = require('express');
 const { pool } = require('../config/db');
 const router   = express.Router();
+const { settingsLimiter } = require('../middleware/rateLimits');
 
 // GET /api/settings — public JSON endpoint
-router.get('/', async (req, res) => {
+router.get('/', settingsLimiter, async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT key, value FROM settings');
     const data = {};
@@ -18,7 +19,7 @@ router.get('/', async (req, res) => {
 
 // GET /api/prices.js — returns a JS snippet that sets window.__BDW_PRICES__
 // Loaded via <script> tag so no CORS or CORP needed
-router.get('/prices.js', async (req, res) => {
+router.get('/prices.js', settingsLimiter, async (req, res) => {
   try {
     const { rows } = await pool.query("SELECT key, value FROM settings WHERE key LIKE 'price_%'");
     const prices = {};

@@ -1,10 +1,10 @@
 const express   = require('express');
 const jwt       = require('jsonwebtoken');
-const rateLimit = require('express-rate-limit');
 const { pool }  = require('../config/db');
 const { adminAuth, jwtSecret } = require('../middleware/adminAuth');
 const { VALID_ROOMS } = require('../middleware/validate');
 const { sendBookingConfirmedEmail, sendContactReplyEmail } = require('../utils/mailer');
+const { loginLimiter } = require('../middleware/rateLimits');
 
 const router = express.Router();
 
@@ -46,13 +46,6 @@ function toIntId(val) {
     console.error('[admin/migration]', e.message);
   }
 })();
-
-// ── Rate limiter for login ────────────────────────────────────────────────
-const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, max: 5, skipSuccessfulRequests: true,
-  standardHeaders: 'draft-7', legacyHeaders: false,
-  message: { success: false, message: 'Too many login attempts. Please wait 15 minutes and try again.' },
-});
 
 // ── Helper: generate unique booking ref ───────────────────────────────────
 async function makeRef() {
