@@ -2,6 +2,14 @@ const { pool }          = require('../config/db');
 const { VALID_ROOMS }   = require('../middleware/validate');
 const { sendBookingEmails } = require('../utils/mailer');
 
+// Validates YYYY-MM-DD format and restricts to a sensible booking horizon
+// so extreme values (year 0001 or 9999) cannot trigger unbounded table scans.
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+function isValidBookingDate(s) {
+  if (!DATE_RE.test(s) || isNaN(Date.parse(s))) return false;
+  return s >= '2020-01-01' && s <= '2035-12-31';
+}
+
 function generateRef() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let ref = 'BDW-';
@@ -170,6 +178,12 @@ async function checkAvailability(req, res) {
   if (!VALID_ROOMS[room_code.toLowerCase()]) {
     return res.status(400).json({ success: false, message: 'Invalid room code.' });
   }
+  if (!isValidBookingDate(checkin_date) || !isValidBookingDate(checkout_date)) {
+    return res.status(400).json({ success: false, message: 'Invalid or out-of-range date.' });
+  }
+  if (checkout_date <= checkin_date) {
+    return res.status(400).json({ success: false, message: 'Check-out must be after check-in.' });
+  }
 
   try {
     const { rows } = await pool.query(
@@ -262,6 +276,12 @@ async function checkAvailabilityBatch(req, res) {
   const { checkin_date, checkout_date } = req.query;
   if (!checkin_date || !checkout_date) {
     return res.status(400).json({ success: false, message: 'checkin_date and checkout_date are required.' });
+  }
+  if (!isValidBookingDate(checkin_date) || !isValidBookingDate(checkout_date)) {
+    return res.status(400).json({ success: false, message: 'Invalid or out-of-range date.' });
+  }
+  if (checkout_date <= checkin_date) {
+    return res.status(400).json({ success: false, message: 'Check-out must be after check-in.' });
   }
   try {
     const { rows } = await pool.query(

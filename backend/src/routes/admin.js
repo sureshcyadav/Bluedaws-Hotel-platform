@@ -143,14 +143,14 @@ router.get('/stats', adminAuth, async (req, res) => {
         SELECT id, guest_first_name, guest_last_name, room_code, room_name, checked_in_at, status
         FROM bookings
         WHERE checkin_date=$1 AND status!='cancelled'
-        ORDER BY created_at DESC
+        ORDER BY created_at DESC LIMIT 50
       `, [today]),
       // Departing today (in-house, checkout today, not yet checked out)
       pool.query(`
         SELECT id, guest_first_name, guest_last_name, room_code, room_name, checked_in_at, checked_out_at
         FROM bookings
         WHERE checkout_date=$1 AND checked_in_at IS NOT NULL AND checked_out_at IS NULL AND status!='cancelled'
-        ORDER BY checked_in_at
+        ORDER BY checked_in_at LIMIT 50
       `, [today]),
       // Currently in house
       pool.query(`
@@ -192,10 +192,18 @@ router.get('/stats', adminAuth, async (req, res) => {
   }
 });
 
-// GET /api/admin/bookings
+// GET /api/admin/bookings — capped at 1000 rows; clients filter/search client-side
 router.get('/bookings', adminAuth, async (req, res) => {
   try {
-    const { rows } = await pool.query('SELECT * FROM bookings ORDER BY created_at DESC');
+    const { rows } = await pool.query(
+      `SELECT id, ref, status, guest_first_name, guest_last_name, guest_email, guest_phone,
+              guest_country, room_code, room_name, checkin_date, checkout_date, nights,
+              adults, children, total_amount, payment_method, payment_status, amount_paid,
+              payment_mode, payment_note, special_requests, admin_notes,
+              checked_in_at, checked_out_at, guest_id_type, guest_id_number,
+              guest_dob, guest_nationality, created_at
+       FROM bookings ORDER BY created_at DESC LIMIT 1000`
+    );
     res.json({ success: true, data: rows });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -438,10 +446,13 @@ router.patch('/bookings/:id/guest', adminAuth, async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
-// GET /api/admin/contacts
+// GET /api/admin/contacts — capped at 500 rows
 router.get('/contacts', adminAuth, async (req, res) => {
   try {
-    const { rows } = await pool.query('SELECT * FROM contacts ORDER BY created_at DESC');
+    const { rows } = await pool.query(
+      `SELECT id, status, first_name, last_name, email, phone, subject, message, created_at
+       FROM contacts ORDER BY created_at DESC LIMIT 500`
+    );
     res.json({ success: true, data: rows });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
@@ -557,7 +568,7 @@ router.get('/guests', adminAuth, async (req, res) => {
         ARRAY_AGG(ref ORDER BY created_at DESC)                                    AS refs
       FROM bookings
       GROUP BY guest_email, guest_first_name, guest_last_name, guest_phone, guest_country
-      ORDER BY last_booking DESC
+      ORDER BY last_booking DESC LIMIT 500
     `);
     res.json({ success: true, data: rows });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
