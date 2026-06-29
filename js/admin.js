@@ -1,5 +1,5 @@
 // ── Config ────────────────────────────────────────────────────
-const API = 'https://bluedaws-hotel-platform.onrender.com';
+const API = 'https://api.bluedawshotel.com';
 
 async function sendBookingConfirmationEmail(booking) {
   const { ok, data } = await apiFetch('POST', '/api/admin/bookings/' + booking.id + '/send-confirmation');

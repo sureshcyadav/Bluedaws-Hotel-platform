@@ -35,7 +35,7 @@ if (navToggle && navLinks) {
 
 // ---------- Global settings: announcement + promotion ----------
 (function () {
-  var API_BASE   = 'https://bluedaws-hotel-platform.onrender.com';
+  var API_BASE   = 'https://api.bluedawshotel.com';
   var siteHeader = document.getElementById('site-header');
   var nav        = siteHeader ? siteHeader.querySelector('nav.navbar') : null;
 

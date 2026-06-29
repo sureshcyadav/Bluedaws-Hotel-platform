@@ -100,7 +100,7 @@ if (window._bdwSettings) applyBDWPrices(window._bdwSettings);
 
 // Layer 4: own fetch with retries (backend cold-start safety net)
 (function fetchPricesFallback() {
-  var url = 'https://bluedaws-hotel-platform.onrender.com/api/settings';
+  var url = 'https://api.bluedawshotel.com/api/settings';
   function attempt(retriesLeft) {
     fetch(url, { cache: 'no-store' })
       .then(function(r) { return r.json(); })

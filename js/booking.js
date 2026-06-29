@@ -2,7 +2,7 @@
 // BLUEDAWS HOTEL — Booking Engine
 // ======================================================================
 
-const API_BASE = 'https://bluedaws-hotel-platform.onrender.com';
+const API_BASE = 'https://api.bluedawshotel.com';
 
 // ---------- Room data ----------
 const ROOMS = {
