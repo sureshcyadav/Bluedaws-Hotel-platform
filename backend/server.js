@@ -96,7 +96,7 @@ async function initDb() {
       ('confirm_hours',   '2',                              'Booking Confirmation (hours)', 'hotel'),
       ('hotel_address',   'Paddington, London',             'Address',                     'hotel'),
       ('hotel_email',     'bluedawsprivatehotel@gmail.com', 'Contact Email',               'hotel'),
-      ('hotel_phone',     '',                               'Contact Phone',               'hotel'),
+      ('hotel_phone',     '02077236040',                    'Contact Phone',               'hotel'),
       ('deposit_percent', '50',                             'Deposit Required (%)',        'hotel'),
       -- Images
       ('img_hero',        '', 'Hero / Banner Image URL (all pages)',  'images'),
