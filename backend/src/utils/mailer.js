@@ -2,6 +2,14 @@ const nodemailer = require('nodemailer');
 
 let _transporter = null;
 
+function h(str) {
+  return String(str == null ? '' : str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 function getTransporter() {
   if (_transporter) return _transporter;
   if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) return null;
@@ -60,21 +68,21 @@ async function sendBookingEmails({ ref, guest, roomLabel, checkin, checkout, nig
   // Hotel notification
   const notifBody = `
     <h2 style="margin:0 0 4px;color:#0f172a;font-size:18px">New Booking Received</h2>
-    <p style="margin:0 0 20px;color:#64748b;font-size:13px">${dateReceived}</p>
+    <p style="margin:0 0 20px;color:#64748b;font-size:13px">${h(dateReceived)}</p>
     <table style="width:100%;border-collapse:collapse">
-      ${row('Reference', `<strong style="font-size:16px">${ref}</strong>`)}
-      ${row('Guest', `${guest.firstName} ${guest.lastName}`)}
-      ${row('Email', `<a href="mailto:${guest.email}" style="color:#c9a96e">${guest.email}</a>`)}
-      ${row('Phone', guest.phone)}
-      ${row('Country', guest.country)}
-      ${row('Room', roomLabel)}
-      ${row('Check-in', checkin)}
-      ${row('Check-out', checkout)}
-      ${row('Nights', nights)}
-      ${row('Guests', guests)}
-      ${row('Total', `<strong>£${total}</strong>`)}
-      ${row('Payment', payStr)}
-      ${requests ? row('Special Requests', requests) : ''}
+      ${row('Reference', `<strong style="font-size:16px">${h(ref)}</strong>`)}
+      ${row('Guest', `${h(guest.firstName)} ${h(guest.lastName)}`)}
+      ${row('Email', `<a href="mailto:${h(guest.email)}" style="color:#c9a96e">${h(guest.email)}</a>`)}
+      ${row('Phone', h(guest.phone))}
+      ${row('Country', h(guest.country))}
+      ${row('Room', h(roomLabel))}
+      ${row('Check-in', h(checkin))}
+      ${row('Check-out', h(checkout))}
+      ${row('Nights', h(String(nights)))}
+      ${row('Guests', h(String(guests)))}
+      ${row('Total', `<strong>£${h(String(total))}</strong>`)}
+      ${row('Payment', h(payStr))}
+      ${requests ? row('Special Requests', h(requests).replace(/\n/g, '<br>')) : ''}
     </table>`;
 
   await t.sendMail({
@@ -87,21 +95,21 @@ async function sendBookingEmails({ ref, guest, roomLabel, checkin, checkout, nig
   // Guest: booking received (NOT confirmed yet)
   const receivedBody = `
     <h2 style="margin:0 0 16px;color:#c9a96e;font-size:20px">Booking Received</h2>
-    <p style="margin:0 0 8px;color:#1e293b">Dear <strong>${guest.firstName}</strong>,</p>
+    <p style="margin:0 0 8px;color:#1e293b">Dear <strong>${h(guest.firstName)}</strong>,</p>
     <p style="margin:0 0 22px;color:#475569;font-size:14px;line-height:1.6">
       Thank you! We have received your booking request at Bluedaws Private Hotel.
       We will review and send you a <strong>confirmation email within 1 hour</strong>.
     </p>
     <table style="width:100%;border-collapse:collapse">
-      ${row('Reference', `<strong style="font-size:18px;color:#0f172a">${ref}</strong>`)}
-      ${row('Room', roomLabel)}
-      ${row('Check-in', `${checkin} &nbsp;<span style="color:#64748b;font-size:12px">(from 1:00 PM)</span>`)}
-      ${row('Check-out', `${checkout} &nbsp;<span style="color:#64748b;font-size:12px">(by 12:00 PM)</span>`)}
-      ${row('Nights', nights)}
-      ${row('Guests', guests)}
-      ${row('Total', `<strong style="font-size:16px;color:#0f172a">£${total}</strong>`)}
-      ${row('Payment', payStr)}
-      ${requests ? row('Special Requests', requests) : ''}
+      ${row('Reference', `<strong style="font-size:18px;color:#0f172a">${h(ref)}</strong>`)}
+      ${row('Room', h(roomLabel))}
+      ${row('Check-in', `${h(checkin)} &nbsp;<span style="color:#64748b;font-size:12px">(from 1:00 PM)</span>`)}
+      ${row('Check-out', `${h(checkout)} &nbsp;<span style="color:#64748b;font-size:12px">(by 12:00 PM)</span>`)}
+      ${row('Nights', h(String(nights)))}
+      ${row('Guests', h(String(guests)))}
+      ${row('Total', `<strong style="font-size:16px;color:#0f172a">£${h(String(total))}</strong>`)}
+      ${row('Payment', h(payStr))}
+      ${requests ? row('Special Requests', h(requests).replace(/\n/g, '<br>')) : ''}
     </table>
     <div style="margin:24px 0 20px;padding:14px 16px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;font-size:13px;color:#92400e">
       ⏳ Your booking is <strong>pending confirmation</strong>. You will receive a confirmation email within 1 hour.
@@ -132,21 +140,21 @@ async function sendBookingConfirmedEmail({ ref, guest, roomLabel, checkin, check
 
   const confirmedBody = `
     <h2 style="margin:0 0 16px;color:#059669;font-size:20px">✓ Booking Confirmed</h2>
-    <p style="margin:0 0 8px;color:#1e293b">Dear <strong>${guest.firstName}</strong>,</p>
+    <p style="margin:0 0 8px;color:#1e293b">Dear <strong>${h(guest.firstName)}</strong>,</p>
     <p style="margin:0 0 22px;color:#475569;font-size:14px;line-height:1.6">
       Great news! Your booking at Bluedaws Private Hotel is <strong>confirmed</strong>.
       We look forward to welcoming you!
     </p>
     <table style="width:100%;border-collapse:collapse">
-      ${row('Reference', `<strong style="font-size:18px;color:#0f172a">${ref}</strong>`)}
-      ${row('Room', roomLabel)}
-      ${row('Check-in', `${checkin} &nbsp;<span style="color:#64748b;font-size:12px">(from 1:00 PM)</span>`)}
-      ${row('Check-out', `${checkout} &nbsp;<span style="color:#64748b;font-size:12px">(by 12:00 PM)</span>`)}
-      ${row('Nights', nights)}
-      ${row('Guests', guests)}
-      ${row('Total', `<strong style="font-size:16px;color:#0f172a">£${total}</strong>`)}
-      ${row('Payment', payStr)}
-      ${requests ? row('Special Requests', requests) : ''}
+      ${row('Reference', `<strong style="font-size:18px;color:#0f172a">${h(ref)}</strong>`)}
+      ${row('Room', h(roomLabel))}
+      ${row('Check-in', `${h(checkin)} &nbsp;<span style="color:#64748b;font-size:12px">(from 1:00 PM)</span>`)}
+      ${row('Check-out', `${h(checkout)} &nbsp;<span style="color:#64748b;font-size:12px">(by 12:00 PM)</span>`)}
+      ${row('Nights', h(String(nights)))}
+      ${row('Guests', h(String(guests)))}
+      ${row('Total', `<strong style="font-size:16px;color:#0f172a">£${h(String(total))}</strong>`)}
+      ${row('Payment', h(payStr))}
+      ${requests ? row('Special Requests', h(requests).replace(/\n/g, '<br>')) : ''}
     </table>
     <div style="margin:24px 0 20px;padding:14px 16px;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;font-size:13px;color:#166534">
       ✓ <strong>Confirmed</strong> — What's included: Free Wi-Fi · Breakfast · Heating &amp; Fan · Hair Dryer · Towels &amp; Linen
@@ -175,18 +183,18 @@ async function sendBookingCancelledEmail({ ref, guest, roomLabel, checkin, check
 
   const cancelledBody = `
     <h2 style="margin:0 0 16px;color:#dc2626;font-size:20px">Booking Cancellation Notice</h2>
-    <p style="margin:0 0 8px;color:#1e293b">Dear <strong>${guest.firstName}</strong>,</p>
+    <p style="margin:0 0 8px;color:#1e293b">Dear <strong>${h(guest.firstName)}</strong>,</p>
     <p style="margin:0 0 22px;color:#475569;font-size:14px;line-height:1.6">
       We regret to inform you that the following booking has been <strong>cancelled</strong>.
       We apologise for any inconvenience caused.
     </p>
     <table style="width:100%;border-collapse:collapse">
-      ${row('Reference', `<strong style="font-size:18px;color:#0f172a">${ref}</strong>`)}
-      ${row('Room', roomLabel)}
-      ${row('Check-in', checkin)}
-      ${row('Check-out', checkout)}
-      ${row('Nights', nights)}
-      ${row('Total', `<strong style="font-size:16px;color:#0f172a">£${total}</strong>`)}
+      ${row('Reference', `<strong style="font-size:18px;color:#0f172a">${h(ref)}</strong>`)}
+      ${row('Room', h(roomLabel))}
+      ${row('Check-in', h(checkin))}
+      ${row('Check-out', h(checkout))}
+      ${row('Nights', h(String(nights)))}
+      ${row('Total', `<strong style="font-size:16px;color:#0f172a">£${h(String(total))}</strong>`)}
     </table>
     <div style="margin:24px 0 20px;padding:14px 16px;background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;font-size:13px;color:#991b1b">
       This booking has been cancelled. If you paid by bank transfer or card, please allow 5–10 business days for any refund to appear.
@@ -216,13 +224,13 @@ async function sendContactEmail({ firstName, lastName, email, phone, subjectLabe
 
   const body = `
     <h2 style="margin:0 0 4px;color:#0f172a;font-size:18px">New Website Enquiry</h2>
-    <p style="margin:0 0 20px;color:#64748b;font-size:13px">${subjectLabel}</p>
+    <p style="margin:0 0 20px;color:#64748b;font-size:13px">${h(subjectLabel)}</p>
     <table style="width:100%;border-collapse:collapse">
-      ${row('From', `${firstName} ${lastName}`)}
-      ${row('Email', `<a href="mailto:${email}" style="color:#c9a96e">${email}</a>`)}
-      ${row('Phone', phone || 'Not provided')}
-      ${row('Subject', subjectLabel)}
-      ${row('Message', `<span style="white-space:pre-wrap">${message}</span>`)}
+      ${row('From', `${h(firstName)} ${h(lastName)}`)}
+      ${row('Email', `<a href="mailto:${h(email)}" style="color:#c9a96e">${h(email)}</a>`)}
+      ${row('Phone', h(phone || 'Not provided'))}
+      ${row('Subject', h(subjectLabel))}
+      ${row('Message', `<span style="white-space:pre-wrap">${h(message).replace(/\n/g, '<br>')}</span>`)}
     </table>`;
 
   await t.sendMail({
@@ -244,16 +252,16 @@ async function sendContactReplyEmail({ to, firstName, subject, originalMessage, 
   const hotelAddr = process.env.GMAIL_USER;
 
   const body = `
-    <p style="margin:0 0 8px;color:#1e293b">Dear <strong>${firstName}</strong>,</p>
+    <p style="margin:0 0 8px;color:#1e293b">Dear <strong>${h(firstName)}</strong>,</p>
     <p style="margin:0 0 20px;color:#475569;font-size:14px;line-height:1.6">
       Thank you for contacting Bluedaws Private Hotel. Here is our response to your enquiry:
     </p>
     <div style="background:#f8fafc;border-left:4px solid #c9a96e;padding:16px 18px;border-radius:0 8px 8px 0;margin-bottom:24px;color:#1e293b;font-size:14px;line-height:1.75">
-      ${replyText.replace(/\n/g, '<br>')}
+      ${h(replyText).replace(/\n/g, '<br>')}
     </div>
     <div style="background:#f1f5f9;border-radius:8px;padding:14px 16px;margin-bottom:20px;font-size:12px;color:#94a3b8">
       <strong style="display:block;margin-bottom:6px;color:#64748b">Your original message:</strong>
-      <em>${originalMessage.replace(/\n/g, '<br>')}</em>
+      <em>${h(originalMessage).replace(/\n/g, '<br>')}</em>
     </div>
     <p style="margin:0 0 20px;font-size:13px;color:#64748b">
       Need anything else? Reply to this email or call us directly.

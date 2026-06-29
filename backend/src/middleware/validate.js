@@ -61,7 +61,7 @@ const bookingRules = [
     .notEmpty().withMessage('Room code is required.')
     .custom((val, { req }) => {
       const room = VALID_ROOMS[val.toLowerCase()];
-      if (!room) throw new Error(`Invalid room code: ${val}.`);
+      if (!room) throw new Error('Invalid room code.');
       const adults   = Number(req.body.adults)   || 1;
       const children = Number(req.body.children) || 0;
       if (adults + children > room.max) {

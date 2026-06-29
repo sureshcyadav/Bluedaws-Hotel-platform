@@ -434,6 +434,11 @@ router.patch('/bookings/:id/guest', adminAuth, async (req, res) => {
   } = req.body || {};
   if (payment_status && !VALID_PAYMENT_STATUSES.includes(payment_status))
     return res.status(400).json({ success: false, message: 'Invalid payment_status.' });
+  if (amount_paid != null) {
+    const ap = Number(amount_paid);
+    if (isNaN(ap) || ap < 0 || ap > 999999.99)
+      return res.status(400).json({ success: false, message: 'Invalid amount paid.' });
+  }
   const id = toIntId(req.params.id);
   if (!id) return res.status(400).json({ success: false, message: 'Invalid booking ID.' });
   try {
@@ -461,7 +466,7 @@ router.patch('/bookings/:id/guest', adminAuth, async (req, res) => {
       amount_paid != null ? Number(amount_paid) : null,
       payment_mode      || null,
       payment_note      || null,
-      req.params.id,
+      id,
     ]);
     if (!rowCount) return res.status(404).json({ success: false, message: 'Booking not found.' });
     res.json({ success: true });

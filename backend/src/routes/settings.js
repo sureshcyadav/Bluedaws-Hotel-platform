@@ -13,7 +13,8 @@ router.get('/', settingsLimiter, async (req, res) => {
     res.set('Cross-Origin-Resource-Policy', 'cross-origin');
     res.json({ success: true, data });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    console.error('[settings] GET error:', err.message);
+    res.status(500).json({ success: false, message: 'Service temporarily unavailable.' });
   }
 });
 
