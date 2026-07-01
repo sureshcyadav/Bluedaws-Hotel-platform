@@ -51,9 +51,10 @@ const VALID_PAYMENTS = ['card', 'bank', 'payathotel'];
 const bookingRules = [
   body('checkin_date')
     .notEmpty().withMessage('Check-in date is required.')
-    .isDate({ format: 'YYYY-MM-DD' }).withMessage('Check-in date must be YYYY-MM-DD.')
     .custom(val => {
-      // Compare as YYYY-MM-DD strings to avoid timezone issues (Render runs UTC-7)
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(val) || isNaN(Date.parse(val + 'T12:00:00')))
+        throw new Error('Check-in date must be a valid date (YYYY-MM-DD).');
+      // String comparison avoids Render UTC-7 timezone offset bugs
       const todayStr = new Date().toISOString().slice(0, 10);
       if (val < todayStr) throw new Error('Check-in date cannot be in the past.');
       return true;
@@ -61,9 +62,10 @@ const bookingRules = [
 
   body('checkout_date')
     .notEmpty().withMessage('Check-out date is required.')
-    .isDate({ format: 'YYYY-MM-DD' }).withMessage('Check-out date must be YYYY-MM-DD.')
     .custom((val, { req }) => {
-      if (val <= req.body.checkin_date) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(val) || isNaN(Date.parse(val + 'T12:00:00')))
+        throw new Error('Check-out date must be a valid date (YYYY-MM-DD).');
+      if (val <= (req.body.checkin_date || '')) {
         throw new Error('Check-out must be after check-in.');
       }
       return true;
@@ -135,10 +137,12 @@ const contactRules = [
 function handleValidationErrors(req, res, next) {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
+    const errs = errors.array().map(e => ({ field: e.path, message: e.msg }));
+    console.error('[validation] failed:', JSON.stringify(errs));
     return res.status(422).json({
       success: false,
-      message: 'Validation failed.',
-      errors:  errors.array().map(e => ({ field: e.path, message: e.msg })),
+      message: errs.map(e => e.message).join(' · '),
+      errors:  errs,
     });
   }
   next();

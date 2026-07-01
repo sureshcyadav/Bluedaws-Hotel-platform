@@ -406,7 +406,11 @@ document.getElementById('confirmBooking').addEventListener('click', async () => 
     const data = await response.json();
 
     if (!response.ok) {
-      const msg = data.message || 'Booking failed. Please try again.';
+      let msg = data.message || 'Booking failed. Please try again.';
+      // Show individual field errors if available (helps debug validation failures)
+      if (Array.isArray(data.errors) && data.errors.length) {
+        msg = data.errors.map(e => e.message || e.msg).join(' · ');
+      }
       if (response.status === 409) {
         // Room type taken between check and confirm — go back to room selection
         const roomErr = document.getElementById('roomErr');
