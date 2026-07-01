@@ -94,7 +94,7 @@ async function initDb() {
       ('checkin_time',    '1:00 PM',                        'Check-in Time',               'hotel'),
       ('checkout_time',   '12:00 PM',                       'Check-out Time',              'hotel'),
       ('confirm_hours',   '2',                              'Booking Confirmation (hours)', 'hotel'),
-      ('hotel_address',   'Paddington, London',             'Address',                     'hotel'),
+      ('hotel_address',   '133-135 Sussex Gardens, Hyde Park, London W2 2RX', 'Address', 'hotel'),
       ('hotel_email',     'bluedawsprivatehotel@gmail.com', 'Contact Email',               'hotel'),
       ('hotel_phone',     '02077236040',                    'Contact Phone',               'hotel'),
       ('deposit_percent', '50',                             'Deposit Required (%)',        'hotel'),

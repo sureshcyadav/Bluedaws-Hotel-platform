@@ -50,7 +50,7 @@ function wrapHtml(header, body) {
     ${body}
   </div>
   <p style="text-align:center;color:#94a3b8;font-size:11px;margin:16px 0 0">
-    Bluedaws Private Hotel · 16-20 Argyle Square, London WC1H 8AS
+    Bluedaws Private Hotel · 133-135 Sussex Gardens, Hyde Park, London W2 2RX
   </p>
 </div>
 </body></html>`;
