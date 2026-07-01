@@ -53,8 +53,9 @@ const bookingRules = [
     .notEmpty().withMessage('Check-in date is required.')
     .isDate({ format: 'YYYY-MM-DD' }).withMessage('Check-in date must be YYYY-MM-DD.')
     .custom(val => {
-      const today = new Date(); today.setHours(0, 0, 0, 0);
-      if (new Date(val) < today) throw new Error('Check-in date cannot be in the past.');
+      // Compare as YYYY-MM-DD strings to avoid timezone issues (Render runs UTC-7)
+      const todayStr = new Date().toISOString().slice(0, 10);
+      if (val < todayStr) throw new Error('Check-in date cannot be in the past.');
       return true;
     }),
 
@@ -62,7 +63,7 @@ const bookingRules = [
     .notEmpty().withMessage('Check-out date is required.')
     .isDate({ format: 'YYYY-MM-DD' }).withMessage('Check-out date must be YYYY-MM-DD.')
     .custom((val, { req }) => {
-      if (new Date(val) <= new Date(req.body.checkin_date)) {
+      if (val <= req.body.checkin_date) {
         throw new Error('Check-out must be after check-in.');
       }
       return true;
