@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Dark navy rounded-square background -->
+  <rect width="64" height="64" rx="12" fill="#0f172a"/>
+  <!-- Gold horizontal rule top -->
+  <rect x="14" y="13" width="36" height="2.5" rx="1.25" fill="#c9a96e"/>
+  <!-- Letter B in gold serif style -->
+  <text
+    x="32" y="47"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="36"
+    font-weight="700"
+    fill="#c9a96e"
+    text-anchor="middle"
+    dominant-baseline="auto"
+    letter-spacing="-1"
+  >B</text>
+  <!-- Gold horizontal rule bottom -->
+  <rect x="14" y="50" width="36" height="2.5" rx="1.25" fill="#c9a96e"/>
+</svg>
