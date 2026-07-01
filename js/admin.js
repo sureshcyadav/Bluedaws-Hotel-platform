@@ -375,10 +375,12 @@ async function loadFrontDesk() {
 
     bookings.forEach(b => {
       // Always use UPPERCASE to match CAL_ROOMS codes (DB stores lowercase)
-      const code = b.room_code.toUpperCase();
+      // Use allocated_room_code for front desk grid; unallocated bookings skip room tracking
+      const code = (b.allocated_room_code || '').toUpperCase();
       const cin  = b.checkin_date  ? b.checkin_date.slice(0, 10)  : '';
       const cout = b.checkout_date ? b.checkout_date.slice(0, 10) : '';
 
+      if (!code) return; // skip bookings not yet assigned to a physical room
       if (b.checked_in_at && !b.checked_out_at) {
         // Guest is physically in the hotel
         if (cout === today) {
@@ -451,7 +453,7 @@ function _renderFrontDesk(roomStatus, arrivals, departures) {
       + '<div class="fd-avatar fd-avatar-arr">' + initials(b) + '</div>'
       + '<div class="fd-guest-body">'
       + '<strong>' + esc(b.guest_first_name) + ' ' + esc(b.guest_last_name) + '</strong>'
-      + '<span>' + esc(b.room_name) + ' &middot; ' + b.room_code.toUpperCase() + ' &middot; ' + b.nights + 'n &middot; ' + (payLabel[b.payment_method] || b.payment_method) + '</span>'
+      + '<span>' + esc(b.room_name) + (b.allocated_room_code ? ' &middot; ' + b.allocated_room_code.toUpperCase() : ' &middot; Unallocated') + ' &middot; ' + b.nights + 'n &middot; ' + (payLabel[b.payment_method] || b.payment_method) + '</span>'
       + '</div>'
       + '<div class="fd-guest-meta"><span class="fd-ref">' + b.ref + '</span></div>'
       + '<div class="fd-guest-actions">'
@@ -466,7 +468,7 @@ function _renderFrontDesk(roomStatus, arrivals, departures) {
       + '<div class="fd-avatar fd-avatar-dep">' + initials(b) + '</div>'
       + '<div class="fd-guest-body">'
       + '<strong>' + esc(b.guest_first_name) + ' ' + esc(b.guest_last_name) + '</strong>'
-      + '<span>' + esc(b.room_name) + ' &middot; ' + b.room_code.toUpperCase() + ' &middot; &pound;' + Number(b.total_amount).toLocaleString() + '</span>'
+      + '<span>' + esc(b.room_name) + (b.allocated_room_code ? ' &middot; ' + b.allocated_room_code.toUpperCase() : '') + ' &middot; &pound;' + Number(b.total_amount).toLocaleString() + '</span>'
       + '</div>'
       + '<div class="fd-guest-meta"><span class="fd-ref">' + b.ref + '</span></div>'
       + '<div class="fd-guest-actions">'
@@ -610,7 +612,11 @@ function renderBookings() {
       + (hasId ? ' <span class="bpd-id-badge" title="Identity on file">ID&#10003;</span>' : '') + '</div>'
       + '<div class="bk-guest-sub">' + esc(b.guest_country) + '</div></div></div></td>'
       + '<td><a href="mailto:' + esc(b.guest_email) + '">' + esc(b.guest_email) + '</a><br><small>' + esc(b.guest_phone) + '</small></td>'
-      + '<td><div class="bk-room-name">' + esc(b.room_name) + '</div><span class="bk-room-code">' + b.room_code.toUpperCase() + '</span></td>'
+      + '<td><div class="bk-room-name">' + esc(b.room_name) + '</div>'
+      + (b.allocated_room_code
+          ? '<span class="bk-room-code">' + b.allocated_room_code.toUpperCase() + '</span>'
+          : '<span class="bk-room-unallocated">Unallocated</span>')
+      + '</td>'
       + '<td>' + fmtDate(b.checkin_date) + '</td>'
       + '<td>' + fmtDate(b.checkout_date) + '</td>'
       + '<td><span class="bk-nights">' + b.nights + '</span></td>'
@@ -701,7 +707,7 @@ function downloadBookingsPDF() {
     return '<tr style="border-bottom:1px solid #f1f5f9">'
       + '<td style="padding:7px 8px;font-size:10px;font-family:monospace;font-weight:700;white-space:nowrap;color:#0f172a">' + esc(b.ref) + '</td>'
       + '<td style="padding:7px 8px;font-size:11px;font-weight:600;color:#0f172a">' + esc(b.guest_first_name) + ' ' + esc(b.guest_last_name) + '</td>'
-      + '<td style="padding:7px 8px;font-size:10.5px;color:#475569">' + esc(b.room_name) + ' <span style="font-family:monospace;font-size:9.5px">' + b.room_code.toUpperCase() + '</span></td>'
+      + '<td style="padding:7px 8px;font-size:10.5px;color:#475569">' + esc(b.room_name) + (b.allocated_room_code ? ' <span style="font-family:monospace;font-size:9.5px">' + b.allocated_room_code.toUpperCase() + '</span>' : '') + '</td>'
       + '<td style="padding:7px 8px;font-size:10.5px;color:#334155;white-space:nowrap">' + fmtDate(b.checkin_date) + '</td>'
       + '<td style="padding:7px 8px;font-size:10.5px;color:#334155;white-space:nowrap">' + fmtDate(b.checkout_date) + '</td>'
       + '<td style="padding:7px 8px;font-size:10.5px;text-align:center;color:#334155">' + b.nights + '</td>'
@@ -1142,7 +1148,8 @@ function renderCalendar() {
   html += '<div class="cal-body">';
   CAL_ROOMS.forEach(function(room) {
     var bookings = calBookings.filter(function(b) {
-      if (b.room_code.toUpperCase() !== room.code) return false;
+      var rc = (b.allocated_room_code || '').toUpperCase();
+      if (rc !== room.code) return false;
       if (b.status === 'cancelled') return false;
       return new Date(b.checkout_date) > calWeekStart && new Date(b.checkin_date) < weekEnd;
     });
@@ -1232,8 +1239,10 @@ function openCalBooking(id) {
 
   // Dark header
   document.getElementById('bpName').textContent = b.guest_first_name + ' ' + b.guest_last_name;
-  document.getElementById('bpMeta').textContent =
-    (b.room_name || b.room_code.toUpperCase()) + ' (' + b.room_code.toUpperCase() + ')  ·  ' + b.ref;
+  var _roomMeta = b.room_name || 'Unknown Room';
+  if (b.allocated_room_code) _roomMeta += ' · Room ' + b.allocated_room_code.toUpperCase();
+  else if (b.room_type)      _roomMeta += ' · Unallocated';
+  document.getElementById('bpMeta').textContent = _roomMeta + '  ·  ' + b.ref;
   var badgeHtml = '<span class="status-badge status-' + b.status + '">'
     + b.status.charAt(0).toUpperCase() + b.status.slice(1) + '</span>';
   if (b.checked_in_at && !b.checked_out_at)
@@ -1287,6 +1296,13 @@ function openCalBooking(id) {
     foot += '<button class="btn-action btn-cancel" onclick="bpAction(\'cancelled\')">Cancel Booking</button>';
   if (b.status === 'cancelled')
     foot += '<button class="btn-action" style="background:#475569;color:#fff;padding:6px 12px" onclick="bpAction(\'pending\')">Restore Booking</button>';
+  // Allocate Room button — shown for any active guest booking that has a room_type
+  if (b.status !== 'cancelled' && b.room_type) {
+    if (!b.allocated_room_code)
+      foot += '<button class="btn-action btn-allocate" onclick="openAllocateModal()">Allocate Room</button>';
+    else
+      foot += '<button class="btn-action btn-allocate" onclick="openAllocateModal()">Room ' + b.allocated_room_code.toUpperCase() + ' &#x2713; Change</button>';
+  }
   foot += '<span style="flex:1"></span>';
 
   // Stay-status pill group — always shown for non-cancelled bookings, always changeable
@@ -1944,6 +1960,90 @@ async function checkOutGuest(id) {
     renderBookings();
     renderCalendar();
   } catch { alert('Failed to check out.'); }
+}
+
+// ── Allocate Room Modal ───────────────────────────────────────
+document.getElementById('allocateClose').addEventListener('click',     closeAllocateModal);
+document.getElementById('allocateCancelBtn').addEventListener('click', closeAllocateModal);
+document.getElementById('allocateConfirmBtn').addEventListener('click', confirmAllocateRoom);
+document.getElementById('allocateModal').addEventListener('click', function(e) {
+  if (e.target === document.getElementById('allocateModal')) closeAllocateModal();
+});
+
+function closeAllocateModal() {
+  document.getElementById('allocateModal').classList.add('hidden');
+}
+
+async function openAllocateModal() {
+  var b = allBookings.find(function(x) { return x.id === _calCurrentBookingId; });
+  if (!b || !b.room_type) return;
+
+  document.getElementById('allocateInfo').textContent =
+    b.ref + ' — ' + b.room_name + ' · ' + b.guest_first_name + ' ' + b.guest_last_name +
+    ' · ' + (b.checkin_date ? b.checkin_date.slice(0,10) : '') + ' → ' + (b.checkout_date ? b.checkout_date.slice(0,10) : '');
+
+  var sel  = document.getElementById('allocateRoomSelect');
+  var errEl = document.getElementById('allocateError');
+  sel.innerHTML = '<option value="">Loading available rooms…</option>';
+  errEl.classList.add('hidden');
+  document.getElementById('allocateConfirmBtn').disabled    = false;
+  document.getElementById('allocateConfirmBtn').textContent = 'Allocate Room';
+  document.getElementById('allocateModal').classList.remove('hidden');
+
+  var resp = await apiFetch('GET', '/api/admin/bookings/' + _calCurrentBookingId + '/available-rooms');
+  if (!resp.ok) {
+    sel.innerHTML = '<option value="">Failed to load rooms — ' + (resp.data.message || 'error') + '</option>';
+    return;
+  }
+
+  var rooms = resp.data.rooms || [];
+  if (rooms.length === 0) {
+    sel.innerHTML = '<option value="">No rooms of this type available for those dates</option>';
+  } else {
+    sel.innerHTML = '<option value="">Select a room…</option>' +
+      rooms.map(function(r) {
+        return '<option value="' + r.code + '">' + r.code.toUpperCase() + ' — ' + r.name + ' (' + r.floor + ') · ' + r.bed + '</option>';
+      }).join('');
+    if (b.allocated_room_code) sel.value = b.allocated_room_code;
+  }
+}
+
+async function confirmAllocateRoom() {
+  var sel   = document.getElementById('allocateRoomSelect');
+  var errEl = document.getElementById('allocateError');
+  var btn   = document.getElementById('allocateConfirmBtn');
+  errEl.classList.add('hidden');
+
+  if (!sel.value) {
+    errEl.textContent = 'Please select a room.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Allocating…';
+
+  var resp = await apiFetch('PATCH', '/api/admin/bookings/' + _calCurrentBookingId + '/allocate', { room_code: sel.value });
+  btn.disabled = false;
+  btn.textContent = 'Allocate Room';
+
+  if (!resp.ok) {
+    errEl.textContent = resp.data.message || 'Allocation failed.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+
+  // Update local booking data
+  var code = sel.value;
+  [calBookings, allBookings].forEach(function(arr) {
+    var b = arr.find(function(x) { return x.id === _calCurrentBookingId; });
+    if (b) b.allocated_room_code = code;
+  });
+
+  closeAllocateModal();
+  openCalBooking(_calCurrentBookingId);
+  renderCalendar();
+  renderBookings();
 }
 
 // ── New Walk-in Booking Modal ─────────────────────────────────

@@ -3,7 +3,7 @@ const jwt       = require('jsonwebtoken');
 const crypto    = require('crypto');
 const { pool }  = require('../config/db');
 const { adminAuth, jwtSecret } = require('../middleware/adminAuth');
-const { VALID_ROOMS } = require('../middleware/validate');
+const { VALID_ROOMS, ROOM_TYPES, ROOM_CODE_TO_TYPE } = require('../middleware/validate');
 const { sendBookingConfirmedEmail, sendBookingCancelledEmail, sendContactReplyEmail } = require('../utils/mailer');
 const { loginLimiter } = require('../middleware/rateLimits');
 
@@ -32,6 +32,8 @@ function toIntId(val) {
     await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS amount_paid      NUMERIC(10,2) DEFAULT 0`);
     await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS payment_mode     VARCHAR(50)`);
     await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS payment_note     TEXT`);
+    await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS room_type          VARCHAR(50) NOT NULL DEFAULT ''`);
+    await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS allocated_room_code VARCHAR(10)`);
     await pool.query(`
       CREATE TABLE IF NOT EXISTS room_blocks (
         id         SERIAL PRIMARY KEY,
@@ -144,14 +146,14 @@ router.get('/stats', adminAuth, async (req, res) => {
       `),
       // Arriving today
       pool.query(`
-        SELECT id, guest_first_name, guest_last_name, room_code, room_name, checked_in_at, status
+        SELECT id, guest_first_name, guest_last_name, room_code, room_name, room_type, allocated_room_code, checked_in_at, status
         FROM bookings
         WHERE checkin_date=$1 AND status!='cancelled'
         ORDER BY created_at DESC LIMIT 50
       `, [today]),
       // Departing today (in-house, checkout today, not yet checked out)
       pool.query(`
-        SELECT id, guest_first_name, guest_last_name, room_code, room_name, checked_in_at, checked_out_at
+        SELECT id, guest_first_name, guest_last_name, room_code, room_name, room_type, allocated_room_code, checked_in_at, checked_out_at
         FROM bookings
         WHERE checkout_date=$1 AND checked_in_at IS NOT NULL AND checked_out_at IS NULL AND status!='cancelled'
         ORDER BY checked_in_at LIMIT 50
@@ -201,7 +203,8 @@ router.get('/bookings', adminAuth, async (req, res) => {
   try {
     const { rows } = await pool.query(
       `SELECT id, ref, status, guest_first_name, guest_last_name, guest_email, guest_phone,
-              guest_country, room_code, room_name, checkin_date, checkout_date, nights,
+              guest_country, room_code, room_name, room_type, allocated_room_code,
+              checkin_date, checkout_date, nights,
               adults, children, total_amount, payment_method, payment_status, amount_paid,
               payment_mode, payment_note, special_requests, admin_notes,
               checked_in_at, checked_out_at, guest_id_type, guest_id_number,
@@ -253,25 +256,31 @@ router.post('/bookings', adminAuth, async (req, res) => {
   try {
     await client.query('BEGIN');
     const { rows: conflicts } = await client.query(
-      `SELECT id FROM bookings WHERE room_code=$1 AND status!='cancelled' AND checkin_date<$3 AND checkout_date>$2 FOR UPDATE`,
+      `SELECT id FROM bookings
+       WHERE (room_code=$1 OR allocated_room_code=$1)
+         AND status!='cancelled' AND checkin_date<$3 AND checkout_date>$2
+       FOR UPDATE`,
       [room_code.toLowerCase(), checkin_date, checkout_date]
     );
     if (conflicts.length) { await client.query('ROLLBACK'); return res.status(409).json({ success: false, message: `Room ${room_code.toUpperCase()} is already booked for those dates.` }); }
 
     const ref = await makeRef();
+    // Derive room_type from room_code for walk-in bookings (room is already allocated)
+    const walkInRoomType = ROOM_CODE_TO_TYPE[room_code.toLowerCase()] || '';
     const { rows } = await client.query(`
       INSERT INTO bookings (
         ref, guest_first_name, guest_last_name, guest_email, guest_phone, guest_country,
-        room_code, room_name, room_floor, room_bed, price_per_night,
-        checkin_date, checkout_date, nights, adults, children,
+        room_code, room_name, room_floor, room_bed, room_type, allocated_room_code,
+        price_per_night, checkin_date, checkout_date, nights, adults, children,
         total_amount, payment_method, special_requests, admin_notes, status
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,'confirmed')
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,'confirmed')
       RETURNING id, ref, created_at
     `, [
       ref, guest_first_name.trim(), guest_last_name.trim(),
       guest_email.trim(), guest_phone.trim(), guest_country.trim(),
-      room_code.toLowerCase(), room.name, room.floor, room.bed, pricePerNight,
-      checkin_date, checkout_date, nights, Number(adults), Number(children),
+      room_code.toLowerCase(), room.name, room.floor, room.bed,
+      walkInRoomType, room_code.toLowerCase(),
+      pricePerNight, checkin_date, checkout_date, nights, Number(adults), Number(children),
       nights * pricePerNight, payment_method, special_requests || null, admin_notes || null,
     ]);
     await client.query('COMMIT');
@@ -295,7 +304,8 @@ router.patch('/bookings/:id/status', adminAuth, async (req, res) => {
     const { rows, rowCount } = await pool.query(
       `UPDATE bookings SET status=$1 WHERE id=$2
        RETURNING ref, guest_first_name, guest_last_name, guest_email, guest_phone, guest_country,
-                 room_code, room_name, checkin_date, checkout_date, nights, adults, children,
+                 room_name, room_type, allocated_room_code,
+                 checkin_date, checkout_date, nights, adults, children,
                  total_amount, payment_method, special_requests`,
       [status, id]
     );
@@ -303,13 +313,18 @@ router.patch('/bookings/:id/status', adminAuth, async (req, res) => {
     res.json({ success: true });
 
     const b = rows[0];
+    // Show allocated room code only if known; guest bookings hide specific room numbers
+    const roomLabel = b.allocated_room_code
+      ? `${b.room_name} (Room ${b.allocated_room_code.toUpperCase()})`
+      : b.room_name;
+
     if (status === 'confirmed') {
       const guestStr = `${b.adults} Adult${b.adults !== 1 ? 's' : ''}${b.children > 0 ? `, ${b.children} Child${b.children !== 1 ? 'ren' : ''}` : ''}`;
       setImmediate(() => {
         sendBookingConfirmedEmail({
           ref:       b.ref,
           guest:     { firstName: b.guest_first_name, lastName: b.guest_last_name, email: b.guest_email, phone: b.guest_phone, country: b.guest_country },
-          roomLabel: `${b.room_name} (${b.room_code.toUpperCase()})`,
+          roomLabel,
           checkin:   b.checkin_date.toISOString().slice(0, 10),
           checkout:  b.checkout_date.toISOString().slice(0, 10),
           nights:    String(b.nights),
@@ -324,7 +339,7 @@ router.patch('/bookings/:id/status', adminAuth, async (req, res) => {
         sendBookingCancelledEmail({
           ref:       b.ref,
           guest:     { firstName: b.guest_first_name, lastName: b.guest_last_name, email: b.guest_email },
-          roomLabel: `${b.room_name} (${b.room_code.toUpperCase()})`,
+          roomLabel,
           checkin:   b.checkin_date.toISOString().slice(0, 10),
           checkout:  b.checkout_date.toISOString().slice(0, 10),
           nights:    String(b.nights),
@@ -342,7 +357,8 @@ router.post('/bookings/:id/send-confirmation', adminAuth, async (req, res) => {
   try {
     const { rows } = await pool.query(
       `SELECT ref, guest_first_name, guest_last_name, guest_email, guest_phone, guest_country,
-              room_code, room_name, checkin_date, checkout_date, nights, adults, children,
+              room_name, room_type, allocated_room_code,
+              checkin_date, checkout_date, nights, adults, children,
               total_amount, payment_method, special_requests FROM bookings WHERE id=$1`,
       [id]
     );
@@ -352,7 +368,7 @@ router.post('/bookings/:id/send-confirmation', adminAuth, async (req, res) => {
     await sendBookingConfirmedEmail({
       ref:       b.ref,
       guest:     { firstName: b.guest_first_name, lastName: b.guest_last_name, email: b.guest_email, phone: b.guest_phone, country: b.guest_country },
-      roomLabel: `${b.room_name} (${b.room_code.toUpperCase()})`,
+      roomLabel: b.allocated_room_code ? `${b.room_name} (Room ${b.allocated_room_code.toUpperCase()})` : b.room_name,
       checkin:   b.checkin_date.toISOString().slice(0, 10),
       checkout:  b.checkout_date.toISOString().slice(0, 10),
       nights:    String(b.nights),
@@ -546,6 +562,96 @@ router.patch('/content/:key', adminAuth, async (req, res) => {
     if (!rowCount) return res.status(404).json({ success: false, message: 'Setting not found.' });
     res.json({ success: true });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+});
+
+// GET /api/admin/bookings/:id/available-rooms
+// Returns physical rooms of the booking's type that are free for those dates (for allocation modal)
+router.get('/bookings/:id/available-rooms', adminAuth, async (req, res) => {
+  const id = toIntId(req.params.id);
+  if (!id) return res.status(400).json({ success: false, message: 'Invalid booking ID.' });
+  try {
+    const { rows } = await pool.query(
+      `SELECT id, room_type, checkin_date, checkout_date, allocated_room_code FROM bookings WHERE id=$1`,
+      [id]
+    );
+    if (!rows.length) return res.status(404).json({ success: false, message: 'Booking not found.' });
+    const booking = rows[0];
+    const typeInfo = ROOM_TYPES[booking.room_type];
+    if (!typeInfo) return res.status(400).json({ success: false, message: 'Booking has no valid room type.' });
+
+    // Find rooms of this type that are already allocated for overlapping dates (excluding this booking)
+    const { rows: taken } = await pool.query(
+      `SELECT allocated_room_code FROM bookings
+       WHERE allocated_room_code IS NOT NULL
+         AND id               != $1
+         AND status           != 'cancelled'
+         AND checkin_date      < $3
+         AND checkout_date     > $2`,
+      [id, booking.checkin_date.toISOString().slice(0, 10), booking.checkout_date.toISOString().slice(0, 10)]
+    );
+    const takenCodes = new Set(taken.map(r => r.allocated_room_code.toLowerCase()));
+
+    const availableRooms = typeInfo.codes
+      .filter(code => !takenCodes.has(code))
+      .map(code => {
+        const r = VALID_ROOMS[code] || {};
+        return { code, name: r.name || code.toUpperCase(), floor: r.floor || '', bed: r.bed || '' };
+      });
+
+    res.json({ success: true, rooms: availableRooms });
+  } catch (err) {
+    console.error('[available-rooms]', err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// PATCH /api/admin/bookings/:id/allocate — assign a specific physical room to a booking
+router.patch('/bookings/:id/allocate', adminAuth, async (req, res) => {
+  const id = toIntId(req.params.id);
+  if (!id) return res.status(400).json({ success: false, message: 'Invalid booking ID.' });
+  const { room_code } = req.body || {};
+  if (!room_code) return res.status(400).json({ success: false, message: 'room_code is required.' });
+  const code = room_code.toLowerCase();
+  if (!VALID_ROOMS[code]) return res.status(400).json({ success: false, message: 'Invalid room code.' });
+
+  try {
+    // Get booking to verify type compatibility and dates
+    const { rows: bRows } = await pool.query(
+      `SELECT room_type, checkin_date, checkout_date, status FROM bookings WHERE id=$1`, [id]
+    );
+    if (!bRows.length) return res.status(404).json({ success: false, message: 'Booking not found.' });
+    const booking = bRows[0];
+    if (booking.status === 'cancelled') return res.status(400).json({ success: false, message: 'Cannot allocate a cancelled booking.' });
+
+    // Verify the room belongs to the booking's type
+    const typeInfo = ROOM_TYPES[booking.room_type];
+    if (typeInfo && !typeInfo.codes.includes(code)) {
+      return res.status(400).json({ success: false, message: `Room ${code.toUpperCase()} is not a ${typeInfo.label}.` });
+    }
+
+    // Check room isn't already allocated to another booking for these dates
+    const { rows: conflicts } = await pool.query(
+      `SELECT id FROM bookings
+       WHERE allocated_room_code = $1
+         AND id               != $2
+         AND status           != 'cancelled'
+         AND checkin_date      < $4
+         AND checkout_date     > $3`,
+      [code, id, booking.checkin_date.toISOString().slice(0, 10), booking.checkout_date.toISOString().slice(0, 10)]
+    );
+    if (conflicts.length) {
+      return res.status(409).json({ success: false, message: `Room ${code.toUpperCase()} is already allocated to another booking for those dates.` });
+    }
+
+    await pool.query(
+      `UPDATE bookings SET allocated_room_code=$1 WHERE id=$2`,
+      [code, id]
+    );
+    res.json({ success: true, allocated_room_code: code });
+  } catch (err) {
+    console.error('[allocate]', err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
 // GET /api/admin/blocks

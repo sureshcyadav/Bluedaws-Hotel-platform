@@ -2874,6 +2874,24 @@ a:hover { text-decoration: underline; }
   padding: 2px 8px; border-radius: 6px;
 }
 
+/* Unallocated room badge */
+.bk-room-unallocated {
+  display: inline-block; margin-top: 3px;
+  background: #fef3c7; color: #92400e;
+  font-size: 10px; font-weight: 700;
+  padding: 2px 8px; border-radius: 6px; border: 1px solid #fbbf24;
+}
+
+/* Allocate Room button in booking detail footer */
+.bpd-actions .btn-action.btn-allocate {
+  background: linear-gradient(135deg,#c9a96e,#b8935a) !important;
+  color: #fff !important; border: none !important;
+  box-shadow: 0 2px 8px rgba(201,169,110,.3) !important;
+}
+.bpd-actions .btn-action.btn-allocate:hover {
+  background: linear-gradient(135deg,#b8935a,#a07c40) !important;
+}
+
 /* Nights chip */
 .bk-nights {
   display: inline-flex; align-items: center; justify-content: center;

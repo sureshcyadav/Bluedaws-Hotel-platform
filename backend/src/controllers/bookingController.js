@@ -1,9 +1,7 @@
-const { pool }          = require('../config/db');
-const { VALID_ROOMS }   = require('../middleware/validate');
+const { pool }        = require('../config/db');
+const { ROOM_TYPES }  = require('../middleware/validate');
 const { sendBookingEmails } = require('../utils/mailer');
 
-// Validates YYYY-MM-DD format and restricts to a sensible booking horizon
-// so extreme values (year 0001 or 9999) cannot trigger unbounded table scans.
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 function isValidBookingDate(s) {
   if (!DATE_RE.test(s) || isNaN(Date.parse(s))) return false;
@@ -17,59 +15,66 @@ function generateRef() {
   return ref;
 }
 
-// POST /api/bookings — create a new booking (with double-booking protection)
+// POST /api/bookings — create a new booking by room type (specific room allocated by admin later)
 async function createBooking(req, res) {
   const {
     checkin_date, checkout_date,
     adults, children = 0,
-    room_code, payment_method,
+    room_type, payment_method,
     guest_first_name, guest_last_name,
     guest_email, guest_phone, guest_country,
     special_requests = null,
   } = req.body;
 
-  const room   = VALID_ROOMS[room_code.toLowerCase()];
-  const nights = Math.round((new Date(checkout_date) - new Date(checkin_date)) / 86400000);
+  const typeInfo = ROOM_TYPES[room_type];
+  const nights   = Math.round((new Date(checkout_date) - new Date(checkin_date)) / 86400000);
 
-  // Fetch the current price from admin settings; fall back to hardcoded if missing
-  let pricePerNight = room.price;
+  // Fetch the price for this room type from admin settings; fall back to hardcoded
+  let pricePerNight = 0;
   try {
     const { rows: priceRow } = await pool.query(
       'SELECT value FROM settings WHERE key = $1',
-      ['price_' + room_code.toLowerCase()]
+      [typeInfo.priceKey]
     );
     if (priceRow.length > 0) {
       const dbPrice = parseFloat(priceRow[0].value);
       if (!isNaN(dbPrice) && dbPrice > 0) pricePerNight = dbPrice;
     }
-  } catch (_) { /* use hardcoded fallback */ }
+  } catch (_) { /* use type's hardcoded fallback price */ }
+
+  // Fallback hardcoded prices by type if settings not seeded yet
+  if (!pricePerNight) {
+    const fallbacks = { single: 85, twin: 110, triple: 135, double_single: 145,
+      family: 160, large_family: 195, group_6: 225, group_mixed: 235, large_group: 275 };
+    pricePerNight = fallbacks[room_type] || 100;
+  }
 
   const total = nights * pricePerNight;
+  const roomCapacity = typeInfo.codes.length;
 
-  // Use a transaction + FOR UPDATE lock so two simultaneous requests
-  // for the same room cannot both pass the availability check.
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
 
-    // Overlap condition: new stay overlaps any existing stay when
-    //   existing.checkin  < new.checkout  AND
-    //   existing.checkout > new.checkin
-    const { rows: conflicts } = await client.query(
-      `SELECT id FROM bookings
-       WHERE room_code     = $1
+    // Acquire an advisory lock per room_type so concurrent bookings are serialized,
+    // preventing the race condition where two requests both see available capacity.
+    await client.query(`SELECT pg_advisory_xact_lock(hashtext($1)::bigint)`, [room_type]);
+
+    // Count how many bookings of this type overlap with the requested dates
+    const { rows: countRows } = await client.query(
+      `SELECT COUNT(*)::int AS cnt FROM bookings
+       WHERE room_type     = $1
          AND status       != 'cancelled'
          AND checkin_date  < $3
-         AND checkout_date > $2
-       FOR UPDATE`,
-      [room_code.toLowerCase(), checkin_date, checkout_date]
+         AND checkout_date > $2`,
+      [room_type, checkin_date, checkout_date]
     );
 
-    if (conflicts.length > 0) {
+    if (countRows[0].cnt >= roomCapacity) {
       await client.query('ROLLBACK');
       return res.status(409).json({
         success: false,
-        message: `Room ${room_code.toUpperCase()} is already booked for those dates. Please choose different dates or another room.`,
+        message: `All ${typeInfo.label} rooms are fully booked for those dates. Please choose different dates or a different room type.`,
       });
     }
 
@@ -89,16 +94,16 @@ async function createBooking(req, res) {
       INSERT INTO bookings (
         ref,
         guest_first_name, guest_last_name, guest_email, guest_phone, guest_country,
-        room_code, room_name, room_floor, room_bed, price_per_night,
+        room_code, room_name, room_floor, room_bed, room_type, price_per_night,
         checkin_date, checkout_date, nights,
         adults, children,
         total_amount, payment_method, special_requests, status
       ) VALUES (
         $1, $2, $3, $4, $5, $6,
-        $7, $8, $9, $10, $11,
-        $12, $13, $14,
-        $15, $16,
-        $17, $18, $19, 'pending'
+        $7, $8, $9, $10, $11, $12,
+        $13, $14, $15,
+        $16, $17,
+        $18, $19, $20, 'pending'
       ) RETURNING id, ref, created_at
     `;
 
@@ -106,7 +111,12 @@ async function createBooking(req, res) {
       ref,
       guest_first_name.trim(), guest_last_name.trim(),
       guest_email.trim(), guest_phone.trim(), guest_country.trim(),
-      room_code.toLowerCase(), room.name, room.floor, room.bed, pricePerNight,
+      room_type,          // room_code stored as type key; allocated_room_code set by admin later
+      typeInfo.label,     // room_name = type label
+      null,               // room_floor = null (not known until allocated)
+      typeInfo.bed,       // room_bed = type bed description
+      room_type,          // room_type column
+      pricePerNight,
       checkin_date, checkout_date, nights,
       Number(adults), Number(children),
       total, payment_method, special_requests || null,
@@ -117,7 +127,6 @@ async function createBooking(req, res) {
 
     await client.query('COMMIT');
 
-    // Send emails in background — non-blocking so response goes out immediately
     const guestStr = `${Number(adults)} Adult${Number(adults) !== 1 ? 's' : ''}${Number(children) > 0 ? `, ${Number(children)} Child${Number(children) !== 1 ? 'ren' : ''}` : ''}`;
     setImmediate(() => {
       sendBookingEmails({
@@ -129,7 +138,7 @@ async function createBooking(req, res) {
           phone:     guest_phone.trim(),
           country:   guest_country.trim(),
         },
-        roomLabel:    `${room.name} (${room_code.toUpperCase()})`,
+        roomLabel:    typeInfo.label,
         checkin:      checkin_date,
         checkout:     checkout_date,
         nights:       String(nights),
@@ -149,7 +158,7 @@ async function createBooking(req, res) {
         ref:          saved.ref,
         guest_name:   `${guest_first_name.trim()} ${guest_last_name.trim()}`,
         guest_email:  guest_email.trim(),
-        room:         `${room.name} (${room_code.toUpperCase()})`,
+        room:         typeInfo.label,
         checkin_date,
         checkout_date,
         nights,
@@ -168,15 +177,16 @@ async function createBooking(req, res) {
   }
 }
 
-// GET /api/bookings/availability?room_code=c3&checkin_date=2026-07-01&checkout_date=2026-07-05
+// GET /api/bookings/availability?room_type=twin&checkin_date=2026-07-01&checkout_date=2026-07-05
 async function checkAvailability(req, res) {
-  const { room_code, checkin_date, checkout_date } = req.query;
+  const { room_type, checkin_date, checkout_date } = req.query;
 
-  if (!room_code || !checkin_date || !checkout_date) {
-    return res.status(400).json({ success: false, message: 'room_code, checkin_date, and checkout_date are required.' });
+  if (!room_type || !checkin_date || !checkout_date) {
+    return res.status(400).json({ success: false, message: 'room_type, checkin_date, and checkout_date are required.' });
   }
-  if (!VALID_ROOMS[room_code.toLowerCase()]) {
-    return res.status(400).json({ success: false, message: 'Invalid room code.' });
+  const typeInfo = ROOM_TYPES[room_type];
+  if (!typeInfo) {
+    return res.status(400).json({ success: false, message: 'Invalid room type.' });
   }
   if (!isValidBookingDate(checkin_date) || !isValidBookingDate(checkout_date)) {
     return res.status(400).json({ success: false, message: 'Invalid or out-of-range date.' });
@@ -187,15 +197,16 @@ async function checkAvailability(req, res) {
 
   try {
     const { rows } = await pool.query(
-      `SELECT id FROM bookings
-       WHERE room_code     = $1
+      `SELECT COUNT(*)::int AS cnt FROM bookings
+       WHERE room_type     = $1
          AND status       != 'cancelled'
          AND checkin_date  < $3
          AND checkout_date > $2`,
-      [room_code.toLowerCase(), checkin_date, checkout_date]
+      [room_type, checkin_date, checkout_date]
     );
 
-    return res.json({ success: true, available: rows.length === 0 });
+    const available = rows[0].cnt < typeInfo.codes.length;
+    return res.json({ success: true, available, available_count: typeInfo.codes.length - rows[0].cnt });
   } catch (err) {
     console.error('[checkAvailability]', err.message);
     return res.status(500).json({ success: false, message: 'Server error.' });
@@ -212,7 +223,7 @@ async function getBookingByRef(req, res) {
   try {
     const { rows } = await pool.query(
       `SELECT ref, guest_first_name, guest_last_name, guest_email,
-              room_code, room_name, checkin_date, checkout_date, nights,
+              room_name, checkin_date, checkout_date, nights,
               total_amount, payment_method, status, created_at
        FROM bookings WHERE ref = $1`,
       [ref]
@@ -221,7 +232,6 @@ async function getBookingByRef(req, res) {
       return res.status(404).json({ success: false, message: `No booking found with reference ${ref}.` });
     }
     const b = rows[0];
-    // Mask email — show only first char and domain (e.g. s***@gmail.com)
     const [user, domain] = b.guest_email.split('@');
     b.guest_email = user[0] + '***@' + domain;
     return res.json({ success: true, data: b });
@@ -246,7 +256,7 @@ async function listBookings(req, res) {
 
     const { rows } = await pool.query(
       `SELECT id, ref, guest_first_name, guest_last_name, guest_email, guest_phone,
-              room_code, room_name, checkin_date, checkout_date, nights,
+              room_type, room_name, checkin_date, checkout_date, nights,
               adults, children, total_amount, payment_method, status, created_at
        FROM bookings ${where}
        ORDER BY created_at DESC
@@ -271,7 +281,7 @@ async function listBookings(req, res) {
 }
 
 // GET /api/bookings/availability/batch?checkin_date=2026-07-01&checkout_date=2026-07-05
-// Returns all room codes that have an overlapping confirmed booking — one DB query.
+// Returns room types that are fully booked (all rooms of that type taken) for the given dates.
 async function checkAvailabilityBatch(req, res) {
   const { checkin_date, checkout_date } = req.query;
   if (!checkin_date || !checkout_date) {
@@ -285,13 +295,25 @@ async function checkAvailabilityBatch(req, res) {
   }
   try {
     const { rows } = await pool.query(
-      `SELECT DISTINCT room_code FROM bookings
-       WHERE status        != 'cancelled'
-         AND checkin_date   < $2
-         AND checkout_date  > $1`,
+      `SELECT room_type, COUNT(*)::int AS cnt
+       FROM bookings
+       WHERE room_type    != ''
+         AND status       != 'cancelled'
+         AND checkin_date  < $2
+         AND checkout_date > $1
+       GROUP BY room_type`,
       [checkin_date, checkout_date]
     );
-    return res.json({ success: true, booked: rows.map(r => r.room_code) });
+
+    const bookedTypes = [];
+    for (const row of rows) {
+      const typeInfo = ROOM_TYPES[row.room_type];
+      if (typeInfo && row.cnt >= typeInfo.codes.length) {
+        bookedTypes.push(row.room_type);
+      }
+    }
+
+    return res.json({ success: true, booked_types: bookedTypes });
   } catch (err) {
     console.error('[checkAvailabilityBatch]', err.message);
     return res.status(500).json({ success: false, message: 'Server error.' });

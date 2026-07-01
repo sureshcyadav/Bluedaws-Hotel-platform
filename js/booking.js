@@ -4,39 +4,27 @@
 
 const API_BASE = 'https://api.bluedawshotel.com';
 
-// ---------- Room data ----------
-const ROOMS = {
-  d6:  { name: 'Single Room',       code: 'D6', floor: 'Third Floor',   bed: '1 Single Bed',                    max: 1, price: 85,  img: 'double-room', tags: ['1 Guest',   'Single Bed'] },
-  c3:  { name: 'Twin Room',         code: 'C3', floor: 'Second Floor',  bed: '2 Single Beds',                   max: 2, price: 110, img: 'twin-room',   tags: ['2 Guests',  'Twin Beds'] },
-  d3:  { name: 'Twin Room',         code: 'D3', floor: 'Third Floor',   bed: '2 Single Beds',                   max: 2, price: 110, img: 'twin-room',   tags: ['2 Guests',  'Twin Beds'] },
-  b6:  { name: 'Triple Room',       code: 'B6', floor: 'First Floor',   bed: '1 Bunk + 1 Single',              max: 3, price: 135, img: 'twin-room',   tags: ['3 Guests',  'Bunk Beds'] },
-  c6:  { name: 'Triple Room',       code: 'C6', floor: 'Second Floor',  bed: '1 Bunk + 1 Single',              max: 3, price: 135, img: 'twin-room',   tags: ['3 Guests',  'Bunk Beds'] },
-  b8:  { name: 'Double + Single',   code: 'B8', floor: 'First Floor',   bed: '1 Double + 1 Single',            max: 3, price: 145, img: 'double-room', tags: ['3 Guests',  'Double Bed'] },
-  b7:  { name: 'Family Room',       code: 'B7', floor: 'First Floor',   bed: '1 Double + 2 Single',            max: 4, price: 160, img: 'double-room', tags: ['4 Guests',  'Family', 'Popular'], popular: true },
-  e2:  { name: 'Family Room',       code: 'E2', floor: 'Fourth Floor',  bed: '1 Double + 2 Single',            max: 4, price: 160, img: 'double-room', tags: ['4 Guests',  'Family'] },
-  e3:  { name: 'Family Room',       code: 'E3', floor: 'Fourth Floor',  bed: '1 Double + 2 Single',            max: 4, price: 160, img: 'double-room', tags: ['4 Guests',  'Family'] },
-  b2:  { name: 'Large Family Room', code: 'B2', floor: 'First Floor',   bed: '1 Double + 1 Single + 1 Bunk',  max: 5, price: 195, img: 'double-room', tags: ['5 Guests',  'Bunk + Double'] },
-  b4:  { name: 'Large Family Room', code: 'B4', floor: 'First Floor',   bed: '1 Double + 1 Single + 1 Bunk',  max: 5, price: 195, img: 'double-room', tags: ['5 Guests',  'Bunk + Double'] },
-  b5:  { name: 'Group Room',        code: 'B5', floor: 'First Floor',   bed: '3 Bunk Beds (6 Beds)',           max: 6, price: 225, img: 'twin-room',   tags: ['6 Guests',  'Bunk Beds'] },
-  c1:  { name: 'Group Room',        code: 'C1', floor: 'Second Floor',  bed: '3 Bunk Beds (6 Beds)',           max: 6, price: 225, img: 'twin-room',   tags: ['6 Guests',  'Bunk Beds'] },
-  c4:  { name: 'Group Room',        code: 'C4', floor: 'Second Floor',  bed: '3 Bunk Beds (6 Beds)',           max: 6, price: 225, img: 'twin-room',   tags: ['6 Guests',  'Bunk Beds'] },
-  d1:  { name: 'Group Room',        code: 'D1', floor: 'Third Floor',   bed: '3 Bunk Beds (6 Beds)',           max: 6, price: 225, img: 'twin-room',   tags: ['6 Guests',  'Bunk Beds'] },
-  d2:  { name: 'Group Room',        code: 'D2', floor: 'Third Floor',   bed: '3 Bunk Beds (6 Beds)',           max: 6, price: 225, img: 'twin-room',   tags: ['6 Guests',  'Bunk Beds'] },
-  d5:  { name: 'Group Room',        code: 'D5', floor: 'Third Floor',   bed: '3 Bunk Beds (6 Beds)',           max: 6, price: 225, img: 'twin-room',   tags: ['6 Guests',  'Bunk Beds'] },
-  b3:  { name: 'Group Room',        code: 'B3', floor: 'First Floor',   bed: '1 Double + 2 Single + 1 Bunk',  max: 6, price: 235, img: 'twin-room',   tags: ['6 Guests',  'Mixed Beds'] },
-  c5:  { name: 'Group Room',        code: 'C5', floor: 'Second Floor',  bed: '2 Bunk + 2 Single (6 Beds)',    max: 6, price: 235, img: 'twin-room',   tags: ['6 Guests',  'Mixed Beds'] },
-  d4:  { name: 'Group Room',        code: 'D4', floor: 'Third Floor',   bed: '2 Bunk + 2 Single (6 Beds)',    max: 6, price: 235, img: 'twin-room',   tags: ['6 Guests',  'Mixed Beds'] },
-  z6:  { name: 'Large Group Room',  code: 'Z6', floor: 'Basement',      bed: '3 Bunk + 1 Single (7 Beds)',    max: 7, price: 275, img: 'twin-room',   tags: ['7 Guests',  'Largest Room'] },
-  c2:  { name: 'Large Group Room',  code: 'C2', floor: 'Second Floor',  bed: '3 Bunk + 1 Single (7 Beds)',    max: 7, price: 275, img: 'twin-room',   tags: ['7 Guests',  'Largest Room'] },
+// ---------- Room type data (guests book a type; admin allocates a specific room) ----------
+const ROOM_TYPES = {
+  single:        { name: 'Single Room',             bed: '1 Single Bed',                   max: 1, price: 85,  priceKey: 'price_d6',  img: 'double-room', tags: ['Single Bed'],           popular: false },
+  twin:          { name: 'Twin Room',               bed: '2 Single Beds',                  max: 2, price: 110, priceKey: 'price_c3',  img: 'twin-room',   tags: ['Twin Beds'],            popular: false },
+  triple:        { name: 'Triple Room',             bed: '1 Bunk + 1 Single',              max: 3, price: 135, priceKey: 'price_b6',  img: 'twin-room',   tags: ['Bunk + Single'],        popular: false },
+  double_single: { name: 'Double + Single Room',    bed: '1 Double + 1 Single',            max: 3, price: 145, priceKey: 'price_b8',  img: 'double-room', tags: ['Double + Single'],      popular: false },
+  family:        { name: 'Family Room',             bed: '1 Double + 2 Single Beds',       max: 4, price: 160, priceKey: 'price_b7',  img: 'double-room', tags: ['Double + 2 Singles'],   popular: true  },
+  large_family:  { name: 'Large Family Room',       bed: '1 Double + 1 Single + 1 Bunk',  max: 5, price: 195, priceKey: 'price_b2',  img: 'double-room', tags: ['Bunk + Double'],        popular: false },
+  group_6:       { name: 'Group Room',              bed: '3 Bunk Beds (6 Beds)',           max: 6, price: 225, priceKey: 'price_b5',  img: 'twin-room',   tags: ['3 Bunk Beds'],          popular: false },
+  group_mixed:   { name: 'Group Room (Mixed Beds)', bed: '1 Double + 2 Single + 1 Bunk',  max: 6, price: 235, priceKey: 'price_b3',  img: 'twin-room',   tags: ['Mixed Beds'],           popular: false },
+  large_group:   { name: 'Large Group Room',        bed: '3 Bunk + 1 Single (7 Beds)',     max: 7, price: 275, priceKey: 'price_z6',  img: 'twin-room',   tags: ['Largest Room'],         popular: false },
 };
 
 // ---------- Load live prices from admin settings ----------
 function applyBDWPrices(d) {
-  Object.keys(ROOMS).forEach(function(key) {
-    var val = d['price_' + key];
+  Object.keys(ROOM_TYPES).forEach(function(key) {
+    var priceKey = ROOM_TYPES[key].priceKey;
+    var val = d[priceKey];
     if (val !== undefined) {
       var p = parseInt(val, 10);
-      if (!isNaN(p) && p > 0) ROOMS[key].price = p;
+      if (!isNaN(p) && p > 0) ROOM_TYPES[key].price = p;
     }
   });
 }
@@ -83,13 +71,6 @@ function fmtDate(s) {
 
 function fmtDateShort(s) {
   return new Date(s + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-}
-
-function genRef() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let r = 'BDW-';
-  for (let i = 0; i < 6; i++) r += chars[Math.floor(Math.random() * chars.length)];
-  return r;
 }
 
 // ---------- Step management ----------
@@ -168,10 +149,10 @@ checkoutEl.addEventListener('change', () => {
   updateSummary();
 });
 
-// ---------- Rooms booked for the current date range (hidden from list) ----------
-let bookedRoomCodes = [];
+// ---------- Room types fully booked for the current date range ----------
+let bookedTypes = [];
 
-// ---------- Render room cards dynamically ----------
+// ---------- Render room type cards dynamically ----------
 function renderRooms(totalGuests) {
   const container = document.getElementById('bookingRooms');
   if (!container) return;
@@ -181,13 +162,13 @@ function renderRooms(totalGuests) {
     badge.textContent = `Showing rooms for ${totalGuests} guest${totalGuests !== 1 ? 's' : ''}`;
   }
 
-  // Filter by guest capacity AND hide rooms already booked for these dates
-  const eligible = Object.entries(ROOMS).filter(([key, r]) =>
-    r.max >= totalGuests && !bookedRoomCodes.includes(key.toLowerCase())
+  // Filter by guest capacity AND hide fully booked types
+  const eligible = Object.entries(ROOM_TYPES).filter(([key, r]) =>
+    r.max >= totalGuests && !bookedTypes.includes(key)
   );
 
   if (eligible.length === 0) {
-    container.innerHTML = `<p class="summary-empty" style="padding:24px 0">No rooms available for ${totalGuests} guests. Please call us to arrange a group stay.</p>`;
+    container.innerHTML = `<p class="summary-empty" style="padding:24px 0">No rooms available for ${totalGuests} guests on those dates. Please call us or try different dates.</p>`;
     return;
   }
 
@@ -207,17 +188,17 @@ function renderRooms(totalGuests) {
     groups[tier].forEach(([key, r]) => {
       const imgSrc = `assets/images/${r.img}.jpg`;
       const popularBadge = r.popular ? `<span class="popular-tag">Popular</span>` : '';
-      const tagHtml = r.tags.filter(t => !t.includes('Guests')).map(t => `<span>${t}</span>`).join('');
+      const tagHtml = r.tags.map(t => `<span>${t}</span>`).join('');
       html += `
         <label class="booking-room-option">
-          <input type="radio" name="roomChoice" value="${key}" data-price="${r.price}" data-name="${r.name} (${r.code})">
+          <input type="radio" name="roomChoice" value="${key}" data-price="${r.price}" data-name="${r.name}">
           <div class="booking-room-card">
             <div class="brc-img" style="background-image:url('${imgSrc}')"></div>
             <div class="brc-info">
               <div class="brc-top">
                 <div>
-                  <h3>${r.name} <span class="room-code-tag">${r.code}</span> ${popularBadge}</h3>
-                  <p>${r.floor} &middot; ${r.bed} &middot; up to ${r.max} Guest${r.max !== 1 ? 's' : ''}</p>
+                  <h3>${r.name} ${popularBadge}</h3>
+                  <p>${r.bed} &middot; up to ${r.max} Guest${r.max !== 1 ? 's' : ''}</p>
                 </div>
                 <div class="brc-price">&pound;${r.price}<span>/night</span></div>
               </div>
@@ -264,7 +245,7 @@ document.getElementById('toStep2').addEventListener('click', async () => {
   state.adults   = +document.getElementById('adults').value;
   state.children = +document.getElementById('children').value;
 
-  // Fetch which rooms are already booked for these dates (single DB query)
+  // Fetch which room types are fully booked for these dates (single DB query)
   const btn = document.getElementById('toStep2');
   const origText = btn.textContent;
   btn.textContent = 'Checking availability…';
@@ -273,9 +254,9 @@ document.getElementById('toStep2').addEventListener('click', async () => {
     const params = new URLSearchParams({ checkin_date: state.checkin, checkout_date: state.checkout });
     const res  = await fetch(API_BASE + '/api/bookings/availability/batch?' + params);
     const data = await res.json();
-    bookedRoomCodes = (data.success && Array.isArray(data.booked)) ? data.booked : [];
+    bookedTypes = (data.success && Array.isArray(data.booked_types)) ? data.booked_types : [];
   } catch (_) {
-    bookedRoomCodes = []; // network error — show all rooms, backend will guard on confirm
+    bookedTypes = []; // network error — show all types, backend will guard on confirm
   }
   btn.textContent = origText;
   btn.disabled = false;
@@ -290,7 +271,7 @@ document.getElementById('toStep3').addEventListener('click', async () => {
   const sel   = document.querySelector('input[name="roomChoice"]:checked');
   const errEl = document.getElementById('roomErr');
   if (!sel) {
-    if (errEl) errEl.textContent = 'Please select a room to continue.';
+    if (errEl) errEl.textContent = 'Please select a room type to continue.';
     return;
   }
   if (errEl) errEl.textContent = '';
@@ -302,7 +283,7 @@ document.getElementById('toStep3').addEventListener('click', async () => {
 
   try {
     const params = new URLSearchParams({
-      room_code:     sel.value,
+      room_type:     sel.value,
       checkin_date:  state.checkin,
       checkout_date: state.checkout,
     });
@@ -310,7 +291,7 @@ document.getElementById('toStep3').addEventListener('click', async () => {
     const data = await res.json();
 
     if (data.success && !data.available) {
-      if (errEl) errEl.textContent = 'This room is already booked for your selected dates. Please choose another room.';
+      if (errEl) errEl.textContent = 'This room type is fully booked for your selected dates. Please choose a different room type or dates.';
       btn.textContent = origText;
       btn.disabled    = false;
       return;
@@ -363,7 +344,7 @@ document.getElementById('backToStep2').addEventListener('click', () => showStep(
 
 // ---------- Confirm summary ----------
 function buildConfirmSummary() {
-  const room  = ROOMS[state.roomKey];
+  const room  = ROOM_TYPES[state.roomKey];
   const total = room ? state.nights * room.price : 0;
   const payLabel = { card: 'Credit / Debit Card', bank: 'Bank Transfer', payathotel: 'Pay at Hotel' };
   const guestStr = `${state.adults} Adult${state.adults !== 1 ? 's' : ''}${state.children > 0 ? `, ${state.children} Child${state.children !== 1 ? 'ren' : ''}` : ''}`;
@@ -375,10 +356,10 @@ function buildConfirmSummary() {
     <div class="confirm-row"><label>Email</label><span>${state.guest.email}</span></div>
     <div class="confirm-row"><label>Phone</label><span>${state.guest.phone}</span></div>
     <div class="confirm-row"><label>Country</label><span>${state.guest.country}</span></div>
-    <div class="confirm-row"><label>Room</label><span>${room ? room.name + ' (' + room.code + ')' : '—'}</span></div>
-    <div class="confirm-row"><label>Floor / Beds</label><span>${room ? room.floor + ' · ' + room.bed : '—'}</span></div>
-    <div class="confirm-row"><label>Check-in</label><span>${fmtDate(state.checkin)} from 1:00 PM</span></div>
-    <div class="confirm-row"><label>Check-out</label><span>${fmtDate(state.checkout)} by 12:00 PM</span></div>
+    <div class="confirm-row"><label>Room Type</label><span>${room ? room.name : '—'}</span></div>
+    <div class="confirm-row"><label>Beds</label><span>${room ? room.bed : '—'}</span></div>
+    <div class="confirm-row"><label>Check-in</label><span>${fmtDate(state.checkin)}</span></div>
+    <div class="confirm-row"><label>Check-out</label><span>${fmtDate(state.checkout)}</span></div>
     <div class="confirm-row"><label>Duration</label><span>${state.nights} night${state.nights !== 1 ? 's' : ''}</span></div>
     <div class="confirm-row"><label>Guests</label><span>${guestStr}</span></div>
     <div class="confirm-row"><label>Rate</label><span>&pound;${room ? room.price : 0}/night</span></div>
@@ -403,8 +384,6 @@ document.getElementById('confirmBooking').addEventListener('click', async () => 
   btn.disabled = true;
 
   try {
-    // Save booking to database
-    const room = ROOMS[state.roomKey];
     const response = await fetch(`${API_BASE}/api/bookings`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -413,7 +392,7 @@ document.getElementById('confirmBooking').addEventListener('click', async () => 
         checkout_date:     state.checkout,
         adults:            state.adults,
         children:          state.children,
-        room_code:         state.roomKey,
+        room_type:         state.roomKey,
         payment_method:    state.payment,
         guest_first_name:  state.guest.firstName,
         guest_last_name:   state.guest.lastName,
@@ -429,8 +408,7 @@ document.getElementById('confirmBooking').addEventListener('click', async () => 
     if (!response.ok) {
       const msg = data.message || 'Booking failed. Please try again.';
       if (response.status === 409) {
-        // Room was taken between availability check and confirm — send back to room selection
-        termsErr.textContent = '';
+        // Room type taken between check and confirm — go back to room selection
         const roomErr = document.getElementById('roomErr');
         if (roomErr) roomErr.textContent = msg;
         btn.textContent = 'Confirm Booking';
@@ -446,8 +424,6 @@ document.getElementById('confirmBooking').addEventListener('click', async () => 
 
     const ref = data.data.ref;
     state.bookingRef = ref;
-
-    // Emails are now sent server-side in bookingController.js
 
     const refEl   = document.getElementById('successRef');
     const emailEl = document.getElementById('successEmail');
@@ -483,10 +459,10 @@ function updateSummary() {
     datesEl.innerHTML = '<p class="summary-empty">Select your dates above.</p>';
   }
 
-  const room = state.roomKey ? ROOMS[state.roomKey] : null;
+  const room = state.roomKey ? ROOM_TYPES[state.roomKey] : null;
   if (room) {
     roomEl.innerHTML = `
-      <div class="summary-item"><label>Room</label><span>${room.name} (${room.code})</span></div>
+      <div class="summary-item"><label>Room</label><span>${room.name}</span></div>
       <div class="summary-item"><label>Beds</label><span>${room.bed}</span></div>
       <div class="summary-item"><label>Rate</label><span>&pound;${room.price}/night</span></div>
     `;
@@ -521,16 +497,16 @@ const totalGuests = (+document.getElementById('adults').value || 2) + (+document
 renderRooms(totalGuests);
 updateSummary();
 
-// Fetch dynamic room prices from backend (non-blocking, falls back to hardcoded)
+// Fetch dynamic room prices from backend (non-blocking)
 fetch(`${API_BASE}/api/settings`)
   .then(r => r.json())
   .then(({ data }) => {
     if (!data) return;
     let changed = false;
-    Object.keys(ROOMS).forEach(key => {
-      const val = data[`price_${key}`];
-      if (val && Number(val) !== ROOMS[key].price) {
-        ROOMS[key].price = Number(val);
+    Object.keys(ROOM_TYPES).forEach(key => {
+      const val = data[ROOM_TYPES[key].priceKey];
+      if (val && Number(val) !== ROOM_TYPES[key].price) {
+        ROOM_TYPES[key].price = Number(val);
         changed = true;
       }
     });
