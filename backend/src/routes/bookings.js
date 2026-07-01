@@ -10,7 +10,10 @@ router.get('/availability/batch', availabilityLimiter, checkAvailabilityBatch);
 router.get('/availability', availabilityLimiter, checkAvailability);
 
 // POST /api/bookings — create a new booking
-router.post('/', bookingCreateLimiter, bookingRules, handleValidationErrors, createBooking);
+router.post('/', bookingCreateLimiter, (req, _res, next) => {
+  console.log('[POST /bookings] body:', JSON.stringify(req.body));
+  next();
+}, bookingRules, handleValidationErrors, createBooking);
 
 // GET /api/bookings/:ref — guest booking lookup (rate-limited, no auth required)
 router.get('/:ref', bookingLookupLimiter, getBookingByRef);
