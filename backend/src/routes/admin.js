@@ -580,7 +580,7 @@ router.get('/bookings/:id/available-rooms', adminAuth, async (req, res) => {
     if (!typeInfo) return res.status(400).json({ success: false, message: 'Booking has no valid room type.' });
 
     // Find rooms of this type that are already allocated for overlapping dates (excluding this booking)
-    const { rows: taken } = await pool.query(
+    const { rows: takenRows } = await pool.query(
       `SELECT allocated_room_code FROM bookings
        WHERE allocated_room_code IS NOT NULL
          AND id               != $1
@@ -589,7 +589,7 @@ router.get('/bookings/:id/available-rooms', adminAuth, async (req, res) => {
          AND checkout_date     > $2`,
       [id, booking.checkin_date.toISOString().slice(0, 10), booking.checkout_date.toISOString().slice(0, 10)]
     );
-    const takenCodes = new Set(taken.map(r => r.allocated_room_code.toLowerCase()));
+    const takenCodes = new Set(takenRows.map(r => r.allocated_room_code.toLowerCase()));
 
     const available = [];
     const taken     = [];
