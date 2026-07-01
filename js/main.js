@@ -110,6 +110,18 @@ if (navToggle && navLinks) {
           summaryNote.parentNode.insertBefore(card, summaryNote);
         }
       }
+
+      // ── Check-in / Check-out times ────────────────────────────
+      if (d.checkin_time) {
+        document.querySelectorAll('[data-bdw="checkin_time"]').forEach(function(el) {
+          el.textContent = d.checkin_time;
+        });
+      }
+      if (d.checkout_time) {
+        document.querySelectorAll('[data-bdw="checkout_time"]').forEach(function(el) {
+          el.textContent = d.checkout_time;
+        });
+      }
     })
     .catch(function () {});
 })();
