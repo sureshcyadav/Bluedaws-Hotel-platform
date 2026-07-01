@@ -614,8 +614,8 @@ function renderBookings() {
       + '<td><a href="mailto:' + esc(b.guest_email) + '">' + esc(b.guest_email) + '</a><br><small>' + esc(b.guest_phone) + '</small></td>'
       + '<td><div class="bk-room-name">' + esc(b.room_name) + '</div>'
       + (b.allocated_room_code
-          ? '<span class="bk-room-code">' + b.allocated_room_code.toUpperCase() + '</span>'
-          : '<span class="bk-room-unallocated">Unallocated</span>')
+          ? '<span class="bk-room-code">ALLOCATED: ' + b.allocated_room_code.toUpperCase() + '</span>'
+          : (b.room_type ? '<span class="bk-room-unallocated">Unallocated</span>' : ''))
       + '</td>'
       + '<td>' + fmtDate(b.checkin_date) + '</td>'
       + '<td>' + fmtDate(b.checkout_date) + '</td>'
@@ -627,6 +627,11 @@ function renderBookings() {
       + (b.status === 'pending'   ? '<button class="bk-btn bk-btn-confirm" onclick="updateBooking(' + b.id + ',\'confirmed\')">Confirm</button>' : '')
       + (b.status !== 'cancelled' ? '<button class="bk-btn bk-btn-cancel"  onclick="updateBooking(' + b.id + ',\'cancelled\')">Cancel</button>'  : '')
       + (b.status === 'cancelled' ? '<button class="bk-btn bk-btn-restore" onclick="updateBooking(' + b.id + ',\'pending\')">Restore</button>'   : '')
+      + (b.room_type && b.status !== 'cancelled'
+          ? (b.allocated_room_code
+              ? '<button class="bk-btn bk-btn-allocated" onclick="quickAllocate(' + b.id + ')" title="Change room allocation">' + b.allocated_room_code.toUpperCase() + ' &#x2713;</button>'
+              : '<button class="bk-btn bk-btn-allocate" onclick="quickAllocate(' + b.id + ')">Allocate</button>')
+          : '')
       + '<button class="bk-btn bk-btn-profile" onclick="openCalBooking(' + b.id + ')" title="Guest profile">Profile</button>'
       + '</td></tr>';
   }).join('');
@@ -1963,6 +1968,8 @@ async function checkOutGuest(id) {
 }
 
 // ── Allocate Room Modal ───────────────────────────────────────
+var _allocateSelectedCode = null;
+
 document.getElementById('allocateClose').addEventListener('click',     closeAllocateModal);
 document.getElementById('allocateCancelBtn').addEventListener('click', closeAllocateModal);
 document.getElementById('allocateConfirmBtn').addEventListener('click', confirmAllocateRoom);
@@ -1972,50 +1979,108 @@ document.getElementById('allocateModal').addEventListener('click', function(e) {
 
 function closeAllocateModal() {
   document.getElementById('allocateModal').classList.add('hidden');
+  _allocateSelectedCode = null;
+}
+
+function quickAllocate(bookingId) {
+  _calCurrentBookingId = bookingId;
+  openAllocateModal();
+}
+
+function _selectAllocRoom(code) {
+  _allocateSelectedCode = code;
+  document.querySelectorAll('.alloc-room-card').forEach(function(c) {
+    c.classList.toggle('alloc-selected', c.dataset.code === code);
+  });
+  var btn = document.getElementById('allocateConfirmBtn');
+  btn.disabled = false;
+  btn.textContent = 'Allocate Room ' + code.toUpperCase();
 }
 
 async function openAllocateModal() {
   var b = allBookings.find(function(x) { return x.id === _calCurrentBookingId; });
   if (!b || !b.room_type) return;
 
-  document.getElementById('allocateInfo').textContent =
-    b.ref + ' — ' + b.room_name + ' · ' + b.guest_first_name + ' ' + b.guest_last_name +
-    ' · ' + (b.checkin_date ? b.checkin_date.slice(0,10) : '') + ' → ' + (b.checkout_date ? b.checkout_date.slice(0,10) : '');
+  _allocateSelectedCode = null;
+  var btn = document.getElementById('allocateConfirmBtn');
+  btn.disabled = true;
+  btn.textContent = 'Allocate Room';
 
-  var sel  = document.getElementById('allocateRoomSelect');
-  var errEl = document.getElementById('allocateError');
-  sel.innerHTML = '<option value="">Loading available rooms…</option>';
+  document.getElementById('allocateInfo').textContent =
+    b.ref + '  ·  ' + b.guest_first_name + ' ' + b.guest_last_name +
+    '  ·  ' + (b.checkin_date ? b.checkin_date.slice(0,10) : '') + ' → ' + (b.checkout_date ? b.checkout_date.slice(0,10) : '');
+
+  var listEl = document.getElementById('allocateRoomList');
+  var errEl  = document.getElementById('allocateError');
+  listEl.innerHTML = '<p style="color:#94a3b8;font-size:13px;margin:0">Loading available rooms…</p>';
   errEl.classList.add('hidden');
-  document.getElementById('allocateConfirmBtn').disabled    = false;
-  document.getElementById('allocateConfirmBtn').textContent = 'Allocate Room';
   document.getElementById('allocateModal').classList.remove('hidden');
 
   var resp = await apiFetch('GET', '/api/admin/bookings/' + _calCurrentBookingId + '/available-rooms');
   if (!resp.ok) {
-    sel.innerHTML = '<option value="">Failed to load rooms — ' + (resp.data.message || 'error') + '</option>';
+    listEl.innerHTML = '<p style="color:#ef4444;font-size:13px;margin:0">Failed to load rooms: ' + esc(resp.data.message || 'error') + '</p>';
     return;
   }
 
-  var rooms = resp.data.rooms || [];
-  if (rooms.length === 0) {
-    sel.innerHTML = '<option value="">No rooms of this type available for those dates</option>';
+  var available  = resp.data.available  || [];
+  var taken      = resp.data.taken      || [];
+  var typeLabel  = resp.data.type_label || b.room_name;
+  var currentCode = b.allocated_room_code ? b.allocated_room_code.toLowerCase() : null;
+  var html = '';
+
+  // ── Available rooms (same type, free for these dates) ──────────
+  html += '<div class="alloc-section-label">Available — ' + esc(typeLabel) + '</div>';
+  if (available.length === 0) {
+    html += '<p class="alloc-none-msg">All rooms of this type are booked for these dates.</p>';
   } else {
-    sel.innerHTML = '<option value="">Select a room…</option>' +
-      rooms.map(function(r) {
-        return '<option value="' + r.code + '">' + r.code.toUpperCase() + ' — ' + r.name + ' (' + r.floor + ') · ' + r.bed + '</option>';
-      }).join('');
-    if (b.allocated_room_code) sel.value = b.allocated_room_code;
+    html += '<div class="alloc-cards-grid">';
+    available.forEach(function(r) {
+      var sel = currentCode === r.code ? ' alloc-selected' : '';
+      html += '<div class="alloc-room-card' + sel + '" data-code="' + r.code + '" onclick="_selectAllocRoom(\'' + r.code + '\')">'
+            + '<div class="alloc-card-code">' + r.code.toUpperCase() + '</div>'
+            + '<div class="alloc-card-floor">' + esc(r.floor) + '</div>'
+            + '<div class="alloc-card-bed">' + esc(r.bed) + '</div>'
+            + '<div class="alloc-card-tick">&#x2713;</div>'
+            + '</div>';
+    });
+    html += '</div>';
+  }
+
+  // ── Already booked rooms (same type, taken for these dates) ────
+  if (taken.length > 0) {
+    html += '<div class="alloc-section-label alloc-section-taken">Already Booked</div>';
+    html += '<div class="alloc-cards-grid">';
+    taken.forEach(function(r) {
+      html += '<div class="alloc-room-card alloc-taken">'
+            + '<div class="alloc-card-code">' + r.code.toUpperCase() + '</div>'
+            + '<div class="alloc-card-floor">' + esc(r.floor) + '</div>'
+            + '<div class="alloc-card-bed">' + esc(r.bed) + '</div>'
+            + '<div class="alloc-card-unavail">Booked</div>'
+            + '</div>';
+    });
+    html += '</div>';
+  }
+
+  listEl.innerHTML = html;
+
+  // Restore selection if already allocated
+  if (currentCode) {
+    var card = listEl.querySelector('[data-code="' + currentCode + '"]');
+    if (card) {
+      _allocateSelectedCode = currentCode;
+      btn.disabled = false;
+      btn.textContent = 'Allocate Room ' + currentCode.toUpperCase();
+    }
   }
 }
 
 async function confirmAllocateRoom() {
-  var sel   = document.getElementById('allocateRoomSelect');
   var errEl = document.getElementById('allocateError');
   var btn   = document.getElementById('allocateConfirmBtn');
   errEl.classList.add('hidden');
 
-  if (!sel.value) {
-    errEl.textContent = 'Please select a room.';
+  if (!_allocateSelectedCode) {
+    errEl.textContent = 'Please select a room first.';
     errEl.classList.remove('hidden');
     return;
   }
@@ -2023,9 +2088,9 @@ async function confirmAllocateRoom() {
   btn.disabled = true;
   btn.textContent = 'Allocating…';
 
-  var resp = await apiFetch('PATCH', '/api/admin/bookings/' + _calCurrentBookingId + '/allocate', { room_code: sel.value });
+  var resp = await apiFetch('PATCH', '/api/admin/bookings/' + _calCurrentBookingId + '/allocate', { room_code: _allocateSelectedCode });
   btn.disabled = false;
-  btn.textContent = 'Allocate Room';
+  btn.textContent = 'Allocate Room ' + _allocateSelectedCode.toUpperCase();
 
   if (!resp.ok) {
     errEl.textContent = resp.data.message || 'Allocation failed.';
@@ -2033,8 +2098,7 @@ async function confirmAllocateRoom() {
     return;
   }
 
-  // Update local booking data
-  var code = sel.value;
+  var code = _allocateSelectedCode;
   [calBookings, allBookings].forEach(function(arr) {
     var b = arr.find(function(x) { return x.id === _calCurrentBookingId; });
     if (b) b.allocated_room_code = code;

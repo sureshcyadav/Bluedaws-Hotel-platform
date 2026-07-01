@@ -591,14 +591,15 @@ router.get('/bookings/:id/available-rooms', adminAuth, async (req, res) => {
     );
     const takenCodes = new Set(taken.map(r => r.allocated_room_code.toLowerCase()));
 
-    const availableRooms = typeInfo.codes
-      .filter(code => !takenCodes.has(code))
-      .map(code => {
-        const r = VALID_ROOMS[code] || {};
-        return { code, name: r.name || code.toUpperCase(), floor: r.floor || '', bed: r.bed || '' };
-      });
+    const available = [];
+    const taken     = [];
+    typeInfo.codes.forEach(code => {
+      const r    = VALID_ROOMS[code] || {};
+      const room = { code, name: r.name || code.toUpperCase(), floor: r.floor || '', bed: r.bed || '' };
+      (takenCodes.has(code) ? taken : available).push(room);
+    });
 
-    res.json({ success: true, rooms: availableRooms });
+    res.json({ success: true, available, taken, type_label: typeInfo.label });
   } catch (err) {
     console.error('[available-rooms]', err.message);
     res.status(500).json({ success: false, message: err.message });

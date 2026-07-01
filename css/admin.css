@@ -2924,8 +2924,34 @@ a:hover { text-decoration: underline; }
 .bk-btn-cancel:hover  { background: #fecaca; }
 .bk-btn-restore { background: #f1f5f9; color: #475569; }
 .bk-btn-restore:hover { background: #e2e8f0; }
-.bk-btn-profile { background: linear-gradient(135deg,#0f172a,#1e293b); color: #c9a96e; box-shadow: 0 2px 8px rgba(15,23,42,.20); }
-.bk-btn-profile:hover { box-shadow: 0 5px 16px rgba(15,23,42,.32); }
+.bk-btn-profile   { background: linear-gradient(135deg,#0f172a,#1e293b); color: #c9a96e; box-shadow: 0 2px 8px rgba(15,23,42,.20); }
+.bk-btn-profile:hover   { box-shadow: 0 5px 16px rgba(15,23,42,.32); }
+.bk-btn-allocate  { background: linear-gradient(135deg,#c9a96e,#b8935a); color: #fff; box-shadow: 0 2px 6px rgba(201,169,110,.30); }
+.bk-btn-allocate:hover  { background: linear-gradient(135deg,#b8935a,#a07c40); }
+.bk-btn-allocated { background: linear-gradient(135deg,#059669,#047857); color: #fff; font-size: 10px !important; box-shadow: 0 2px 6px rgba(5,150,105,.25); }
+.bk-btn-allocated:hover { box-shadow: 0 4px 12px rgba(5,150,105,.35); }
+
+/* ── Allocate Room Modal — room cards ───────────────────────── */
+.alloc-section-label {
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+  color: #059669; margin: 0 0 10px; padding-bottom: 6px; border-bottom: 1.5px solid #d1fae5;
+}
+.alloc-section-taken { color: #94a3b8; border-bottom-color: #e2e8f0; margin-top: 20px; }
+.alloc-none-msg { font-size: 13px; color: #94a3b8; margin: 0 0 8px; }
+.alloc-cards-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(120px,1fr)); gap: 10px; }
+.alloc-room-card {
+  border: 2px solid #e2e8f0; border-radius: 10px; padding: 12px 10px; cursor: pointer;
+  text-align: center; transition: all 0.15s; background: #fff; position: relative;
+}
+.alloc-room-card:hover:not(.alloc-taken) { border-color: #c9a96e; background: #fffbf3; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(201,169,110,.2); }
+.alloc-room-card.alloc-selected { border-color: #059669; background: #f0fdf4; box-shadow: 0 0 0 3px rgba(5,150,105,.15); }
+.alloc-room-card.alloc-taken    { opacity: .5; cursor: not-allowed; background: #f8fafc; }
+.alloc-card-code   { font-size: 18px; font-weight: 800; color: #0f172a; font-family: 'Courier New',monospace; letter-spacing: .04em; }
+.alloc-card-floor  { font-size: 10px; color: #64748b; margin: 3px 0 2px; }
+.alloc-card-bed    { font-size: 10px; color: #94a3b8; }
+.alloc-card-tick   { position: absolute; top: 6px; right: 7px; font-size: 14px; color: #059669; display: none; font-weight: 700; }
+.alloc-room-card.alloc-selected .alloc-card-tick { display: block; }
+.alloc-card-unavail { font-size: 10px; font-weight: 600; color: #94a3b8; margin-top: 4px; text-transform: uppercase; letter-spacing: .04em; }
 
 /* Status badges — enhanced */
 .status-badge { padding: 4px 11px !important; border-radius: 20px !important; font-size: 11px !important; font-weight: 700 !important; }
