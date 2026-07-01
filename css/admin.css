@@ -3448,3 +3448,158 @@ a:hover { text-decoration: underline; }
   .av-matrix    { grid-template-columns: repeat(auto-fill, minmax(100px,1fr)); }
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE RESPONSIVE  (≤ 768 px)
+═══════════════════════════════════════════════════════════════ */
+
+/* ── Mobile top bar ─────────────────────────────────────────── */
+.mob-topbar {
+  display: none;
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  height: 54px; background: #0f172a;
+  align-items: center; padding: 0 14px; gap: 12px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  -webkit-tap-highlight-color: transparent;
+}
+.mob-hamburger {
+  background: none; border: none; color: #c9a96e; cursor: pointer;
+  padding: 6px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  min-width: 40px; min-height: 40px; flex-shrink: 0;
+}
+.mob-hamburger:active { background: rgba(255,255,255,.08); }
+.mob-brand-wrap { flex: 1; line-height: 1; }
+.mob-brand     { display: block; font-size: 14px; font-weight: 700; letter-spacing: 3px; color: #fff; }
+.mob-brand-sub { display: block; font-size: 9.5px; letter-spacing: 1.5px; color: #c9a96e; text-transform: uppercase; margin-top: 2px; }
+
+/* ── Sidebar close button (mobile only) ─────────────────────── */
+.sb-close-btn {
+  display: none;
+  position: absolute; top: 18px; right: 14px;
+  background: none; border: none; color: #64748b; font-size: 22px;
+  cursor: pointer; line-height: 1; padding: 2px 6px; border-radius: 6px;
+}
+.sb-close-btn:hover { color: #fff; }
+
+/* ── Overlay behind sidebar drawer ─────────────────────────── */
+.mob-overlay {
+  display: none; position: fixed; inset: 0; z-index: 250;
+  background: rgba(0,0,0,.55); backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+.mob-overlay.mob-active { display: block; }
+
+@media (max-width: 768px) {
+
+  /* ── Show/hide chrome ─────────────────────────────────────── */
+  .mob-topbar   { display: flex; }
+  .sb-close-btn { display: block; }
+
+  /* ── Sidebar becomes a slide-in drawer ────────────────────── */
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.26s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 300; width: 264px;
+  }
+  .sidebar.sb-open { transform: translateX(0); }
+  .sidebar-brand { position: relative; }
+
+  /* ── Main area: full-width under topbar ───────────────────── */
+  .admin-main { margin-left: 0; padding: 68px 14px 24px; }
+
+  /* ── Section header: stack ─────────────────────────────────── */
+  .section-header {
+    flex-direction: column; align-items: flex-start; gap: 10px; margin-bottom: 14px;
+  }
+  .section-header h1  { font-size: 17px; }
+  .section-header > div > h1 + .section-sub { margin-top: 2px; }
+
+  /* ── KPI strip: 3 cols ─────────────────────────────────────── */
+  .dash-kpi-strip { grid-template-columns: repeat(3, 1fr) !important; gap: 7px !important; }
+  .dash-kpi-card  { min-width: 0 !important; padding: 12px 8px !important; }
+  .dash-kpi-val   { font-size: 16px !important; }
+  .dash-kpi-lbl   { font-size: 9.5px !important; }
+  .dash-kpi-icon  { display: none; }
+
+  /* ── Dashboard grid: single col ────────────────────────────── */
+  .dash-main-grid { grid-template-columns: 1fr !important; }
+
+  /* ── Bookings toolbar + table ──────────────────────────────── */
+  .bk-toolbar   { flex-direction: column; gap: 8px; align-items: stretch; }
+  .bk-filters   { flex-wrap: wrap; gap: 4px; }
+  .bk-filter-btn { font-size: 11px; padding: 5px 10px; }
+  .bk-search    { width: 100% !important; box-sizing: border-box; }
+  .bk-sort-bar  { flex-wrap: wrap; gap: 6px; }
+  .bk-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 10px; }
+  .bk-table     { min-width: 680px; font-size: 12px; }
+  .bk-table th, .bk-table td { padding: 9px 8px; }
+  .bk-summary   { flex-direction: column; gap: 8px; align-items: flex-start; }
+
+  /* ── Front desk ──────────────────────────────────────────────  */
+  #sectionFrontdesk .section-header { padding: 14px 14px 0; flex-direction: row; align-items: center; }
+  .fd-room-grid { grid-template-columns: repeat(auto-fill, minmax(68px, 1fr)) !important; gap: 6px !important; }
+  .fd-tabs      { flex-wrap: wrap; gap: 4px; overflow-x: auto; }
+  .fd-tab       { font-size: 11px; padding: 6px 12px; }
+  .fd-guest-list { gap: 8px; }
+
+  /* Booking panel: full-screen overlay ───────────────────────── */
+  .booking-detail-overlay { padding: 0 !important; }
+  .booking-detail-panel   {
+    width: 100% !important; max-width: 100% !important;
+    height: 100dvh; border-radius: 0; overflow-y: auto;
+  }
+  .bp-top-row { grid-template-columns: 1fr !important; }
+  .bp-panel-right { border-left: none !important; border-top: 1px solid #f1f5f9 !important; }
+  .bpd-cols   { flex-direction: column !important; }
+  .bpd-col-r  { border-left: none !important; border-top: 1px solid #e2e8f0; }
+  .bpd-pay-grid { grid-template-columns: 1fr 1fr !important; }
+
+  /* ── Calendar: horizontal scroll ──────────────────────────── */
+  .cal-wrap  { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .cal-grid  { min-width: 640px; }
+  .cal-toolbar { flex-wrap: wrap; gap: 8px; }
+
+  /* ── Modals: near-full-screen ──────────────────────────────── */
+  .modal-overlay { padding: 8px !important; align-items: flex-end !important; }
+  .modal-card    {
+    max-width: 100% !important; width: 100% !important;
+    max-height: 92dvh !important; overflow-y: auto;
+    border-radius: 16px 16px 0 0 !important;
+  }
+  .modal-wide { max-width: 100% !important; }
+  .modal-row  { flex-direction: column; }
+  .modal-field { flex: none !important; }
+  .nb-modal   { border-radius: 16px 16px 0 0 !important; }
+
+  /* Walk-in total box price input */
+  .nb-price-input { width: 64px !important; }
+
+  /* Allocate modal card */
+  #allocateModal .modal-card { max-width: 100% !important; border-radius: 16px 16px 0 0 !important; }
+
+  /* ── Reports ────────────────────────────────────────────────── */
+  .reports-quad  { grid-template-columns: 1fr !important; }
+  .rpt-kpi2      { grid-template-columns: 1fr 1fr !important; }
+  .eod-grid3, .eod-grid2 { grid-template-columns: 1fr !important; }
+  .rpt-section-hdr { flex-direction: column; gap: 6px; }
+
+  /* ── Guests ─────────────────────────────────────────────────── */
+  .gst-cards     { grid-template-columns: 1fr !important; }
+  .gst-toolbar   { flex-direction: column; gap: 8px; }
+  .gst-search    { width: 100% !important; box-sizing: border-box; }
+
+  /* ── Availability ───────────────────────────────────────────── */
+  .av-kpi-strip  { grid-template-columns: repeat(2, 1fr) !important; }
+  .av-matrix     { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)) !important; }
+
+  /* ── Content/Settings ───────────────────────────────────────── */
+  .ctab-bar      { flex-wrap: wrap; gap: 4px; }
+  .price-cards-grid { grid-template-columns: repeat(2, 1fr) !important; }
+
+  /* ── Touch sizing ───────────────────────────────────────────── */
+  .btn-refresh, .btn-new-booking, .btn-modal-confirm, .btn-modal-cancel {
+    min-height: 40px;
+  }
+  .nav-item { min-height: 44px; padding: 11px 16px; }
+}
+

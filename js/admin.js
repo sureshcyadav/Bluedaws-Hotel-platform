@@ -161,8 +161,32 @@ document.getElementById('revokeSessionsBtn').addEventListener('click', async () 
 
 // ── Nav ───────────────────────────────────────────────────────
 document.querySelectorAll('.nav-item').forEach(item => {
-  item.addEventListener('click', e => { e.preventDefault(); showSection(item.dataset.section); });
+  item.addEventListener('click', e => {
+    e.preventDefault();
+    showSection(item.dataset.section);
+    if (window.innerWidth <= 768) _closeMobSidebar();
+  });
 });
+
+// ── Mobile sidebar ─────────────────────────────────────────────
+const _mobSidebar  = document.querySelector('.sidebar');
+const _mobOverlay  = document.getElementById('mobOverlay');
+const _mobMenuBtn  = document.getElementById('mobMenuBtn');
+const _sbCloseBtn  = document.getElementById('sbCloseBtn');
+
+function _openMobSidebar() {
+  _mobSidebar.classList.add('sb-open');
+  _mobOverlay.classList.add('mob-active');
+  document.body.style.overflow = 'hidden';
+}
+function _closeMobSidebar() {
+  _mobSidebar.classList.remove('sb-open');
+  _mobOverlay.classList.remove('mob-active');
+  document.body.style.overflow = '';
+}
+if (_mobMenuBtn) _mobMenuBtn.addEventListener('click', _openMobSidebar);
+if (_sbCloseBtn) _sbCloseBtn.addEventListener('click', _closeMobSidebar);
+if (_mobOverlay) _mobOverlay.addEventListener('click', _closeMobSidebar);
 
 // ── Dashboard KPI card clicks ──────────────────────────────────
 document.querySelector('.dash-kpi-strip').addEventListener('click', function(e) {

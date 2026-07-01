@@ -6,7 +6,7 @@
   <title>Admin — Bluedaws Hotel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/admin.css?v=14">
+  <link rel="stylesheet" href="css/admin.css?v=15">
 </head>
 <body>
 
@@ -30,10 +30,23 @@
   <!-- ── Admin App ──────────────────────────────────────────── -->
   <div id="adminApp" class="hidden">
 
+    <!-- Mobile top bar (hidden on desktop) -->
+    <div class="mob-topbar">
+      <button class="mob-hamburger" id="mobMenuBtn" aria-label="Open menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="22" height="22"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div class="mob-brand-wrap">
+        <span class="mob-brand">BLUEDAWS</span>
+        <span class="mob-brand-sub">Admin Portal</span>
+      </div>
+    </div>
+    <div class="mob-overlay" id="mobOverlay"></div>
+
     <aside class="sidebar">
       <div class="sidebar-brand">
         <span class="sb-logo">BLUEDAWS</span>
         <span class="sb-label">Admin Portal</span>
+        <button class="sb-close-btn" id="sbCloseBtn" aria-label="Close menu">&times;</button>
       </div>
       <nav class="sidebar-nav">
         <a href="#" class="nav-item active" data-section="dashboard">
@@ -1136,6 +1149,6 @@
     </div>
   </div>
 
-  <script src="js/admin.js?v=17"></script>
+  <script src="js/admin.js?v=18"></script>
 </body>
 </html>
