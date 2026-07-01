@@ -29,7 +29,7 @@ function applyFilterAndSort() {
   }
 
   const count = visible.length;
-  if (resultsCount) resultsCount.textContent = `Showing ${count} accommodation${count !== 1 ? 's' : ''}`;
+  if (resultsCount) resultsCount.textContent = `Showing ${count} room type${count !== 1 ? 's' : ''}`;
   if (noResults) noResults.style.display = count === 0 ? 'block' : 'none';
 }
 
@@ -71,11 +71,8 @@ roomCards.forEach(c => cardObs.observe(c));
 
 // ---------- Dynamic prices from backend ----------
 function applyBDWPrices(data) {
-  document.querySelectorAll('.room-card').forEach(function(card) {
-    var codeEl = card.querySelector('.room-code');
-    if (!codeEl) return;
-    var code  = codeEl.textContent.trim().toLowerCase();
-    var price = parseFloat(data['price_' + code]);
+  document.querySelectorAll('.room-card[data-price-key]').forEach(function(card) {
+    var price = parseFloat(data[card.dataset.priceKey]);
     if (!isNaN(price) && price > 0) {
       var amt = card.querySelector('.price-amount');
       if (amt) amt.textContent = '£' + price;
