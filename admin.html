@@ -890,7 +890,7 @@
           <div class="modal-field"><label>Check-out *</label><input type="date" id="nb_checkout" class="cf-input"></div>
         </div>
         <div class="nb-total-box hidden" id="nbTotalBox">
-          <span id="nbNights"></span> nights &times; £<span id="nbPrice"></span>/night = <strong>£<span id="nbTotal"></span></strong>
+          <span id="nbNights"></span> nights &times; &pound;<input type="number" id="nbPriceInput" class="nb-price-input" min="1" max="99999" step="1" placeholder="0">/night = <strong>&pound;<span id="nbTotal"></span></strong>
         </div>
         <div class="modal-row">
           <div class="modal-field" style="flex:1"><label>Special Requests</label><textarea id="nb_requests" class="cf-input" rows="2" placeholder="Guest requests…"></textarea></div>
@@ -985,6 +985,7 @@
             <div class="bpd-row"><span class="bpd-k">Check-out</span><span class="bpd-v" id="bpCheckout"></span></div>
             <div class="bpd-row"><span class="bpd-k">Duration</span><span class="bpd-v" id="bpNights"></span></div>
             <div class="bpd-row"><span class="bpd-k">Guests</span><span class="bpd-v" id="bpGuests"></span></div>
+            <div class="bpd-row"><span class="bpd-k">Rate</span><span class="bpd-v"><input type="number" id="bpRate" class="bp-rate-input" min="1" max="99999" step="1" placeholder="0">&thinsp;/night</span></div>
             <div class="bpd-row"><span class="bpd-k">Total</span><span class="bpd-v bpd-total" id="bpTotal"></span></div>
             <div class="bpd-row"><span class="bpd-k">Payment</span><span class="bpd-v" id="bpPayment"></span></div>
           </div>

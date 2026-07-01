@@ -205,7 +205,7 @@ router.get('/bookings', adminAuth, async (req, res) => {
       `SELECT id, ref, status, guest_first_name, guest_last_name, guest_email, guest_phone,
               guest_country, room_code, room_name, room_type, allocated_room_code,
               checkin_date, checkout_date, nights,
-              adults, children, total_amount, payment_method, payment_status, amount_paid,
+              adults, children, price_per_night, total_amount, payment_method, payment_status, amount_paid,
               payment_mode, payment_note, special_requests, admin_notes,
               checked_in_at, checked_out_at, guest_id_type, guest_id_number,
               guest_dob, guest_nationality, created_at
@@ -247,10 +247,15 @@ router.post('/bookings', adminAuth, async (req, res) => {
   if (nights < 1) return res.status(400).json({ success: false, message: 'Check-out must be after check-in.' });
 
   let pricePerNight = room.price;
-  try {
-    const { rows } = await pool.query('SELECT value FROM settings WHERE key=$1', ['price_' + room_code.toLowerCase()]);
-    if (rows.length) { const p = parseFloat(rows[0].value); if (!isNaN(p) && p > 0) pricePerNight = p; }
-  } catch (_) {}
+  const po = parseFloat(req.body.price_override);
+  if (!isNaN(po) && po > 0) {
+    pricePerNight = po;
+  } else {
+    try {
+      const { rows } = await pool.query('SELECT value FROM settings WHERE key=$1', ['price_' + room_code.toLowerCase()]);
+      if (rows.length) { const p = parseFloat(rows[0].value); if (!isNaN(p) && p > 0) pricePerNight = p; }
+    } catch (_) {}
+  }
 
   const client = await pool.connect();
   try {
@@ -441,12 +446,13 @@ router.patch('/bookings/:id/undo-checkin', adminAuth, async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
-// PATCH /api/admin/bookings/:id/guest — save guest identity, notes + payment info
+// PATCH /api/admin/bookings/:id/guest — save guest identity, notes, payment info + price adjustment
 router.patch('/bookings/:id/guest', adminAuth, async (req, res) => {
   const {
     guest_id_type, guest_id_number, guest_dob, guest_nationality,
     admin_notes, special_requests,
     payment_status, amount_paid, payment_mode, payment_note,
+    price_per_night, total_amount,
   } = req.body || {};
   if (payment_status && !VALID_PAYMENT_STATUSES.includes(payment_status))
     return res.status(400).json({ success: false, message: 'Invalid payment_status.' });
@@ -454,6 +460,16 @@ router.patch('/bookings/:id/guest', adminAuth, async (req, res) => {
     const ap = Number(amount_paid);
     if (isNaN(ap) || ap < 0 || ap > 999999.99)
       return res.status(400).json({ success: false, message: 'Invalid amount paid.' });
+  }
+  let ppn = null, tot = null;
+  if (price_per_night != null) {
+    ppn = parseFloat(price_per_night);
+    if (isNaN(ppn) || ppn <= 0 || ppn > 99999)
+      return res.status(400).json({ success: false, message: 'Invalid price per night.' });
+  }
+  if (total_amount != null) {
+    tot = parseFloat(total_amount);
+    if (isNaN(tot) || tot < 0) tot = null;
   }
   const id = toIntId(req.params.id);
   if (!id) return res.status(400).json({ success: false, message: 'Invalid booking ID.' });
@@ -469,8 +485,10 @@ router.patch('/bookings/:id/guest', adminAuth, async (req, res) => {
         payment_status    = COALESCE($7, payment_status),
         amount_paid       = COALESCE($8, amount_paid),
         payment_mode      = $9,
-        payment_note      = $10
-      WHERE id = $11
+        payment_note      = $10,
+        price_per_night   = COALESCE($11, price_per_night),
+        total_amount      = COALESCE($12, total_amount)
+      WHERE id = $13
     `, [
       guest_id_type     || null,
       guest_id_number   || null,
@@ -482,6 +500,8 @@ router.patch('/bookings/:id/guest', adminAuth, async (req, res) => {
       amount_paid != null ? Number(amount_paid) : null,
       payment_mode      || null,
       payment_note      || null,
+      ppn,
+      tot,
       id,
     ]);
     if (!rowCount) return res.status(404).json({ success: false, message: 'Booking not found.' });

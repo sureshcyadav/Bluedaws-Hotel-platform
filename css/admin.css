@@ -3213,6 +3213,20 @@ a:hover { text-decoration: underline; }
   padding: 12px 16px !important; font-weight: 600 !important;
   color: #065f46 !important; font-size: 13px !important;
 }
+/* Editable price input inside the walk-in total box */
+.nb-price-input {
+  width: 72px; padding: 3px 6px; border: 1.5px solid #86efac; border-radius: 6px;
+  font-size: 13px; font-weight: 700; color: #065f46; background: #fff;
+  text-align: center; outline: none;
+}
+.nb-price-input:focus { border-color: #059669; box-shadow: 0 0 0 2px rgba(5,150,105,.15); }
+/* Editable rate input inside booking profile panel */
+.bp-rate-input {
+  width: 70px; padding: 3px 7px; border: 1.5px solid #d1fae5; border-radius: 6px;
+  font-size: 13px; font-weight: 700; color: #059669; background: #f0fdf4;
+  text-align: center; outline: none;
+}
+.bp-rate-input:focus { border-color: #059669; box-shadow: 0 0 0 2px rgba(5,150,105,.15); }
 
 /* Error box */
 .modal-error { border-radius: 10px !important; }

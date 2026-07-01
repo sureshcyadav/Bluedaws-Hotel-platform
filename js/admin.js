@@ -19,6 +19,7 @@ let calBookings          = [];
 let calBlocks            = [];
 let _calCurrentBookingId = null;
 let calWeekStart         = calGetMonday(new Date());
+let _bpCurrentNights     = 0;
 
 const CAL_ROOMS = [
   { code:'D6', name:'Single Room'     }, { code:'C3', name:'Twin Room'       },
@@ -33,6 +34,13 @@ const CAL_ROOMS = [
   { code:'C5', name:'Group Mixed'     }, { code:'D4', name:'Group Mixed'     },
   { code:'Z6', name:'Large Group'     }, { code:'C2', name:'Large Group'     },
 ];
+// Hardcoded fallback prices (used when settings not yet loaded)
+const ROOM_PRICES = {
+  D6:85, C3:110, D3:110, B6:135, C6:135, B8:145,
+  B7:160, E2:160, E3:160, B2:195, B4:195,
+  B5:225, C1:225, C4:225, D1:225, D2:225, D5:225,
+  B3:235, C5:235, D4:235, Z6:275, C2:275,
+};
 
 // ── Auth helpers ──────────────────────────────────────────────
 const getToken   = () => localStorage.getItem('bdw_admin_token');
@@ -1262,7 +1270,16 @@ function openCalBooking(id) {
   document.getElementById('bpNights').textContent   = b.nights + (b.nights === 1 ? ' night' : ' nights');
   document.getElementById('bpGuests').textContent   = b.adults + ' adult' + (b.adults !== 1 ? 's' : '')
     + (b.children > 0 ? ' · ' + b.children + ' child' + (b.children > 1 ? 'ren' : '') : '');
-  document.getElementById('bpTotal').textContent    = '£' + Number(b.total_amount).toLocaleString();
+  _bpCurrentNights = Number(b.nights) || 0;
+  var bpRateEl = document.getElementById('bpRate');
+  bpRateEl.value = b.price_per_night ? Number(b.price_per_night) : '';
+  function _bpUpdateTotal() {
+    var rate  = parseFloat(bpRateEl.value) || 0;
+    var total = rate > 0 && _bpCurrentNights > 0 ? rate * _bpCurrentNights : Number(b.total_amount);
+    document.getElementById('bpTotal').textContent = '£' + (total || 0).toLocaleString();
+  }
+  bpRateEl.oninput = _bpUpdateTotal;
+  _bpUpdateTotal();
   document.getElementById('bpPayment').textContent  = pay[b.payment_method] || b.payment_method;
 
   // Guest card
@@ -1415,6 +1432,8 @@ async function saveGuestProfile() {
   document.getElementById('bpSaveFeedback').classList.add('hidden');
   document.getElementById('bpSaveError').classList.add('hidden');
   try {
+    var bpRateVal  = parseFloat(document.getElementById('bpRate').value) || null;
+    var bpTotalVal = bpRateVal && _bpCurrentNights > 0 ? bpRateVal * _bpCurrentNights : null;
     const payload = {
       guest_id_type:     document.getElementById('bp_id_type').value        || null,
       guest_id_number:   document.getElementById('bp_id_number').value      || null,
@@ -1426,6 +1445,8 @@ async function saveGuestProfile() {
       payment_note:      document.getElementById('bp_payment_note').value   || null,
       admin_notes:       document.getElementById('bp_notes').value          || null,
       special_requests:  document.getElementById('bp_requests').value       || null,
+      price_per_night:   bpRateVal,
+      total_amount:      bpTotalVal,
     };
     const { ok, data } = await apiFetch('PATCH', '/api/admin/bookings/' + _calCurrentBookingId + '/guest', payload);
     if (!ok) {
@@ -1435,11 +1456,15 @@ async function saveGuestProfile() {
     }
     [calBookings, allBookings].forEach(arr => {
       var b = arr.find(x => x.id === _calCurrentBookingId);
-      if (b) Object.assign(b, payload);
+      if (b) {
+        Object.assign(b, payload);
+        if (bpRateVal)  b.price_per_night = bpRateVal;
+        if (bpTotalVal) b.total_amount    = bpTotalVal;
+      }
     });
     document.getElementById('bpSaveFeedback').classList.remove('hidden');
     setTimeout(() => document.getElementById('bpSaveFeedback').classList.add('hidden'), 3000);
-    renderBookings(); // refresh bookings list so ID badge updates
+    renderBookings(); // refresh bookings list so total updates
   } finally {
     btn.disabled = false; btn.textContent = 'Save Guest Info';
   }
@@ -2141,10 +2166,21 @@ function closeNewBookingModal() {
   document.getElementById('newBookingSubmitBtn').textContent = 'Create Booking';
 }
 
-['nb_room', 'nb_checkin', 'nb_checkout'].forEach(id => {
-  const el = document.getElementById(id);
-  if (el) el.addEventListener('change', calcNewBookingTotal);
-});
+function _nbGetDefaultPrice(roomCode) {
+  const key  = 'price_' + roomCode.toLowerCase();
+  const item = _allSettingsData.find(s => s.key === key);
+  return item ? (parseFloat(item.value) || ROOM_PRICES[roomCode.toUpperCase()] || 0)
+              : (ROOM_PRICES[roomCode.toUpperCase()] || 0);
+}
+
+function _nbRecomputeTotal() {
+  const cin    = document.getElementById('nb_checkin').value;
+  const cout   = document.getElementById('nb_checkout').value;
+  const nights = Math.round((new Date(cout) - new Date(cin)) / 86400000);
+  const price  = parseFloat(document.getElementById('nbPriceInput').value) || 0;
+  document.getElementById('nbTotal').textContent =
+    (nights >= 1 && price > 0) ? (nights * price).toLocaleString() : '—';
+}
 
 function calcNewBookingTotal() {
   const roomCode = document.getElementById('nb_room').value;
@@ -2154,13 +2190,21 @@ function calcNewBookingTotal() {
   if (!roomCode || !cin || !cout) { box.classList.add('hidden'); return; }
   const nights = Math.round((new Date(cout) - new Date(cin)) / 86400000);
   if (nights < 1) { box.classList.add('hidden'); return; }
-  const room = CAL_ROOMS.find(r => r.code.toLowerCase() === roomCode);
-  if (!room) return;
   box.classList.remove('hidden');
   document.getElementById('nbNights').textContent = nights;
-  document.getElementById('nbTotal').textContent  = '—';
-  document.getElementById('nbPrice').textContent  = '—';
+  _nbRecomputeTotal();
 }
+
+// When room changes reset price to default; when dates change keep current price
+document.getElementById('nb_room').addEventListener('change', function() {
+  if (this.value) document.getElementById('nbPriceInput').value = _nbGetDefaultPrice(this.value) || '';
+  calcNewBookingTotal();
+});
+['nb_checkin', 'nb_checkout'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('change', calcNewBookingTotal);
+});
+document.getElementById('nbPriceInput').addEventListener('input', _nbRecomputeTotal);
 
 document.getElementById('newBookingSubmitBtn').addEventListener('click', async () => {
   const btn = document.getElementById('newBookingSubmitBtn');
@@ -2180,6 +2224,7 @@ document.getElementById('newBookingSubmitBtn').addEventListener('click', async (
     children:         Number(document.getElementById('nb_children').value) || 0,
     special_requests: document.getElementById('nb_requests').value.trim() || null,
     admin_notes:      document.getElementById('nb_notes').value.trim() || null,
+    price_override:   parseFloat(document.getElementById('nbPriceInput').value) || undefined,
   };
   if (!body.guest_first_name || !body.guest_last_name || !body.guest_email || !body.guest_phone) {
     errEl.textContent = 'Please fill in all required guest fields.'; errEl.classList.remove('hidden'); return;
