@@ -133,6 +133,18 @@ async function initDb() {
       FOR EACH ROW EXECUTE FUNCTION set_updated_at();
   `);
 
+  // Column migrations — safe to run on every startup
+  await pool.query(`
+    ALTER TABLE bookings ADD COLUMN IF NOT EXISTS room_type          VARCHAR(30);
+    ALTER TABLE bookings ADD COLUMN IF NOT EXISTS allocated_room_code VARCHAR(10);
+  `);
+
+  // Indexes for new columns
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_bookings_room_type  ON bookings (room_type);
+    CREATE INDEX IF NOT EXISTS idx_bookings_alloc_code ON bookings (allocated_room_code);
+  `);
+
   console.log('✓ Database tables ready');
 }
 
