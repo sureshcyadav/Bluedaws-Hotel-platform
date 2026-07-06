@@ -6,15 +6,15 @@ const API_BASE = 'https://api.bluedawshotel.com';
 
 // ---------- Room type data (guests book a type; admin allocates a specific room) ----------
 const ROOM_TYPES = {
-  single:        { name: 'Single Room',             bed: '1 Single Bed',                   max: 1, price: 85,  priceKey: 'price_d6',  img: 'double-room', tags: ['Single Bed'],           popular: false },
-  twin:          { name: 'Twin Room',               bed: '2 Single Beds',                  max: 2, price: 110, priceKey: 'price_c3',  img: 'twin-room',   tags: ['Twin Beds'],            popular: false },
-  triple:        { name: 'Triple Room',             bed: '1 Bunk + 1 Single',              max: 3, price: 135, priceKey: 'price_b6',  img: 'twin-room',   tags: ['Bunk + Single'],        popular: false },
-  double_single: { name: 'Double + Single Room',    bed: '1 Double + 1 Single',            max: 3, price: 145, priceKey: 'price_b8',  img: 'double-room', tags: ['Double + Single'],      popular: false },
-  family:        { name: 'Family Room',             bed: '1 Double + 2 Single Beds',       max: 4, price: 160, priceKey: 'price_b7',  img: 'double-room', tags: ['Double + 2 Singles'],   popular: true  },
-  large_family:  { name: 'Large Family Room',       bed: '1 Double + 1 Single + 1 Bunk',  max: 5, price: 195, priceKey: 'price_b2',  img: 'double-room', tags: ['Bunk + Double'],        popular: false },
-  group_6:       { name: 'Group Room',              bed: '3 Bunk Beds (6 Beds)',           max: 6, price: 225, priceKey: 'price_b5',  img: 'twin-room',   tags: ['3 Bunk Beds'],          popular: false },
-  group_mixed:   { name: 'Group Room (Mixed Beds)', bed: '1 Double + 2 Single + 1 Bunk',  max: 6, price: 235, priceKey: 'price_b3',  img: 'twin-room',   tags: ['Mixed Beds'],           popular: false },
-  large_group:   { name: 'Large Group Room',        bed: '3 Bunk + 1 Single (7 Beds)',     max: 7, price: 275, priceKey: 'price_z6',  img: 'twin-room',   tags: ['Largest Room'],         popular: false },
+  single:        { name: 'Single Room',             bed: '1 Single Bed',                   max: 1, price: 85,  priceKey: 'price_d6',  img: 'double-room',       tags: ['Single Bed'],           popular: false },
+  twin:          { name: 'Twin Room',               bed: '2 Single Beds',                  max: 2, price: 110, priceKey: 'price_c3',  img: 'twin-room',         tags: ['Twin Beds'],            popular: false },
+  triple:        { name: 'Triple Room',             bed: '1 Bunk + 1 Single',              max: 3, price: 135, priceKey: 'price_b6',  img: 'triple-quad-bunk',  tags: ['Bunk + Single'],        popular: false },
+  double_single: { name: 'Double + Single Room',    bed: '1 Double + 1 Single',            max: 3, price: 145, priceKey: 'price_b8',  img: 'double-room',       tags: ['Double + Single'],      popular: false },
+  family:        { name: 'Family Room',             bed: '1 Double + 2 Single Beds',       max: 4, price: 160, priceKey: 'price_b7',  img: 'quad-room',         tags: ['Double + 2 Singles'],   popular: true  },
+  large_family:  { name: 'Large Family Room',       bed: '1 Double + 1 Single + 1 Bunk',  max: 5, price: 195, priceKey: 'price_b2',  img: 'triple-room-2',     tags: ['Bunk + Double'],        popular: false },
+  group_6:       { name: 'Group Room',              bed: '3 Bunk Beds (6 Beds)',           max: 6, price: 225, priceKey: 'price_b5',  img: 'group-room',        tags: ['3 Bunk Beds'],          popular: false },
+  group_mixed:   { name: 'Group Room (Mixed Beds)', bed: '1 Double + 2 Single + 1 Bunk',  max: 6, price: 235, priceKey: 'price_b3',  img: 'twin-room-b',       tags: ['Mixed Beds'],           popular: false },
+  large_group:   { name: 'Large Group Room',        bed: '3 Bunk + 1 Single (7 Beds)',     max: 7, price: 275, priceKey: 'price_z6',  img: 'triple-room',       tags: ['Largest Room'],         popular: false },
 };
 
 // ---------- Load live prices from admin settings ----------
