@@ -15,7 +15,7 @@ async function initDb() {
       guest_email         VARCHAR(255)  NOT NULL,
       guest_phone         VARCHAR(50)   NOT NULL,
       guest_country       VARCHAR(100)  NOT NULL,
-      room_code           VARCHAR(10)   NOT NULL,
+      room_code           VARCHAR(30)   NOT NULL,
       room_name           VARCHAR(100)  NOT NULL,
       room_floor          VARCHAR(60),
       room_bed            VARCHAR(120),
@@ -137,6 +137,7 @@ async function initDb() {
   await pool.query(`
     ALTER TABLE bookings ADD COLUMN IF NOT EXISTS room_type          VARCHAR(30);
     ALTER TABLE bookings ADD COLUMN IF NOT EXISTS allocated_room_code VARCHAR(10);
+    ALTER TABLE bookings ALTER COLUMN room_code TYPE VARCHAR(30);
   `);
 
   // Indexes for new columns

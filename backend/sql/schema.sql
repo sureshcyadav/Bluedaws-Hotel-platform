@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS bookings (
   guest_country       VARCHAR(100) NOT NULL,
 
   -- Room
-  room_code           VARCHAR(10)  NOT NULL,
+  room_code           VARCHAR(30)  NOT NULL,
   room_name           VARCHAR(100) NOT NULL,
   room_floor          VARCHAR(60),
   room_bed            VARCHAR(120),
