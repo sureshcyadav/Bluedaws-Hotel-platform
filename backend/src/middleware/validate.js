@@ -22,8 +22,8 @@ const VALID_ROOMS = {
   b3:  { name: 'Group Room',        floor: 'First Floor',   bed: '1 Double + 2 Single + 1 Bunk',  max: 6, price: 235 },
   c5:  { name: 'Group Room',        floor: 'Second Floor',  bed: '2 Bunk + 2 Single',              max: 6, price: 235 },
   d4:  { name: 'Group Room',        floor: 'Third Floor',   bed: '2 Bunk + 2 Single',              max: 6, price: 235 },
-  z6:  { name: 'Large Group Room',  floor: 'Basement',      bed: '3 Bunk + 1 Single',              max: 7, price: 275 },
-  c2:  { name: 'Large Group Room',  floor: 'Second Floor',  bed: '3 Bunk + 1 Single',              max: 7, price: 275 },
+  z6:  { name: 'Large Group Room',  floor: 'Basement',      bed: '3 Bunk Beds',                    max: 6, price: 275 },
+  c2:  { name: 'Large Group Room',  floor: 'Second Floor',  bed: '3 Bunk Beds',                    max: 6, price: 275 },
 };
 
 // Room types for guest-facing bookings — guests pick a type, admin allocates specific room later
@@ -36,7 +36,7 @@ const ROOM_TYPES = {
   large_family:  { label: 'Large Family Room',       max: 5, priceKey: 'price_b2',  codes: ['b2', 'b4'],                    bed: '1 Double + 1 Single + 1 Bunk'  },
   group_6:       { label: 'Group Room (6 Beds)',     max: 6, priceKey: 'price_b5',  codes: ['b5','c1','c4','d1','d2','d5'], bed: '3 Bunk Beds (6 Beds)'           },
   group_mixed:   { label: 'Group Room (Mixed Beds)', max: 6, priceKey: 'price_b3',  codes: ['b3', 'c5', 'd4'],              bed: '1 Double + 2 Single + 1 Bunk'  },
-  large_group:   { label: 'Large Group Room',        max: 7, priceKey: 'price_z6',  codes: ['z6', 'c2'],                   bed: '3 Bunk + 1 Single (7 Beds)'    },
+  large_group:   { label: 'Large Group Room',        max: 6, priceKey: 'price_z6',  codes: ['z6', 'c2'],                   bed: '3 Bunk Beds (6 Beds)'          },
 };
 
 // Reverse map: room_code → room_type key (used by walk-in booking to auto-set room_type)
@@ -73,7 +73,7 @@ const bookingRules = [
 
   body('adults')
     .notEmpty().withMessage('Number of adults is required.')
-    .isInt({ min: 1, max: 7 }).withMessage('Adults must be between 1 and 7.'),
+    .isInt({ min: 1, max: 6 }).withMessage('Adults must be between 1 and 6.'),
 
   body('children')
     .optional()

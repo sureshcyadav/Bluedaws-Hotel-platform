@@ -14,7 +14,7 @@ const ROOM_TYPES = {
   large_family:  { name: 'Large Family Room',       bed: '1 Double + 1 Single + 1 Bunk',  max: 5, price: 195, priceKey: 'price_b2',  img: 'triple-room-2',     tags: ['Bunk + Double'],        popular: false },
   group_6:       { name: 'Group Room',              bed: '3 Bunk Beds (6 Beds)',           max: 6, price: 225, priceKey: 'price_b5',  img: 'group-room',        tags: ['3 Bunk Beds'],          popular: false },
   group_mixed:   { name: 'Group Room (Mixed Beds)', bed: '1 Double + 2 Single + 1 Bunk',  max: 6, price: 235, priceKey: 'price_b3',  img: 'twin-room-b',       tags: ['Mixed Beds'],           popular: false },
-  large_group:   { name: 'Large Group Room',        bed: '3 Bunk + 1 Single (7 Beds)',     max: 7, price: 275, priceKey: 'price_z6',  img: 'triple-room',       tags: ['Largest Room'],         popular: false },
+  large_group:   { name: 'Large Group Room',        bed: '3 Bunk Beds (6 Beds)',           max: 6, price: 275, priceKey: 'price_z6',  img: 'triple-room',       tags: ['Largest Room'],         popular: false },
 };
 
 // ---------- Load live prices from admin settings ----------
@@ -180,7 +180,7 @@ function renderRooms(totalGuests) {
     groups[tier].push([key, r]);
   });
 
-  const tierLabels = { 1: '1 Guest', 2: '2 Guests', 3: '3 Guests', 4: '4 Guests', 5: '5 Guests', 6: '6 Guests', 7: '7 Guests' };
+  const tierLabels = { 1: '1 Guest', 2: '2 Guests', 3: '3 Guests', 4: '4 Guests', 5: '5 Guests', 6: '6 Guests' };
 
   let html = '';
   Object.keys(groups).sort((a, b) => a - b).forEach(tier => {
