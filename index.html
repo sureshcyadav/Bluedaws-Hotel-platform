@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css?v=3">
-  <link rel="stylesheet" href="css/home.css?v=4">
+  <link rel="stylesheet" href="css/home.css?v=5">
 </head>
 <body>
 
@@ -30,40 +30,43 @@
   </nav>
   </div><!-- /#site-header -->
 
-  <!-- Carnival Promo -->
-  <section class="carnival-promo">
-    <div class="carnival-hero-bg">
-      <div class="carnival-hero-overlay"></div>
-      <span class="carnival-hotel-badge">Bluedaws Hotel</span>
-      <div class="carnival-hero-content">
-        <p class="carnival-eyebrow">30 Aug &ndash; 1 Sep 2026 &middot; Notting Hill, London</p>
-        <h2 class="carnival-title">Notting Hill<br>Carnival</h2>
+  <!-- Carnival Promo Popup -->
+  <div class="carnival-modal-overlay" id="carnivalPromoModal">
+    <div class="carnival-modal-card">
+      <button type="button" class="carnival-modal-close" id="carnivalModalClose" aria-label="Close promo">&times;</button>
+      <div class="carnival-hero-bg">
+        <div class="carnival-hero-overlay"></div>
+        <span class="carnival-hotel-badge">Bluedaws Hotel</span>
+        <div class="carnival-hero-content">
+          <p class="carnival-eyebrow">30 Aug &ndash; 1 Sep 2026 &middot; Notting Hill, London</p>
+          <h2 class="carnival-title">Notting Hill<br>Carnival</h2>
+        </div>
       </div>
-    </div>
-    <div class="carnival-body">
-      <p class="carnival-strip-label">The Carnival Spirit</p>
-      <div class="carnival-strip">
-        <!-- Replace with real event photos: assets/images/carnival-1.jpg / -2.jpg / -3.jpg -->
-        <div class="carnival-strip-img cs-1"></div>
-        <div class="carnival-strip-img cs-2"></div>
-        <div class="carnival-strip-img cs-3"></div>
-      </div>
-      <div class="carnival-offer">
-        <span class="carnival-offer-badge">Group Offer</span>
-        <h3 class="carnival-offer-title">Bring the Whole Crew for Carnival</h3>
-        <p class="carnival-offer-desc">Book 6+ rooms and save 15% for the parade weekend &mdash; with flexible check-in, breakfast included every morning, and a dedicated group host to sort the details.</p>
-        <ul class="carnival-checklist">
-          <li>Save 15% on 6+ rooms</li>
-          <li>Breakfast included</li>
-          <li>Flexible parade-weekend check-in</li>
-        </ul>
-        <div class="carnival-cta">
-          <a href="booking.html" class="btn btn-primary">Book Group Stay</a>
-          <a href="https://www.bluedawshotel.com" class="carnival-url">www.bluedawshotel.com</a>
+      <div class="carnival-body">
+        <p class="carnival-strip-label">The Carnival Spirit</p>
+        <div class="carnival-strip">
+          <!-- Real event photos: assets/images/carnival-1.jpg / -2.jpg / -3.jpg -->
+          <div class="carnival-strip-img cs-1"></div>
+          <div class="carnival-strip-img cs-2"></div>
+          <div class="carnival-strip-img cs-3"></div>
+        </div>
+        <div class="carnival-offer">
+          <span class="carnival-offer-badge">Group Offer</span>
+          <h3 class="carnival-offer-title">Bring the Whole Crew for Carnival</h3>
+          <p class="carnival-offer-desc">Book 6+ rooms and save 15% for the parade weekend &mdash; with flexible check-in, breakfast included every morning, and a dedicated group host to sort the details.</p>
+          <ul class="carnival-checklist">
+            <li>Save 15% on 6+ rooms</li>
+            <li>Breakfast included</li>
+            <li>Flexible parade-weekend check-in</li>
+          </ul>
+          <div class="carnival-cta">
+            <a href="booking.html" class="btn btn-primary">Book Group Stay</a>
+            <a href="https://www.bluedawshotel.com" class="carnival-url">www.bluedawshotel.com</a>
+          </div>
         </div>
       </div>
     </div>
-  </section>
+  </div>
 
   <!-- Hero -->
   <section class="hero" id="home">
@@ -390,6 +393,6 @@
   </footer>
 
   <script src="js/main.js?v=4"></script>
-  <script src="js/home.js?v=3"></script>
+  <script src="js/home.js?v=4"></script>
 </body>
 </html>

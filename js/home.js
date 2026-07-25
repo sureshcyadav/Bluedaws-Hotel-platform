@@ -36,6 +36,34 @@ if (qbCheckin && qbCheckout) {
   });
 }
 
+// ---------- Carnival promo popup ----------
+const carnivalModal = document.getElementById('carnivalPromoModal');
+if (carnivalModal) {
+  const carnivalClose = document.getElementById('carnivalModalClose');
+  const DISMISS_KEY   = 'bdw_carnival_promo_dismissed';
+
+  const closeCarnivalModal = () => {
+    carnivalModal.classList.remove('is-open');
+    document.body.style.overflow = '';
+    sessionStorage.setItem(DISMISS_KEY, '1');
+  };
+
+  if (!sessionStorage.getItem(DISMISS_KEY)) {
+    setTimeout(() => {
+      carnivalModal.classList.add('is-open');
+      document.body.style.overflow = 'hidden';
+    }, 600);
+  }
+
+  carnivalClose.addEventListener('click', closeCarnivalModal);
+  carnivalModal.addEventListener('click', (e) => {
+    if (e.target === carnivalModal) closeCarnivalModal();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && carnivalModal.classList.contains('is-open')) closeCarnivalModal();
+  });
+}
+
 // ---------- Active nav on scroll ----------
 const sections   = document.querySelectorAll('section[id]');
 const navAnchors = document.querySelectorAll('.nav-links a[href^="#"], .nav-links a[href^="index.html"]');
