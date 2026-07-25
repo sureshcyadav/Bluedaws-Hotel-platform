@@ -104,9 +104,9 @@
 }
 .carnival-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 32px; }
 .carnival-strip-img { height: 110px; border-radius: var(--radius); background-size: cover; background-position: center; }
-.cs-1 { background-image: linear-gradient(135deg, #6b21a8 0%, #db2777 50%, #f59e0b 100%); }
-.cs-2 { background-image: linear-gradient(135deg, #dc2626 0%, #f59e0b 50%, #16a34a 100%); }
-.cs-3 { background-image: linear-gradient(135deg, #1d4ed8 0%, #7c3aed 50%, #db2777 100%); }
+.cs-1 { background-image: url('../assets/images/carnival-1.jpg'); }
+.cs-2 { background-image: url('../assets/images/carnival-2.png'); }
+.cs-3 { background-image: url('../assets/images/carnival-3.webp'); }
 .carnival-offer-badge {
   display: inline-block;
   font-size: 0.68rem;
