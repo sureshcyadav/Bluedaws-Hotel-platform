@@ -238,6 +238,20 @@
 .confirm-row.confirm-total label { color: var(--dark); }
 .confirm-row.confirm-total span { font-family: var(--font-serif); font-size: 1.4rem; color: var(--gold); font-weight: 600; }
 
+.confirm-notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: var(--radius);
+  color: #991b1b;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
 .confirm-terms { margin-bottom: 28px; }
 .terms-label {
   display: flex;
