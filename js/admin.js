@@ -670,7 +670,8 @@ function renderBookings() {
 }
 
 async function updateBooking(id, status) {
-  const labels = { confirmed: 'confirm', cancelled: 'cancel', pending: 'restore' };
+  if (status === 'cancelled') { openCancelBookingModal(id, 'list'); return; }
+  const labels = { confirmed: 'confirm', pending: 'restore' };
   if (!confirm('Are you sure you want to ' + labels[status] + ' this booking?')) return;
   try {
     const { ok, data } = await apiFetch('PATCH', '/api/admin/bookings/' + id + '/status', { status });
@@ -680,6 +681,56 @@ async function updateBooking(id, status) {
     renderBookings();
     loadStats();
   } catch { alert('Failed to update booking.'); }
+}
+
+// ── Cancel Booking modal (refundable vs non-refundable) ────────────────
+let _cancelModalBookingId = null;
+let _cancelModalContext   = null; // 'list' | 'profile'
+
+function openCancelBookingModal(id, context) {
+  _cancelModalBookingId = id;
+  _cancelModalContext   = context;
+  document.getElementById('cancelBookingModal').classList.remove('hidden');
+}
+
+function closeCancelBookingModal() {
+  document.getElementById('cancelBookingModal').classList.add('hidden');
+  _cancelModalBookingId = null;
+  _cancelModalContext   = null;
+}
+
+document.getElementById('cancelBookingClose').addEventListener('click', closeCancelBookingModal);
+document.getElementById('cancelBookingModal').addEventListener('click', e => {
+  if (e.target.id === 'cancelBookingModal') closeCancelBookingModal();
+});
+
+async function submitCancelBooking(refundable) {
+  const id      = _cancelModalBookingId;
+  const context = _cancelModalContext;
+  if (!id) return;
+  const confirmMsg = refundable
+    ? 'Cancel this booking as refundable? The guest will be notified a refund is on its way.'
+    : 'Cancel this booking as non-refundable? The guest will be notified the full amount will be charged.';
+  if (!confirm(confirmMsg)) return;
+  try {
+    const { ok, data } = await apiFetch('PATCH', '/api/admin/bookings/' + id + '/status', { status: 'cancelled', refundable });
+    if (!ok) { alert(data.message || 'Failed to cancel booking.'); return; }
+    closeCancelBookingModal();
+    if (context === 'profile') {
+      [calBookings, allBookings].forEach(arr => {
+        const b = arr.find(x => x.id === id);
+        if (b) b.status = 'cancelled';
+      });
+      openCalBooking(id);
+      renderCalendar();
+      renderBookings();
+    } else {
+      const b = allBookings.find(x => x.id === id);
+      if (b) b.status = 'cancelled';
+      renderBookings();
+      loadStats();
+    }
+  } catch { alert('Failed to cancel booking.'); }
 }
 
 document.getElementById('bookingFilters').addEventListener('click', e => {
@@ -1372,6 +1423,7 @@ function openCalBooking(id) {
 
 async function bpAction(newStatus) {
   if (!_calCurrentBookingId) return;
+  if (newStatus === 'cancelled') { openCancelBookingModal(_calCurrentBookingId, 'profile'); return; }
   if (!confirm('Change booking status to "' + newStatus + '"?')) return;
   const { ok, data } = await apiFetch('PATCH', '/api/admin/bookings/' + _calCurrentBookingId + '/status', { status: newStatus });
   if (!ok) { alert(data.message || 'Failed to update status.'); return; }

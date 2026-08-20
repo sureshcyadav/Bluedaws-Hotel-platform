@@ -300,7 +300,7 @@ router.post('/bookings', adminAuth, async (req, res) => {
 
 // PATCH /api/admin/bookings/:id/status
 router.patch('/bookings/:id/status', adminAuth, async (req, res) => {
-  const { status } = req.body || {};
+  const { status, refundable } = req.body || {};
   if (!['pending', 'confirmed', 'cancelled'].includes(status))
     return res.status(400).json({ success: false, message: 'Invalid status.' });
   const id = toIntId(req.params.id);
@@ -340,6 +340,7 @@ router.patch('/bookings/:id/status', adminAuth, async (req, res) => {
         }).catch(err => console.error('[mailer] Failed to send confirmation email:', err.message));
       });
     } else if (status === 'cancelled') {
+      const isRefundable = refundable !== false;
       setImmediate(() => {
         sendBookingCancelledEmail({
           ref:       b.ref,
@@ -349,6 +350,7 @@ router.patch('/bookings/:id/status', adminAuth, async (req, res) => {
           checkout:  b.checkout_date.toISOString().slice(0, 10),
           nights:    String(b.nights),
           total:     Number(b.total_amount).toLocaleString(),
+          refundable: isRefundable,
         }).catch(err => console.error('[mailer] Failed to send cancellation email:', err.message));
       });
     }

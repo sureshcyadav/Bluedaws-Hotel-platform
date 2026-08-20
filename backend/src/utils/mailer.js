@@ -175,18 +175,33 @@ async function sendBookingConfirmedEmail({ ref, guest, roomLabel, checkin, check
 }
 
 // ── Sent when admin cancels a booking ────────────────────────────────────────
-async function sendBookingCancelledEmail({ ref, guest, roomLabel, checkin, checkout, nights, total }) {
+async function sendBookingCancelledEmail({ ref, guest, roomLabel, checkin, checkout, nights, total, refundable = true }) {
   const t = getTransporter();
   if (!t) { console.log('[mailer] Email credentials not set — skipping cancellation email'); return; }
 
   const hotelAddr = process.env.GMAIL_USER;
 
+  const introText = refundable
+    ? `We regret to inform you that the following booking has been <strong>cancelled</strong>.
+       We apologise for any inconvenience caused.`
+    : `We regret to inform you that the following booking has been <strong>cancelled</strong>.
+       As this was a <strong>non-refundable</strong> booking, the full amount will be charged
+       to your original payment method in line with our cancellation policy.`;
+
+  const noticeBox = refundable
+    ? `<div style="margin:24px 0 20px;padding:14px 16px;background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;font-size:13px;color:#991b1b">
+         This booking has been cancelled. If you paid by bank transfer or card, please allow 5–10 business days for any refund to appear.
+       </div>`
+    : `<div style="margin:24px 0 20px;padding:14px 16px;background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;font-size:13px;color:#991b1b">
+         This booking was <strong>non-refundable</strong>. As per our cancellation policy, the full amount of
+         <strong>£${h(String(total))}</strong> will be charged to your original payment method. No refund will be issued.
+       </div>`;
+
   const cancelledBody = `
     <h2 style="margin:0 0 16px;color:#dc2626;font-size:20px">Booking Cancellation Notice</h2>
     <p style="margin:0 0 8px;color:#1e293b">Dear <strong>${h(guest.firstName)}</strong>,</p>
     <p style="margin:0 0 22px;color:#475569;font-size:14px;line-height:1.6">
-      We regret to inform you that the following booking has been <strong>cancelled</strong>.
-      We apologise for any inconvenience caused.
+      ${introText}
     </p>
     <table style="width:100%;border-collapse:collapse">
       ${row('Reference', `<strong style="font-size:18px;color:#0f172a">${h(ref)}</strong>`)}
@@ -196,11 +211,9 @@ async function sendBookingCancelledEmail({ ref, guest, roomLabel, checkin, check
       ${row('Nights', h(String(nights)))}
       ${row('Total', `<strong style="font-size:16px;color:#0f172a">£${h(String(total))}</strong>`)}
     </table>
-    <div style="margin:24px 0 20px;padding:14px 16px;background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;font-size:13px;color:#991b1b">
-      This booking has been cancelled. If you paid by bank transfer or card, please allow 5–10 business days for any refund to appear.
-    </div>
+    ${noticeBox}
     <p style="margin:0 0 20px;font-size:13px;color:#64748b">
-      If this cancellation was made in error, or if you would like to rebook, please contact us at
+      If this cancellation was made in error, or if you have any questions, please contact us at
       <a href="mailto:reservations@bluedawshotel.com" style="color:#c9a96e">reservations@bluedawshotel.com</a>
     </p>
     <p style="margin:0;color:#475569;font-size:14px">Warm regards,<br><strong>The Bluedaws Team</strong></p>`;
@@ -212,7 +225,7 @@ async function sendBookingCancelledEmail({ ref, guest, roomLabel, checkin, check
     html: wrapHtml(headerHtml('PRIVATE HOTEL'), cancelledBody),
   });
 
-  console.log(`[mailer] Sent booking-cancelled email for ${ref} → ${guest.email}`);
+  console.log(`[mailer] Sent booking-cancelled (${refundable ? 'refundable' : 'non-refundable'}) email for ${ref} → ${guest.email}`);
 }
 
 // ── Sent when a contact form enquiry is submitted ─────────────────────────────
