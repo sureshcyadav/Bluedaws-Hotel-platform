@@ -115,7 +115,7 @@ async function sendBookingEmails({ ref, guest, roomLabel, checkin, checkout, nig
       ⏳ Your booking is <strong>pending confirmation</strong>. You will receive a confirmation email within 1 hour.
     </div>
     <p style="margin:0 0 20px;font-size:13px;color:#64748b">
-      Questions? Email <a href="mailto:reservations@bluedawshotel.com" style="color:#c9a96e">reservations@bluedawshotel.com</a>
+      Questions? Email <a href="mailto:bluedawsprivatehotel@gmail.com" style="color:#c9a96e">bluedawsprivatehotel@gmail.com</a>
     </p>
     <p style="margin:0;color:#475569;font-size:14px">Warm regards,<br><strong>The Bluedaws Team</strong></p>`;
 
@@ -160,7 +160,7 @@ async function sendBookingConfirmedEmail({ ref, guest, roomLabel, checkin, check
       ✓ <strong>Confirmed</strong> — What's included: Free Wi-Fi · Breakfast · Heating &amp; Fan · Hair Dryer · Towels &amp; Linen
     </div>
     <p style="margin:0 0 20px;font-size:13px;color:#64748b">
-      Questions? Email <a href="mailto:reservations@bluedawshotel.com" style="color:#c9a96e">reservations@bluedawshotel.com</a>
+      Questions? Email <a href="mailto:bluedawsprivatehotel@gmail.com" style="color:#c9a96e">bluedawsprivatehotel@gmail.com</a>
     </p>
     <p style="margin:0;color:#475569;font-size:14px">Warm regards,<br><strong>The Bluedaws Team</strong></p>`;
 
@@ -214,7 +214,7 @@ async function sendBookingCancelledEmail({ ref, guest, roomLabel, checkin, check
     ${noticeBox}
     <p style="margin:0 0 20px;font-size:13px;color:#64748b">
       If this cancellation was made in error, or if you have any questions, please contact us at
-      <a href="mailto:reservations@bluedawshotel.com" style="color:#c9a96e">reservations@bluedawshotel.com</a>
+      <a href="mailto:bluedawsprivatehotel@gmail.com" style="color:#c9a96e">bluedawsprivatehotel@gmail.com</a>
     </p>
     <p style="margin:0;color:#475569;font-size:14px">Warm regards,<br><strong>The Bluedaws Team</strong></p>`;
 
