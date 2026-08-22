@@ -70,7 +70,17 @@ async function createBooking(req, res) {
       [room_type, checkin_date, checkout_date]
     );
 
-    if (countRows[0].cnt >= roomCapacity) {
+    // Subtract any specific rooms of this type that admin has blocked for these dates
+    const { rows: blockRows } = await client.query(
+      `SELECT COUNT(DISTINCT room_code)::int AS cnt FROM room_blocks
+       WHERE room_code    = ANY($1::text[])
+         AND start_date    < $3
+         AND end_date      > $2`,
+      [typeInfo.codes, checkin_date, checkout_date]
+    );
+    const availableCapacity = Math.max(0, roomCapacity - blockRows[0].cnt);
+
+    if (countRows[0].cnt >= availableCapacity) {
       await client.query('ROLLBACK');
       return res.status(409).json({
         success: false,
@@ -205,8 +215,17 @@ async function checkAvailability(req, res) {
       [room_type, checkin_date, checkout_date]
     );
 
-    const available = rows[0].cnt < typeInfo.codes.length;
-    return res.json({ success: true, available, available_count: typeInfo.codes.length - rows[0].cnt });
+    const { rows: blockRows } = await pool.query(
+      `SELECT COUNT(DISTINCT room_code)::int AS cnt FROM room_blocks
+       WHERE room_code    = ANY($1::text[])
+         AND start_date    < $3
+         AND end_date      > $2`,
+      [typeInfo.codes, checkin_date, checkout_date]
+    );
+    const availableCapacity = Math.max(0, typeInfo.codes.length - blockRows[0].cnt);
+
+    const available = rows[0].cnt < availableCapacity;
+    return res.json({ success: true, available, available_count: Math.max(0, availableCapacity - rows[0].cnt) });
   } catch (err) {
     console.error('[checkAvailability]', err.message);
     return res.status(500).json({ success: false, message: 'Server error.' });
@@ -304,13 +323,23 @@ async function checkAvailabilityBatch(req, res) {
        GROUP BY room_type`,
       [checkin_date, checkout_date]
     );
+    const bookingCounts = {};
+    rows.forEach(r => { bookingCounts[r.room_type] = r.cnt; });
+
+    // Rooms admin has blocked for these dates also reduce capacity, even if
+    // that room type has no active bookings at all.
+    const { rows: blockRows } = await pool.query(
+      `SELECT room_code FROM room_blocks WHERE start_date < $2 AND end_date > $1`,
+      [checkin_date, checkout_date]
+    );
+    const blockedCodes = new Set(blockRows.map(r => r.room_code));
 
     const bookedTypes = [];
-    for (const row of rows) {
-      const typeInfo = ROOM_TYPES[row.room_type];
-      if (typeInfo && row.cnt >= typeInfo.codes.length) {
-        bookedTypes.push(row.room_type);
-      }
+    for (const [typeKey, typeInfo] of Object.entries(ROOM_TYPES)) {
+      const blockedCount     = typeInfo.codes.filter(c => blockedCodes.has(c)).length;
+      const availableCapacity = Math.max(0, typeInfo.codes.length - blockedCount);
+      const bookedCount       = bookingCounts[typeKey] || 0;
+      if (bookedCount >= availableCapacity) bookedTypes.push(typeKey);
     }
 
     return res.json({ success: true, booked_types: bookedTypes });

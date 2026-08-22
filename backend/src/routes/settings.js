@@ -4,9 +4,18 @@ const router   = express.Router();
 const { settingsLimiter } = require('../middleware/rateLimits');
 
 // GET /api/settings — public JSON endpoint
+// Categories intentionally excluded from the public response. Any setting
+// that should not be guest-visible must be seeded under one of these
+// categories — new keys are public by default otherwise, so this is an
+// opt-out, not an allowlist.
+const PRIVATE_CATEGORIES = ['private', 'internal'];
+
 router.get('/', settingsLimiter, async (req, res) => {
   try {
-    const { rows } = await pool.query('SELECT key, value FROM settings');
+    const { rows } = await pool.query(
+      'SELECT key, value FROM settings WHERE category != ALL($1::text[])',
+      [PRIVATE_CATEGORIES]
+    );
     const data = {};
     rows.forEach(r => { data[r.key] = r.value; });
     res.set('Cache-Control', 'no-store');

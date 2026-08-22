@@ -11,7 +11,7 @@ router.get('/availability', availabilityLimiter, checkAvailability);
 
 // POST /api/bookings — create a new booking
 router.post('/', bookingCreateLimiter, (req, _res, next) => {
-  console.log('[POST /bookings] body:', JSON.stringify(req.body));
+  console.log('[POST /bookings] room_type:', req.body && req.body.room_type);
   next();
 }, bookingRules, handleValidationErrors, createBooking);
 

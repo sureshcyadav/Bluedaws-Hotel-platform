@@ -1619,8 +1619,8 @@ function _runPDF(html, filename, btnId, btnLabel, opts) {
   if (!needCanvas && !needJspdf) { doRender(); return; }
   var pending = (needCanvas ? 1 : 0) + (needJspdf ? 1 : 0);
   function dec() { if (--pending === 0) doRender(); }
-  if (needCanvas) _loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js', dec);
-  if (needJspdf)  _loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', dec);
+  if (needCanvas) _loadScript('js/vendor/html2canvas.min.js', dec);
+  if (needJspdf)  _loadScript('js/vendor/jspdf.umd.min.js', dec);
 }
 
 // ── Invoice PDF ───────────────────────────────────────────────
