@@ -8,14 +8,14 @@ function jwtSecret() {
 }
 
 async function adminAuth(req, res, next) {
-  const auth = req.headers.authorization;
-  if (!auth || !auth.startsWith('Bearer ')) {
+  const token = req.cookies && req.cookies.bdw_admin_token;
+  if (!token) {
     return res.status(401).json({ success: false, message: 'Unauthorized.' });
   }
 
   let payload;
   try {
-    payload = jwt.verify(auth.slice(7), jwtSecret());
+    payload = jwt.verify(token, jwtSecret());
   } catch (err) {
     if (err.message.includes('JWT_SECRET')) {
       console.error('[adminAuth]', err.message);

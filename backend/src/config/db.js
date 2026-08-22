@@ -1,8 +1,22 @@
 const { Pool } = require('pg');
 
+// In production, verify the DB server's TLS certificate rather than blindly
+// trusting it. DATABASE_SSL_INSECURE=true is an emergency escape hatch (set
+// via env var, no redeploy needed) in case the provider's cert chain isn't
+// recognized by Node's default trust store — DATABASE_CA_CERT lets you pin
+// the provider's CA instead of disabling verification entirely.
+function sslConfig() {
+  if (process.env.NODE_ENV !== 'production') return false;
+  if (process.env.DATABASE_SSL_INSECURE === 'true') return { rejectUnauthorized: false };
+  return {
+    rejectUnauthorized: true,
+    ca: process.env.DATABASE_CA_CERT || undefined,
+  };
+}
+
 const pool = new Pool({
   connectionString:        process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  ssl: sslConfig(),
   max:                     10,
   idleTimeoutMillis:       30000,
   // Fail fast if all connections are in use — prevents unbounded request queuing

@@ -1,5 +1,6 @@
 const express   = require('express');
 const jwt       = require('jsonwebtoken');
+const bcrypt    = require('bcryptjs');
 const crypto    = require('crypto');
 const { pool }  = require('../config/db');
 const { adminAuth, jwtSecret } = require('../middleware/adminAuth');
@@ -17,6 +18,30 @@ function toIntId(val) {
   const n = parseInt(val, 10);
   return Number.isFinite(n) && n > 0 ? n : null;
 }
+
+// Verifies the admin password against ADMIN_PASSWORD_HASH (preferred, bcrypt)
+// or ADMIN_PASSWORD (legacy plaintext, for backward compatibility until the
+// hash is configured). Returns null if neither env var is set.
+async function verifyAdminPassword(password) {
+  if (!password) return false;
+  if (process.env.ADMIN_PASSWORD_HASH) {
+    return bcrypt.compare(password, process.env.ADMIN_PASSWORD_HASH);
+  }
+  if (process.env.ADMIN_PASSWORD) {
+    console.warn('[admin] ADMIN_PASSWORD is set in plaintext — set ADMIN_PASSWORD_HASH instead (see .env.example) and remove ADMIN_PASSWORD.');
+    return password === process.env.ADMIN_PASSWORD;
+  }
+  return null;
+}
+
+const ADMIN_COOKIE = 'bdw_admin_token';
+const ADMIN_COOKIE_OPTS = {
+  httpOnly: true,
+  secure:   process.env.NODE_ENV === 'production',
+  sameSite: 'strict',
+  path:     '/',
+  maxAge:   8 * 60 * 60 * 1000, // 8h — matches the JWT/session expiry below
+};
 
 // ── Startup: add new columns & tables if missing ───────────────────────────
 ;(async () => {
@@ -77,9 +102,10 @@ async function makeRef() {
 // POST /api/admin/login
 router.post('/login', loginLimiter, async (req, res) => {
   const { password } = req.body || {};
-  if (!process.env.ADMIN_PASSWORD)
+  const valid = await verifyAdminPassword(password);
+  if (valid === null)
     return res.status(500).json({ success: false, message: 'Admin password not configured on server.' });
-  if (password !== process.env.ADMIN_PASSWORD)
+  if (!valid)
     return res.status(401).json({ success: false, message: 'Incorrect password.' });
   try {
     const jti = crypto.randomBytes(16).toString('hex');
@@ -89,7 +115,8 @@ router.post('/login', loginLimiter, async (req, res) => {
       [jti]
     );
     const token = jwt.sign({ admin: true, jti }, jwtSecret(), { expiresIn: '8h' });
-    res.json({ success: true, token });
+    res.cookie(ADMIN_COOKIE, token, ADMIN_COOKIE_OPTS);
+    res.json({ success: true });
   } catch (err) {
     console.error('[login]', err.message);
     res.status(500).json({ success: false, message: 'Login failed. Please try again.' });
@@ -100,6 +127,7 @@ router.post('/login', loginLimiter, async (req, res) => {
 router.post('/logout', adminAuth, async (req, res) => {
   try {
     await pool.query('DELETE FROM admin_sessions');
+    res.clearCookie(ADMIN_COOKIE, { path: '/' });
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -110,10 +138,12 @@ router.post('/logout', adminAuth, async (req, res) => {
 // Use this from any device if you suspect a token has been stolen.
 router.post('/revoke-all', loginLimiter, async (req, res) => {
   const { password } = req.body || {};
-  if (!process.env.ADMIN_PASSWORD || password !== process.env.ADMIN_PASSWORD)
+  const valid = await verifyAdminPassword(password);
+  if (!valid)
     return res.status(401).json({ success: false, message: 'Incorrect password.' });
   try {
     await pool.query('DELETE FROM admin_sessions');
+    res.clearCookie(ADMIN_COOKIE, { path: '/' });
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

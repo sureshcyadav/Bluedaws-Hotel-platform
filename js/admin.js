@@ -42,23 +42,18 @@ const ROOM_PRICES = {
   B3:235, C5:235, D4:235, Z6:275, C2:275,
 };
 
-// ── Auth helpers ──────────────────────────────────────────────
-const getToken   = () => localStorage.getItem('bdw_admin_token');
-const setToken   = t  => localStorage.setItem('bdw_admin_token', t);
-const clearToken = () => localStorage.removeItem('bdw_admin_token');
-
-function authHeaders() {
-  return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` };
-}
-
+// ── Auth ──────────────────────────────────────────────────────
+// The admin session lives in an HttpOnly cookie set by the server — it is
+// never readable from JS, so there is no client-side token to store or read.
 async function apiFetch(method, path, body) {
   const res = await fetch(`${API}${path}`, {
     method,
-    headers: authHeaders(),
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
     body: body ? JSON.stringify(body) : undefined,
   });
   const data = await res.json();
-  if (res.status === 401) { clearToken(); showLogin(); throw new Error('Session expired'); }
+  if (res.status === 401) { showLogin(); throw new Error('Session expired'); }
   return { ok: res.ok, data };
 }
 
@@ -109,6 +104,7 @@ async function login() {
   try {
     const res  = await fetch(`${API}/api/admin/login`, {
       method: 'POST',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ password: pw }),
     });
@@ -117,7 +113,6 @@ async function login() {
       errEl.textContent = data.message || 'Incorrect password.';
       errEl.classList.remove('hidden');
     } else {
-      setToken(data.token);
       document.getElementById('adminPassword').value = '';
       showApp();
       showSection('dashboard');
@@ -134,7 +129,6 @@ async function login() {
 // ── Logout ────────────────────────────────────────────────────
 document.getElementById('logoutBtn').addEventListener('click', async () => {
   try { await apiFetch('POST', '/api/admin/logout'); } catch (_) {}
-  clearToken();
   showLogin();
 });
 
@@ -147,12 +141,12 @@ document.getElementById('revokeSessionsBtn').addEventListener('click', async () 
   try {
     const res  = await fetch(API + '/api/admin/revoke-all', {
       method:  'POST',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({ password: pw }),
     });
     const data = await res.json();
     if (!res.ok) { alert(data.message || 'Incorrect password.'); return; }
-    clearToken();
     showLogin();
   } catch (_) {
     alert('Network error. Please try again.');
@@ -3615,11 +3609,10 @@ function downloadEodPDF() {
 
 // ── Init ──────────────────────────────────────────────────────
 async function init() {
-  if (!getToken()) { showLogin(); return; }
   try {
     const { ok } = await apiFetch('GET', '/api/admin/stats');
     if (ok) { showApp(); showSection('dashboard'); }
-    else    { clearToken(); showLogin(); }
+    else    { showLogin(); }
   } catch { showLogin(); }
 }
 

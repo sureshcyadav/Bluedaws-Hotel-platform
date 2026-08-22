@@ -1,7 +1,8 @@
-const express  = require('express');
-const cors     = require('cors');
-const helmet   = require('helmet');
-const morgan   = require('morgan');
+const express      = require('express');
+const cors         = require('cors');
+const helmet       = require('helmet');
+const morgan       = require('morgan');
+const cookieParser = require('cookie-parser');
 
 const bookingRoutes  = require('./routes/bookings');
 const contactRoutes  = require('./routes/contacts');
@@ -31,6 +32,7 @@ app.use(cors({
     if (allowedOrigins.includes(origin)) return callback(null, true);
     callback(new Error(`CORS: origin '${origin}' is not allowed.`));
   },
+  credentials:      true, // required so the browser sends/stores the admin auth cookie cross-subdomain
   methods:          ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders:   ['Content-Type', 'Authorization'],
   optionsSuccessStatus: 200,
@@ -39,6 +41,7 @@ app.use(cors({
 // ── Body parser ─────────────────────────────────────────────────────
 app.use(express.json({ limit: '50kb' }));
 app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
 
 // ── Logger ──────────────────────────────────────────────────────────
 if (process.env.NODE_ENV !== 'test') {
