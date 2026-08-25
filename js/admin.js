@@ -280,7 +280,7 @@ async function loadStats() {
       document.getElementById('dashUpcoming').innerHTML = upcoming.map(function(g) {
         var cin = fmtDate(g.checkin_date);
         var cout = fmtDate(g.checkout_date);
-        var nights = Math.round((new Date(g.checkout_date) - new Date(g.checkin_date)) / 86400000);
+        var nights = Math.floor((new Date(g.checkout_date) - new Date(g.checkin_date)) / 86400000);
         return '<div class="dash-upcoming-item" onclick="openCalBooking(' + g.id + ')">'
           + '<div class="dash-upc-date">' + cin + '</div>'
           + '<div class="dash-upc-info">'
@@ -2246,7 +2246,7 @@ function _nbGetDefaultPrice(roomCode) {
 function _nbRecomputeTotal() {
   const cin    = document.getElementById('nb_checkin').value;
   const cout   = document.getElementById('nb_checkout').value;
-  const nights = Math.round((new Date(cout) - new Date(cin)) / 86400000);
+  const nights = Math.floor((new Date(cout) - new Date(cin)) / 86400000);
   const price  = parseFloat(document.getElementById('nbPriceInput').value) || 0;
   document.getElementById('nbTotal').textContent =
     (nights >= 1 && price > 0) ? (nights * price).toLocaleString() : '—';
@@ -2258,7 +2258,7 @@ function calcNewBookingTotal() {
   const cout = document.getElementById('nb_checkout').value;
   const box  = document.getElementById('nbTotalBox');
   if (!roomCode || !cin || !cout) { box.classList.add('hidden'); return; }
-  const nights = Math.round((new Date(cout) - new Date(cin)) / 86400000);
+  const nights = Math.floor((new Date(cout) - new Date(cin)) / 86400000);
   if (nights < 1) { box.classList.add('hidden'); return; }
   box.classList.remove('hidden');
   document.getElementById('nbNights').textContent = nights;
@@ -2315,7 +2315,7 @@ document.getElementById('newBookingSubmitBtn').addEventListener('click', async (
 
     // Build full email data from form body (not sparse API response)
     const roomInfo  = CAL_ROOMS.find(r => r.code === body.room_code) || {};
-    const nights    = Math.round((new Date(body.checkout_date) - new Date(body.checkin_date)) / 86400000);
+    const nights    = Math.floor((new Date(body.checkout_date) - new Date(body.checkin_date)) / 86400000);
     const totalDisp = document.getElementById('nbTotal');
     const emailBooking = {
       id:               created.id,
@@ -3119,7 +3119,7 @@ function showRptBreakdown(key) {
       var total2 = activeBks2.length || 1;
       buckets.forEach(function(r){r.c=0;});
       activeBks2.forEach(function(b){
-        var n = Number(b.nights) || Math.max(1, Math.round((new Date(b.checkout_date)-new Date(b.checkin_date))/86400000));
+        var n = Number(b.nights) || Math.max(1, Math.floor((new Date(b.checkout_date)-new Date(b.checkin_date))/86400000));
         var bk = buckets.find(function(r){return n>=r.mn && n<r.mx;});
         if(bk) bk.c++;
       });

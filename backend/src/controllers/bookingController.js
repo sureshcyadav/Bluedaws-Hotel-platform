@@ -27,7 +27,7 @@ async function createBooking(req, res) {
   } = req.body;
 
   const typeInfo = ROOM_TYPES[room_type];
-  const nights   = Math.round((new Date(checkout_date) - new Date(checkin_date)) / 86400000);
+  const nights   = Math.floor((new Date(checkout_date) - new Date(checkin_date)) / 86400000);
 
   // Fetch the price for this room type from admin settings; fall back to hardcoded
   let pricePerNight = 0;
@@ -251,8 +251,12 @@ async function getBookingByRef(req, res) {
       return res.status(404).json({ success: false, message: `No booking found with reference ${ref}.` });
     }
     const b = rows[0];
-    const [user, domain] = b.guest_email.split('@');
-    b.guest_email = user[0] + '***@' + domain;
+    if (typeof b.guest_email === 'string' && b.guest_email.includes('@')) {
+      const [user, domain] = b.guest_email.split('@');
+      b.guest_email = (user && user.length > 0 ? user[0] : '') + '***@' + (domain || '');
+    } else {
+      b.guest_email = '';
+    }
     return res.json({ success: true, data: b });
   } catch (err) {
     console.error('[getBookingByRef]', err.message);

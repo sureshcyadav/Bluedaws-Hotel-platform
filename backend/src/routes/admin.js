@@ -10,6 +10,13 @@ const { loginLimiter } = require('../middleware/rateLimits');
 
 const router = express.Router();
 
+// Safe date formatter: database DATE columns are returned as strings by pg
+// (e.g. '2026-07-01'). Use asDateStr(...) to handle either Date objects or
+// date strings without throwing when calling toISOString().
+function asDateStr(d) {
+  return (d instanceof Date) ? d.toISOString().slice(0, 10) : String(d).slice(0, 10);
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const VALID_PAYMENT_STATUSES = ['unpaid', 'partial', 'paid'];
 const VALID_PAYMENT_METHODS  = ['card', 'bank', 'payathotel'];
@@ -273,7 +280,7 @@ router.post('/bookings', adminAuth, async (req, res) => {
   if (!DATE_RE.test(checkout_date) || isNaN(Date.parse(checkout_date)))
     return res.status(400).json({ success: false, message: 'Invalid check-out date. Use YYYY-MM-DD.' });
 
-  const nights = Math.round((new Date(checkout_date) - new Date(checkin_date)) / 86400000);
+  const nights = Math.floor((new Date(checkout_date) - new Date(checkin_date)) / 86400000);
   if (nights < 1) return res.status(400).json({ success: false, message: 'Check-out must be after check-in.' });
 
   let pricePerNight = room.price;
@@ -360,8 +367,8 @@ router.patch('/bookings/:id/status', adminAuth, async (req, res) => {
           ref:       b.ref,
           guest:     { firstName: b.guest_first_name, lastName: b.guest_last_name, email: b.guest_email, phone: b.guest_phone, country: b.guest_country },
           roomLabel,
-          checkin:   b.checkin_date.toISOString().slice(0, 10),
-          checkout:  b.checkout_date.toISOString().slice(0, 10),
+          checkin:   asDateStr(b.checkin_date),
+          checkout:  asDateStr(b.checkout_date),
           nights:    String(b.nights),
           guests:    guestStr,
           total:     Number(b.total_amount).toLocaleString(),
@@ -376,8 +383,8 @@ router.patch('/bookings/:id/status', adminAuth, async (req, res) => {
           ref:       b.ref,
           guest:     { firstName: b.guest_first_name, lastName: b.guest_last_name, email: b.guest_email },
           roomLabel,
-          checkin:   b.checkin_date.toISOString().slice(0, 10),
-          checkout:  b.checkout_date.toISOString().slice(0, 10),
+          checkin:   asDateStr(b.checkin_date),
+          checkout:  asDateStr(b.checkout_date),
           nights:    String(b.nights),
           total:     Number(b.total_amount).toLocaleString(),
           refundable: isRefundable,
@@ -406,8 +413,8 @@ router.post('/bookings/:id/send-confirmation', adminAuth, async (req, res) => {
       ref:       b.ref,
       guest:     { firstName: b.guest_first_name, lastName: b.guest_last_name, email: b.guest_email, phone: b.guest_phone, country: b.guest_country },
       roomLabel: b.allocated_room_code ? `${b.room_name} (Room ${b.allocated_room_code.toUpperCase()})` : b.room_name,
-      checkin:   b.checkin_date.toISOString().slice(0, 10),
-      checkout:  b.checkout_date.toISOString().slice(0, 10),
+      checkin:   asDateStr(b.checkin_date),
+      checkout:  asDateStr(b.checkout_date),
       nights:    String(b.nights),
       guests:    guestStr,
       total:     Number(b.total_amount).toLocaleString(),
@@ -639,7 +646,7 @@ router.get('/bookings/:id/available-rooms', adminAuth, async (req, res) => {
          AND status           != 'cancelled'
          AND checkin_date      < $3
          AND checkout_date     > $2`,
-      [id, booking.checkin_date.toISOString().slice(0, 10), booking.checkout_date.toISOString().slice(0, 10)]
+      [id, asDateStr(booking.checkin_date), asDateStr(booking.checkout_date)]
     );
     const takenCodes = new Set(takenRows.map(r => r.allocated_room_code.toLowerCase()));
 
@@ -690,7 +697,7 @@ router.patch('/bookings/:id/allocate', adminAuth, async (req, res) => {
          AND status           != 'cancelled'
          AND checkin_date      < $4
          AND checkout_date     > $3`,
-      [code, id, booking.checkin_date.toISOString().slice(0, 10), booking.checkout_date.toISOString().slice(0, 10)]
+      [code, id, asDateStr(booking.checkin_date), asDateStr(booking.checkout_date)]
     );
     if (conflicts.length) {
       return res.status(409).json({ success: false, message: `Room ${code.toUpperCase()} is already allocated to another booking for those dates.` });

@@ -66,6 +66,18 @@ async function initDb() {
     );
   `);
 
+  // Room blocks table (ensure exists before any requests use it)
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS room_blocks (
+      id SERIAL PRIMARY KEY,
+      room_code VARCHAR(10) NOT NULL,
+      start_date DATE NOT NULL,
+      end_date DATE NOT NULL,
+      reason TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+  `);
+
   // Seed default settings (skip if already exist)
   await pool.query(`
     INSERT INTO settings (key, value, label, category) VALUES
